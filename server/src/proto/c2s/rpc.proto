@@ -1,0 +1,9 @@
+package c2s;
+
+message rpc
+{
+	required string node = 1;
+	required string servicemethod = 2;
+	optional bytes data = 3;
+}
+

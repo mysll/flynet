@@ -1,0 +1,49 @@
+{{define "Title"}}Info{{end}}
+{{define "Nav"}}			
+			<ul class="breadcrumb">
+				<li>
+					<i class="icon-home"></i>
+					<a href="/index">Console</a> 
+					<i class="icon-angle-right"></i>
+				</li>
+				<li><a href="/view/{{.app.Id}}/info">{{.app.Id}}</a></li>
+			</ul>
+{{end}}
+{{define "Content"}}			
+			<div class="row-fluid">
+
+				
+				<div class="box black span4" onTablet="span6" onDesktop="span4">
+					<div class="box-header">
+						<h2><i class="halflings-icon white info-sign"></i><span class="break"></span>{{.app.Id}}-Infos</h2>
+						<div class="box-icon">
+							<a href="#" class="btn-minimize"><i class="halflings-icon white chevron-up"></i></a>
+							<a href="#" class="btn-close"><i class="halflings-icon white remove"></i></a>
+						</div>
+					</div>
+					<div class="box-content">
+						<ul class="dashboard-list metro">
+							<li class="green">							
+								<strong>Type:</strong> {{.app.Type}}<br>
+							</li>
+							<li class="green">
+								<strong>Host:</strong> {{.app.Host}}<br>
+							</li>
+							<li class="green">	
+								<strong>Port:</strong> {{.app.Port}}<br>
+							</li>
+							<li class="green">		
+								<strong>ClientPort:</strong> {{.app.ClientPort}}<br>      
+							</li>
+							<li class="blue">	
+								<strong>State:</strong> {{if .app.Ready}}ready{{else}}not ready{{end}}<br>
+							</li>
+						</ul>
+					</div>
+				</div><!--/span-->
+				
+			
+			</div>			
+			
+		<!-- end: Content -->
+{{end}}

@@ -1,0 +1,8 @@
+package s2c;
+
+message loginsucceed
+{
+	required string host = 1;
+	required int32 port = 2;
+	required int32 key= 3;
+}

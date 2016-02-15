@@ -1,0 +1,7 @@
+package c2s;
+
+message loginuser
+{
+	required string user= 1;
+	required string password=2;
+}

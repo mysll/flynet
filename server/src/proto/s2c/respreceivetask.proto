@@ -1,0 +1,7 @@
+package s2c;
+
+
+message respreceivetask
+{
+	required string taskid = 1;
+}

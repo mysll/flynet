@@ -1,0 +1,9 @@
+package s2c;
+
+message visibleobject
+{
+	required bool self = 1;
+	optional int32 index = 2;
+	optional int32 serial = 3;
+	required bool visible =4;	
+}

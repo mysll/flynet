@@ -1,0 +1,13 @@
+{
+	"apps": {
+		"area": "./areaapp",
+		"login": "./loginapp",
+		"base": "./baseapp",
+		"basemgr": "./basemgr",
+		"loginmgr": "./loginmgr",
+		"areamgr": "./areamgr",
+		"database": "./db",
+		"status":"./statusapp"
+	},
+	"mustapps": ["loginmgr", "basemgr", "database", "status"]
+}

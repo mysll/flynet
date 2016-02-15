@@ -1,0 +1,66 @@
+<Player>
+	<name>Player</name>
+	<type>PLAYER</type>
+	<interfaces>
+		<interface>Moveable</interface>
+		<interface>AOI</interface>
+	</interfaces>
+	<propertys>
+		<property name="DataVer" type="int32" save="true" public="" realtime="" comment="数据版本号"/>
+		<property name="Name" type="string" len="32" save="true" public="self" realtime="" comment="名称" />
+		<property name="Sex" type="int8" save="true" public="self" realtime="" comment="性别" />
+		<property name="Level" type="int16" save="true" public="self" realtime="" comment="等级" />
+		<property name="Model" type="int32" save="true" public="self" realtime="" comment="模型" />
+		<property name="Exp" type="int32" save="true" public="self" realtime="" comment="经验" />
+		<property name="Vip" type="int8" save="true" public="self" realtime="" comment="VIP等级" />
+		<property name="MaxExp" type="int32" save="true" public="self" realtime="" comment="经验上限" />
+		<property name="HP" type="int32" save="true" public="self" realtime="" comment="血" />
+		<property name="MP" type="int32" save="true" public="self" realtime="" comment="魔" />
+		<property name="MaxHP" type="int32" save="true" public="self" realtime="" comment="血上限" />
+		<property name="MaxMP" type="int32" save="true" public="self" realtime="" comment="魔上限" />
+		<property name="LastUpdateTime" type="int64" save="true" public="" realtime="" comment="最后刷新时间" />
+	</propertys>
+	<records>
+		<record name="MailBox" cols="6" maxrows="100" save="true" visible="true" comment="邮箱" type="MEDIUMTEXT">
+			<column type="uint64" name="Source_uid" tag="`json:&quot;1&quot;`" comment="发件人UID"/>
+			<column type="string" len="32" name="Source_name" tag="`json:&quot;2&quot;`" comment="发件人名称"/>
+			<column type="int64" name="SendTime" tag="`json:&quot;3&quot;`" comment="发件时间"/>
+			<column type="string" len="255" name="Title" tag="`json:&quot;4&quot;`" comment="标题"/>
+			<column type="string" len="255" name="Content" tag="`json:&quot;5&quot;`" comment="内容"/>
+			<column type="string" len="255" name="Appendix" tag="`json:&quot;6&quot;`" comment="附件"/>
+			<column type="int8" name="IsRead" tag="`json:&quot;7&quot;`" comment="是否已读"/>
+			<column type="uint64" name="Serial_no" tag="`json:&quot;8&quot;`" comment="邮件序列号"/>
+			<column type="int32" name="MsgType" tag="`json:&quot;9&quot;`" comment="邮件类型"/>
+		</record>
+		<record name="TaskAccepted" cols="2" maxrows="1024" save="true" visible="true" comment="已承接任务表" type="MEDIUMTEXT"> 
+			<column type="string" len="64" name="ID" tag="`json:&quot;1&quot;`" comment="任务编号"/>
+			<column type="int8" name="Flag" tag="`json:&quot;2&quot;`" comment="任务标记"/>
+		</record>
+		<record name="TaskRecord" cols="6" maxrows="1024" save="true" visible="true" comment="任务记录表" type="MEDIUMTEXT"> 
+			<column type="string" len="64" name="ID" tag="`json:&quot;1&quot;`" comment="任务编号"/>
+			<column type="int32" name="Typ" tag="`json:&quot;2&quot;`" comment="记录类型"/>
+			<column type="string" len="64" name="Key" tag="`json:&quot;3&quot;`" comment="关键字ID(如物品编号、NPC编号等等)"/>
+			<column type="int32" name="CurrentAmount" tag="`json:&quot;4&quot;`" comment="当前完成度"/>
+			<column type="int32" name="TotalAmount" tag="`json:&quot;5&quot;`" comment="总进度"/>
+			<column type="int8" name="Flag" tag="`json:&quot;6&quot;`" comment="任务标记"/>
+		</record>
+		<record name="TaskCanAccept" cols="1" maxrows="1024" save="true" visible="true" comment="可承接任务表" type="MEDIUMTEXT"> 
+			<column type="string" len="64" name="ID" tag="`json:&quot;1&quot;`" comment="任务编号"/>
+		</record>
+		<record name="TaskTimeLimit" cols="3" maxrows="1024" save="true" visible="true" comment="任务时间限制记录表" type="MEDIUMTEXT"> 
+			<column type="string" len="64" name="ID" tag="`json:&quot;1&quot;`" comment="任务编号"/>
+			<column type="int64" name="StartTime" tag="`json:&quot;2&quot;`" comment="开始时间记录"/>
+			<column type="int64" name="EndTime" tag="`json:&quot;3&quot;`" comment="结束时间记录"/>
+		</record>
+		<record name="TaskGlobalRecord" cols="3" maxrows="1024" save="true" visible="true" comment="任务全局记录表" type="MEDIUMTEXT"> 
+			<column type="int32" name="Typ" tag="`json:&quot;1&quot;`" comment="记录类型"/>
+			<column type="string" len="64" name="Key" tag="`json:&quot;2&quot;`" comment="关键字ID(如物品编号、NPC编号等等)"/>
+			<column type="int32" name="CurrentAmount" tag="`json:&quot;3&quot;`" comment="当前完成度"/>
+		</record>
+		<record name="TaskPropRecord" cols="2" maxrows="1024" save="true" visible="false" comment="任务属性记录表" type="MEDIUMTEXT"> 
+			<column type="string" len="64" name="ID" tag="`json:&quot;1&quot;`" comment="任务编号"/>
+			<column type="string" len="64" name="Property" tag="`json:&quot;2&quot;`" comment="属性名"/>
+			<column type="string" len="128" name="NeedValue" tag="`json:&quot;3&quot;`" comment="属性达成条件"/>
+		</record>
+	</records>
+</Player>

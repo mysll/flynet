@@ -1,0 +1,6 @@
+package s2c;
+
+message EnterScene
+{
+	required string name =1;	
+}

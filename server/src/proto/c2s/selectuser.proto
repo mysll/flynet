@@ -1,0 +1,6 @@
+package c2s;
+message selectuser
+{
+	required string rolename = 1;
+	required int32 roleindex = 2;
+}

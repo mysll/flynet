@@ -1,0 +1,11 @@
+{
+	"serv": [
+		"area",
+		"login",
+		"base",
+		"basemgr",
+		"loginmgr",
+		"areamgr",
+		"database"
+	]
+}

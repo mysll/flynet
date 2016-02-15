@@ -1,0 +1,8 @@
+package s2c;
+
+message objectinfo
+{
+	required bool self = 1;
+	optional int32 index = 2;
+	optional int32 serial = 3;
+}

@@ -1,0 +1,6 @@
+package c2s;
+
+message reqreceivetask
+{
+	required string taskid = 1; // task id
+}

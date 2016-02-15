@@ -1,0 +1,55 @@
+package s2c;
+
+// 添加视窗
+message CreateView
+{
+	required int32	ViewId = 1;			// 视窗编号
+	required string Entity = 2;			// 类型
+	required int32	Capacity = 3;		// 大小
+};
+
+// 删除视窗
+message DeleteView
+{
+	required int32	ViewId = 1;			// 视窗编号
+};
+
+// 视窗属性
+message ViewProperty
+{
+	required int32	ViewId = 1;			// 视窗编号
+	optional bytes  Props = 2;			// 属性数值
+};
+
+// 视窗中添加对象
+message ViewAdd
+{
+	required int32	ViewId = 1;			// 视窗编号
+	required int32  Index = 2;			// 视窗中的位置
+	required string Entity = 3; 		// 对象类型
+	optional bytes  Props = 4;			// 属性数值
+};
+
+// 视窗中删除对象
+message ViewRemove
+{
+	required int32	ViewId = 1;			// 视窗编号
+	required int32  Index = 2;			// 视窗中的位置
+};
+
+// 视窗中对象的属性
+message ViewobjProperty
+{
+	required int32	ViewId = 1;			// 视窗编号
+	required int32  Index = 2;			// 视窗中的位置
+	optional bytes  Props = 3;			// 属性数值
+};
+
+// 交换视窗对象
+message ViewExchange
+{
+	required int32	ViewId1 = 1;		// 视窗编号
+	required int32  Index1 = 2;			// 视窗中的位置
+	required int32	ViewId2 = 3;		// 视窗编号
+	required int32  Index2 = 4;			// 视窗中的位置
+};

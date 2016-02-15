@@ -1,0 +1,7 @@
+package c2s;
+message create
+{
+	required string name = 1;
+	required int32 index = 2;
+	required int32 sex = 3;
+}

@@ -1,0 +1,10 @@
+bin/
+console.bak/
+nanomsg/
+redis/
+pkg/
+.svn
+.DS_Store
+*.exe
+
+server/src/test.go

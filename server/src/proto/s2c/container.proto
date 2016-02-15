@@ -1,0 +1,19 @@
+package s2c;
+
+enum ContainerOP
+{
+	OP_ADD = 1;
+	OP_REMOVE = 2;
+	OP_MODIFY = 3;
+	OP_EXCHANGE = 4;
+}
+
+message ContainerInfo
+{
+	required ContainerOP op = 1;
+	required int32 ctype = 2;
+	required int32 src = 3;
+	optional int32 dest = 4;
+	required string src_item = 5;
+	optional string dest_item = 6;
+}

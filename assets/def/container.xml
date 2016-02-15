@@ -1,0 +1,10 @@
+<BaseScene>
+	<name>Container</name>
+	<type>ITEM</type>
+	<propertys>
+		<property name="Name" type="string" len="32" save="true" public="" comment="名称" tag="`json:&quot;1&quot;`"/>
+		<property name="ContainerType" type="int32" save="true" public="" comment="类型" tag="`json:&quot;2&quot;`"/>
+	</propertys>
+	<records>
+	</records>
+</BaseScene>

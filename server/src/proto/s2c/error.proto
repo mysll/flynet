@@ -1,0 +1,5 @@
+package s2c;
+message error
+{
+	required int32 error_no = 1 ;
+}

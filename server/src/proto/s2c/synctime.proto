@@ -1,0 +1,7 @@
+package s2c;
+message synctime
+{
+	required int32 serverTime = 1;
+	required int32 clientTime = 2;
+	required int32 diffTime = 3;
+}

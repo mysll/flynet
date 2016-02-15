@@ -1,0 +1,15 @@
+package s2c;
+
+message motion
+{
+	required bool self = 1;
+	optional int32 index = 2;
+	optional int32 serial = 3;
+	required float x = 4;
+	required float y = 5;
+	required float z = 6;
+	required float dir = 7;
+	required string state = 8;
+	optional int32 parentIndex = 9;
+	optional int32 parentSerial = 10;
+}

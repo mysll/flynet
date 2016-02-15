@@ -1,0 +1,9 @@
+package s2c;
+
+message UpdateProperty
+{
+	required bool self = 1;
+	optional int32 index = 2;
+	optional int32 serial = 3;
+	required bytes propinfo =4;	
+}

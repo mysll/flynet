@@ -1,0 +1,58 @@
+{
+	"master": {
+		"host": "127.0.0.1",
+		"port": 5100,
+		"consoleport": 8700,
+		"consoleroot": "../console"
+	},
+	"login": [{
+		"id": "login_1",
+		"host": "127.0.0.1",
+		"port": 0,
+		"clienthost": "192.168.1.102",
+		"clientport": 0,
+		"fronted": true
+	}],
+	"loginmgr": [{
+		"id": "loginmgr",
+		"host": "127.0.0.1",
+		"port": 0,
+		"clienthost": "192.168.1.102",
+		"clientport": 5391,
+		"fronted": true
+	}],
+	"base": [{
+		"id": "base_1",
+		"host": "127.0.0.1",
+		"port": 0,
+		"clienthost": "192.168.1.102",
+		"clientport": 0,
+		"fronted": true,
+		"assets":"../assets",
+		"loglevel":2,
+		"debug":true,
+		"pprof":6800
+	}],
+	"basemgr": [{
+		"id": "basemgr",
+		"host": "127.0.0.1",
+		"port": 0
+	}],
+	"status": [{
+		"id": "status",
+		"host": "127.0.0.1",
+		"port": 0
+	}],
+	"database": [{
+		"id": "db_1",
+		"host": "127.0.0.1",
+		"port": 0,
+		"type": "mysql",
+		"datasource": "root:@tcp(192.168.1.10:3306)/mmosll?charset=utf8",
+		"role": "Player",
+		"db": "mmosll",
+		"entity": "../assets/def",
+		"pools": 4,
+		"rolelimit":1
+	}]
+}

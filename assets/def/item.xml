@@ -1,0 +1,14 @@
+<Npc>
+	<name>Item</name>
+	<type>ITEM</type>
+	<interfaces/>
+	<propertys>
+		<property name="ID" type="string" len="64" save="true" public="self" comment="编号" tag="`json:&quot;1&quot;`"/>
+		<property name="Time" type="int32" save="true" public="self" comment="时效" tag="`json:&quot;2&quot;`"/>
+		<property name="Amount" type="int16" save="true" public="self" comment="物品叠加数量" tag="`json:&quot;3&quot;`"/>
+		
+		<property name="Name" type="string" len="32" save="false" public="" comment="名称" />
+	</propertys>
+	<records>
+	</records>
+</Npc>

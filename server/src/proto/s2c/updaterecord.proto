@@ -1,0 +1,42 @@
+package s2c;
+
+message CreateRecord
+{
+	required string record = 1;
+	required int32 rows = 2;
+	required int32 cols = 3;
+	optional bytes recinfo = 4;	
+}
+
+message RecordAddRow
+{
+	required string record = 1;
+	required int32 row = 2;
+	required bytes rowinfo = 3;	
+}
+
+message RecordDelRow
+{
+	required string record = 1;
+	required int32 row = 2;
+}
+
+message RecordSetRow
+{
+	required string record = 1;
+	required int32 row = 2;
+	required bytes rowinfo = 3;	
+}
+
+message RecordGrid
+{
+	required string record = 1;
+	required int32 row = 2;
+	required int32 col = 3;
+	required bytes gridinfo = 4;
+}
+
+message RecordClear
+{
+	required string record = 1;
+}

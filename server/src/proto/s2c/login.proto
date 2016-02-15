@@ -1,0 +1,7 @@
+package s2c;
+
+message login
+{
+	required string host= 1;
+	required int32 port=2;
+}

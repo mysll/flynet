@@ -1,0 +1,8 @@
+package s2c;
+
+message rpc
+{
+	required string sender = 1;
+	required string servicemethod = 2;
+	optional bytes data = 3;
+}

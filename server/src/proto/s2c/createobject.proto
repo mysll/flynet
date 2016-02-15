@@ -1,0 +1,12 @@
+package s2c;
+
+message CreateObject
+{
+	required bool self = 1;
+	optional int32 index = 2;
+	optional int32 serial = 3;
+	required string entity = 4;
+	required int32 typ = 5;
+	required bytes propinfo =6;
+	optional string mailbox = 7;
+}

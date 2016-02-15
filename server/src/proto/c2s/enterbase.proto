@@ -1,0 +1,9 @@
+package c2s;
+
+message enterbase
+{
+	required string user= 1;
+	required int32 key=2;
+	optional string rolename = 3;
+	optional int32 roleindex = 4;
+}

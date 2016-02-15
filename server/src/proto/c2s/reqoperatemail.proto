@@ -1,0 +1,6 @@
+package c2s;
+
+message reqoperatemail
+{
+	repeated int64 mails = 1;
+}

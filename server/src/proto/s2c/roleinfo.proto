@@ -1,0 +1,13 @@
+package s2c;
+
+message role
+{
+	required string name =1;
+	required int32 index =2;
+	required string roleinfo = 3;	
+}
+
+message role_info
+{
+	repeated role user_info = 1 ;
+}

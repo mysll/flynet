@@ -1,0 +1,9 @@
+<BaseScene>
+	<name>BaseScene</name>
+	<type>SCENE</type>
+	<propertys>
+		<property name="Name" type="string" len="32" save="true" public="" comment="名称" cell="true"/>
+	</propertys>
+	<records>
+	</records>
+</BaseScene>

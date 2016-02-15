@@ -1,0 +1,6 @@
+package c2s;
+message synctime
+{
+	required int32 serverTime = 1;
+	required int32 clientTime = 2;
+}

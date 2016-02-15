@@ -1,0 +1,6 @@
+package c2s;
+message controlview
+{
+	required int32 viewid = 1;
+	required int32 op = 2;
+}
