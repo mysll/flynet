@@ -5,7 +5,6 @@ import (
 	"io"
 	"libs/log"
 	"net"
-	"runtime"
 	"share"
 	"strings"
 	"util"
@@ -81,7 +80,6 @@ func (p *peer) readloop() {
 	for !context.Server.quit {
 		id, msg, err := util.ReadPkg(p.rwc, buffer)
 		if err != nil {
-			runtime.Gosched()
 			if err != io.EOF && !strings.Contains(err.Error(), "use of closed network connection") {
 				log.LogError(err)
 			}
@@ -90,7 +88,6 @@ func (p *peer) readloop() {
 
 		if p.h != nil {
 			if err := p.h.Handle(id, msg); err != nil {
-				runtime.Gosched()
 				log.LogError(err)
 				break
 			}

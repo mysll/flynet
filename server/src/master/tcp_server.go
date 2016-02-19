@@ -8,7 +8,6 @@ import (
 )
 
 type tcp_server struct {
-	context *context
 }
 
 func (tcp *tcp_server) Handle(clientconn net.Conn) {
@@ -21,23 +20,32 @@ func (tcp *tcp_server) Handle(clientconn net.Conn) {
 		return
 	}
 
-	var reg share.RegisterApp
 	switch id {
 	case share.M_REGISTER_APP:
+		var reg share.RegisterApp
 		if err := share.DecodeMsg(msgbody, &reg); err != nil {
 			clientconn.Close()
 			log.LogFatalf(err)
 		}
+		app := &app{typ: reg.Type, id: reg.AppId, conn: clientconn, host: reg.Host, port: reg.Port, clienthost: reg.ClientHost, clientport: reg.ClientPort}
+		log.LogMessage(app.id, ":", app.conn.RemoteAddr().String())
+		app.SendList()
+		AddApp(app)
+		app.Loop()
+	case share.M_REGISTER_AGENT:
+		var reg share.RegisterAgent
+		if err := share.DecodeMsg(msgbody, &reg); err != nil {
+			clientconn.Close()
+			log.LogFatalf(err)
+		}
+
+		agent := &AgentNode{id: reg.AgentId, nobalance: reg.NoBalance}
+		agent.Handle(clientconn)
+		context.agentlist.AddAgent(agent)
+		log.LogMessage("agent add:", reg.AgentId)
 	default:
 		log.LogError("first message must reg app")
 		return
 	}
 
-	app := &app{typ: reg.Type, id: reg.AppId, conn: clientconn, host: reg.Host, port: reg.Port, clienthost: reg.ClientHost, clientport: reg.ClientPort}
-
-	log.LogMessage(app.id, ":", app.conn.RemoteAddr().String())
-
-	app.SendList()
-	AddApp(app)
-	app.Loop()
 }

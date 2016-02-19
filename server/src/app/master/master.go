@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"github.com/bitly/go-simplejson"
 	"io/ioutil"
 	"libs/log"
 	"master"
@@ -11,6 +10,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/bitly/go-simplejson"
 )
 
 var (
@@ -90,6 +91,28 @@ func main() {
 				m.Host = "127.0.0.1"
 			}
 
+			if localip, ok := mst.CheckGet("localip"); ok {
+				v, err := localip.String()
+				if err != nil {
+					panic(err)
+				}
+
+				m.LocalIP = v
+			} else {
+				m.LocalIP = "127.0.0.1"
+			}
+
+			if outerip, ok := mst.CheckGet("outerip"); ok {
+				v, err := outerip.String()
+				if err != nil {
+					panic(err)
+				}
+
+				m.OuterIP = v
+			} else {
+				m.OuterIP = "127.0.0.1"
+			}
+
 			if port, ok := mst.CheckGet("port"); ok {
 				v, err := port.Int()
 				if err != nil {
@@ -99,6 +122,24 @@ func main() {
 				m.Port = v
 			} else {
 				m.Port = 5100
+			}
+
+			if agent, ok := mst.CheckGet("agent"); ok {
+				v, err := agent.Bool()
+				if err != nil {
+					panic(err)
+				}
+
+				m.Agent = v
+			}
+
+			if agentid, ok := mst.CheckGet("agentid"); ok {
+				v, err := agentid.String()
+				if err != nil {
+					panic(err)
+				}
+
+				m.AgentId = v
 			}
 
 			if cp, ok := mst.CheckGet("consoleport"); ok {
@@ -117,6 +158,33 @@ func main() {
 				}
 				log.LogMessage("path:", v)
 				m.Template = v
+			}
+
+			if waits, ok := mst.CheckGet("waitagents"); ok {
+				v, err := waits.Int()
+				if err != nil {
+					panic(err)
+				}
+
+				m.WaitAgents = v
+			}
+
+			if startuid, ok := mst.CheckGet("startuid"); ok {
+				v, err := startuid.Int()
+				if err != nil {
+					panic(err)
+				}
+
+				master.AppUid = int32(v)
+			}
+
+			if nobalance, ok := mst.CheckGet("nobalance"); ok {
+				v, err := nobalance.Bool()
+				if err != nil {
+					panic(err)
+				}
+
+				m.NoBalance = v
 			}
 
 			continue

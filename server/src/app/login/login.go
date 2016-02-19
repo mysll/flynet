@@ -2,13 +2,16 @@ package main
 
 import (
 	"flag"
-	"github.com/bitly/go-simplejson"
 	. "login"
 	"server"
+
+	"github.com/bitly/go-simplejson"
 )
 
 var (
 	master    = flag.String("m", "", "master info")
+	localip   = flag.String("l", "", "local ip")
+	outerip   = flag.String("o", "", "outer ip")
 	appid     = flag.Int("d", 0, "appid")
 	typ       = flag.String("t", "", "app type")
 	startargs = flag.String("s", "", "start args")
@@ -27,7 +30,8 @@ func main() {
 	}
 
 	App.Server = server.NewServer(App, int32(*appid))
-	if App.Start(*master, *typ, json) {
+	if App.Start(*master, *localip, *outerip, *typ, json) {
 		App.Wait()
 	}
+
 }

@@ -44,18 +44,22 @@ func (app *app) Close() {
 
 }
 
+func (app *app) Send(data []byte) error {
+	_, err := app.conn.Write(data)
+	return err
+}
+
 func (app *app) SendList() {
 	applock.RLock()
 	defer applock.RUnlock()
 
-	ms := Context.master
-	size := len(ms.app)
+	size := len(context.app)
 	if size == 0 {
 		return
 	}
 
 	rs := make([]share.AddApp, 0, size)
-	for _, v := range ms.app {
+	for _, v := range context.app {
 		rs = append(rs, share.AddApp{v.typ, v.id, v.host, v.port, v.clienthost, v.clientport, v.ready})
 	}
 
@@ -108,22 +112,7 @@ func (app *app) Loop() {
 }
 
 func (app *app) CreateApp(create share.CreateApp) {
-	startapp := GetAppName(create.Type)
-	err := Start(startapp, create.AppId, create.Type, create.Args)
-	if err != nil {
-		data, err := share.CreateAppBakMsg(create.Id, create.AppId, err.Error())
-		if err != nil {
-			log.LogFatalf(err)
-		}
-		app.conn.Write(data)
-		return
-	}
-
-	data, err := share.CreateAppBakMsg(create.Id, create.AppId, "ok")
-	if err != nil {
-		log.LogFatalf(err)
-	}
-	app.conn.Write(data)
+	context.CreateApp(create.ReqId, create.AppId, 0, create.Type, create.Args, create.CallApp)
 }
 
 func (app *app) Handle(id uint16, body []byte) error {

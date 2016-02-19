@@ -1,0 +1,30 @@
+{
+	"master": {
+		"host": "192.168.1.102",
+		"localip": "192.168.1.102",
+		"outerip": "192.168.1.102",
+		"port": 5100,
+		"consoleport": 8700,
+		"consoleroot": "../console",
+		"waitagents":2
+	},
+	"login": [{
+		"id": "login_1",
+		"host": "127.0.0.1",
+		"port": 0,
+		"clientport": 0,
+		"fronted": true
+	},{
+		"id": "login_2",
+		"host": "127.0.0.1",
+		"port": 0,
+		"clientport": 0,
+		"fronted": true
+	},{
+		"id": "login_3",
+		"host": "127.0.0.1",
+		"port": 0,
+		"clientport": 0,
+		"fronted": true
+	}]
+}

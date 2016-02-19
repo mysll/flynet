@@ -12,7 +12,7 @@ import (
 	"syscall"
 )
 
-func Start(startapp string, id string, typ string, startargs string) error {
+func Start(startapp string, id string, appuid int32, typ string, startargs string) error {
 	ferr, err := os.Create(fmt.Sprintf("log/%s_err.log", id))
 	if err != nil {
 		log.LogError(err)
@@ -23,8 +23,8 @@ func Start(startapp string, id string, typ string, startargs string) error {
 		log.LogError(err)
 		return err
 	}
-	atomic.AddInt32(&AppId, 1)
-	cmd := exec.Command(startapp, "-m", fmt.Sprintf("%s:%d", Context.master.Host, Context.master.Port), "-d", strconv.Itoa(int(AppId)), "-t", typ, "-s", startargs)
+
+	cmd := exec.Command(startapp, "-m", fmt.Sprintf("%s:%d", context.Host, context.Port), "-l", context.LocalIP, "-o", context.OuterIP, "-d", strconv.Itoa(int(appuid)), "-t", typ, "-s", startargs)
 	cmd.Stdout = fout
 	cmd.Stderr = ferr
 	if cmd.SysProcAttr == nil {
@@ -39,12 +39,15 @@ func Start(startapp string, id string, typ string, startargs string) error {
 		return err
 	}
 
-	log.TraceInfo("master", "app start ", typ, ",", strconv.Itoa(int(AppId)))
+	log.TraceInfo("master", "app start ", typ, ",", strconv.Itoa(int(appuid)))
+
+	atomic.AddInt32(&Load, 1)
 	Context.master.waitGroup.Wrap(func() {
 		cmd.Wait()
 		ferr.Close()
 		fout.Close()
 		log.LogMessage(id, " is quit")
+		atomic.AddInt32(&Load, -1)
 	})
 	return nil
 }

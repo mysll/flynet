@@ -21,12 +21,12 @@ func Ready(app *app) {
 	}
 
 	ismustapp := false
-	for _, v := range Context.master.AppDef.MustApps {
+	for _, v := range context.AppDef.MustApps {
 		if app.typ == v {
 			mustapps[app.typ] = app.id
 			ismustapp = true
 
-			if len(mustapps) == len(Context.master.AppDef.MustApps) {
+			if len(mustapps) == len(context.AppDef.MustApps) {
 				log.LogMessage("must app ready")
 			}
 			break
@@ -34,14 +34,14 @@ func Ready(app *app) {
 	}
 
 	var out1 []byte
-	if len(mustapps) == len(Context.master.AppDef.MustApps) {
+	if len(mustapps) == len(context.AppDef.MustApps) {
 		out1, err = share.CreateMustAppReadyMsg()
 		if err != nil {
 			log.LogFatalf(err)
 		}
 	}
 
-	for _, v := range Context.master.app {
+	for _, v := range context.app {
 		if v.id != app.id {
 			v.conn.Write(out)
 		}
@@ -58,7 +58,7 @@ func Ready(app *app) {
 }
 
 func AddApp(app *app) {
-	if _, ok := Context.master.app[app.id]; ok {
+	if _, ok := context.app[app.id]; ok {
 		RemoveApp(app.id)
 	}
 
@@ -69,29 +69,29 @@ func AddApp(app *app) {
 	if err != nil {
 		log.LogFatalf(err)
 	}
-	for _, v := range Context.master.app {
+	for _, v := range context.app {
 		v.conn.Write(out)
 	}
 
-	Context.master.app[app.id] = app
+	context.app[app.id] = app
 }
 
 func RemoveApp(id string) {
 	applock.Lock()
 	defer applock.Unlock()
-	if _, ok := Context.master.app[id]; !ok {
+	if _, ok := context.app[id]; !ok {
 		return
 	}
 
-	app := Context.master.app[id]
+	app := context.app[id]
 	app.Close()
-	delete(Context.master.app, id)
+	delete(context.app, id)
 
 	out, err := share.CreateRemoveServerMsg(id)
 	if err != nil {
 		log.LogFatalf(err)
 	}
-	for _, v := range Context.master.app {
+	for _, v := range context.app {
 		v.conn.Write(out)
 	}
 

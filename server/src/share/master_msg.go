@@ -17,6 +17,8 @@ const (
 	M_MUSTAPPREADY
 	M_CREATEAPP
 	M_CREATEAPP_BAK
+	M_REGISTER_AGENT
+	M_FORWARD_MSG
 )
 
 type RegisterApp struct {
@@ -26,6 +28,11 @@ type RegisterApp struct {
 	Port       int
 	ClientHost string
 	ClientPort int
+}
+
+type RegisterAgent struct {
+	AgentId   string
+	NoBalance bool
 }
 
 type AddApp struct {
@@ -54,10 +61,12 @@ type MustAppReady struct {
 }
 
 type CreateApp struct {
-	Type  string
-	Id    string
-	AppId string
-	Args  string
+	Type    string
+	ReqId   string
+	AppId   string
+	AppUid  int32
+	Args    string
+	CallApp string
 }
 
 type CreateAppBak struct {
@@ -66,8 +75,33 @@ type CreateAppBak struct {
 	Res   string
 }
 
-func CreateAppMsg(typ string, id string, appid string, args string) (data []byte, err error) {
-	create := &CreateApp{typ, id, appid, args}
+type SendAppMsg struct {
+	AppId string
+	Data  []byte
+}
+
+func CreateForwardMsg(appid string, msg []byte) (data []byte, err error) {
+	forward := &SendAppMsg{appid, msg}
+	out, e := EncodeMsg(forward)
+	if e != nil {
+		err = e
+		return
+	}
+	return util.CreateMsg(nil, out, M_FORWARD_MSG)
+}
+
+func CreateRegisterAgent(id string, nobalance bool) (data []byte, err error) {
+	reg := &RegisterAgent{id, nobalance}
+	out, e := EncodeMsg(reg)
+	if e != nil {
+		err = e
+		return
+	}
+	return util.CreateMsg(nil, out, M_REGISTER_AGENT)
+}
+
+func CreateAppMsg(typ string, reqid string, appid string, appuid int32, args string, callapp string) (data []byte, err error) {
+	create := &CreateApp{typ, reqid, appid, appuid, args, callapp}
 	out, e := EncodeMsg(create)
 	if e != nil {
 		err = e
@@ -76,8 +110,8 @@ func CreateAppMsg(typ string, id string, appid string, args string) (data []byte
 	return util.CreateMsg(nil, out, M_CREATEAPP)
 }
 
-func CreateAppBakMsg(id string, appid string, res string) (data []byte, err error) {
-	create := &CreateAppBak{id, appid, res}
+func CreateAppBakMsg(reqid string, appid string, res string) (data []byte, err error) {
+	create := &CreateAppBak{reqid, appid, res}
 	out, e := EncodeMsg(create)
 	if e != nil {
 		err = e

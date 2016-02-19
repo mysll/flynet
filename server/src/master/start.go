@@ -2,13 +2,21 @@ package master
 
 import (
 	"errors"
-	"github.com/bitly/go-simplejson"
 	"libs/log"
+	"sync/atomic"
+
+	"github.com/bitly/go-simplejson"
 )
 
 var (
-	AppId int32
+	AppUid int32
+	Load   int32
 )
+
+func GetAppUid() int32 {
+	atomic.AddInt32(&AppUid, 1)
+	return AppUid
+}
 
 func StartApp(m *Master) {
 
@@ -35,14 +43,49 @@ func StartApp(m *Master) {
 				log.LogFatalf("app id not set")
 				return
 			}
-			Start(startapp, id, k, string(appargs))
+
+			Start(startapp, id, GetAppUid(), k, string(appargs))
 			idx++
 		}
 	}
 }
 
+func StartAppBlance(m *Master) {
+	for k, v := range m.AppArgs {
+		json, err := simplejson.NewJson(v)
+		if err != nil {
+			log.LogFatalf(err)
+		}
+		idx := 0
+
+		for {
+			app := json.GetIndex(idx)
+			if app.Interface() == nil {
+				break
+			}
+
+			appargs, _ := app.MarshalJSON()
+			appid, err := app.Get("id").String()
+			if err != nil {
+				log.LogFatalf("app id not set")
+				return
+			}
+
+			context.CreateApp("", appid, GetAppUid(), k, string(appargs), "")
+
+			idx++
+		}
+	}
+}
+
+func CreateApp(id string, uid int32, typ string, startargs string) error {
+	startapp := GetAppName(typ)
+	err := Start(startapp, id, uid, typ, startargs)
+	return err
+}
+
 func GetAppName(typ string) string {
-	if v, exist := Context.master.AppDef.Apps[typ]; exist {
+	if v, exist := context.AppDef.Apps[typ]; exist {
 		return v
 	}
 

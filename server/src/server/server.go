@@ -79,7 +79,7 @@ func (svr *Server) GetTickCount() int32 {
 	return int32(time.Now().Sub(svr.startTime) % math.MaxInt32)
 }
 
-func (svr *Server) Start(master string, typ string, args *simplejson.Json) bool {
+func (svr *Server) Start(master string, localip string, outerip string, typ string, args *simplejson.Json) bool {
 	svr.startTime = time.Now()
 	defer func() {
 		if e := recover(); e != nil {
@@ -105,14 +105,17 @@ func (svr *Server) Start(master string, typ string, args *simplejson.Json) bool 
 
 	log.LogMessage("id:", svr.AppId)
 
-	if host, ok := args.CheckGet("host"); ok {
-		v, err := host.String()
-		if err != nil {
-			panic(err)
+	svr.Host = localip
+	if svr.Host == "" {
+		if host, ok := args.CheckGet("host"); ok {
+			v, err := host.String()
+			if err != nil {
+				panic(err)
+			}
+			svr.Host = v
+		} else {
+			panic(svr.Id + " host not defined")
 		}
-		svr.Host = v
-	} else {
-		panic(svr.Id + " host not defined")
 	}
 
 	if port, ok := args.CheckGet("port"); ok {
@@ -125,13 +128,15 @@ func (svr *Server) Start(master string, typ string, args *simplejson.Json) bool 
 		panic(svr.Id + "port not defined")
 	}
 
-	svr.ClientHost = svr.Host
-	if clienthost, ok := args.CheckGet("clienthost"); ok {
-		v, err := clienthost.String()
-		if err != nil {
-			panic(err)
+	svr.ClientHost = outerip
+	if svr.ClientHost == "" {
+		if clienthost, ok := args.CheckGet("clienthost"); ok {
+			v, err := clienthost.String()
+			if err != nil {
+				panic(err)
+			}
+			svr.ClientHost = v
 		}
-		svr.ClientHost = v
 	}
 
 	if clientport, ok := args.CheckGet("clientport"); ok {

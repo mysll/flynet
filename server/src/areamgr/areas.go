@@ -53,7 +53,9 @@ func (a *Areas) GetArea(mailbox rpc.Mailbox, id string) error {
 		appid,
 		fmt.Sprintf(`{ "id":"%s", "host":"127.0.0.1", "port":0, "areaid":"%s"}`,
 			appid,
-			id))
+			id),
+		App.Id,
+	)
 	if err != nil {
 		log.LogError(err)
 		return app.Call(&mailbox, "AreaBridge.GetAreaBak", "")
