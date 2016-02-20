@@ -827,9 +827,23 @@ func (k *Kernel) PlaceObj(scene entity.Entityer, object entity.Entityer, pos Vec
 	return true
 }
 
+func (k *Kernel) CancelTimer(intervalid int64) {
+	context.Server.Cancel(intervalid)
+}
+
+//增加一个定时器
+func (k *Kernel) AddTimer(t time.Duration, count int32, cb TimerCB, param interface{}) (intervalid int64) {
+	return context.Server.AddTimer(t, count, cb, param)
+}
+
+//增加一个超时
+func (k *Kernel) Timeout(t time.Duration, cb TimerCB, param interface{}) (intervalid int64) {
+	return context.Server.Timeout(t, cb, param)
+}
+
 //增加一个心跳
-func (k *Kernel) AddHeartbeat(obj ObjectID, beat string, t time.Duration, count int32, args interface{}) bool {
-	return context.Server.sceneBeat.Add(obj, beat, t, count, args)
+func (k *Kernel) AddHeartbeat(object entity.Entityer, beat string, t time.Duration, count int32, args interface{}) bool {
+	return context.Server.sceneBeat.Add(object, beat, t, count, args)
 }
 
 //移除某个心跳

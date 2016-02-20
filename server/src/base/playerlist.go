@@ -63,7 +63,6 @@ func (p *PlayerList) AddPlayer(session int64) *BasePlayer {
 	}
 
 	pl := &BasePlayer{}
-	pl.Heartbeat = server.NewHeartbeat()
 	pl.Mailbox = rpc.NewMailBox(App.Id, "session", session, App.AppId)
 	pl.Session = session
 	p.players[session] = pl
@@ -100,14 +99,6 @@ func (p *PlayerList) ClearDeleted() {
 			delete(p.players, session)
 			log.LogDebug("delete player:", session)
 			log.LogDebug("remain players:", p.Count())
-		}
-	}
-}
-
-func (p *PlayerList) Pump() {
-	for _, pl := range p.players {
-		if !pl.Deleted {
-			pl.Pump()
 		}
 	}
 }

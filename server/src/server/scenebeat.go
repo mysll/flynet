@@ -8,25 +8,11 @@ import (
 	"time"
 )
 
-type ObjectBeater func(obj ObjectID, t time.Duration, args interface{})
-
-var (
-	heartbeat = make(map[string]ObjectBeater, 50)
-)
-
-func RegisterHeartbeat(beatname string, beater ObjectBeater) {
-	if _, dup := heartbeat[beatname]; dup {
-		log.LogError("heart beat already register,", beatname)
-		return
-	}
-
-	heartbeat[beatname] = beater
-}
-
 type objectTick struct {
 	serial   int64
 	Name     string
 	Oid      ObjectID
+	ent      entity.Entityer
 	Params   interface{}
 	Last     time.Time
 	Interval time.Duration
@@ -57,6 +43,7 @@ func (slot *beatSlot) Run(t time.Time) {
 		return
 	}
 
+	//存储当前队尾，用作循环结束的条件。因为执行过程中，执行过的会重新放到队尾。
 	last := slot.info.Back().Value.(*objectTick).serial
 	var next *list.Element
 	for e := slot.info.Front(); e != nil; e = next {
@@ -64,12 +51,23 @@ func (slot *beatSlot) Run(t time.Time) {
 		tick := e.Value.(*objectTick)
 		if !tick.deleted {
 			if dur := t.Sub(tick.Last); dur >= tick.Interval {
-				heartbeat[tick.Name](tick.Oid, dur, tick.Params)
 				tick.Last = t
 				if tick.Count > 0 {
 					tick.Count--
 					if tick.Count == 0 {
 						tick.deleted = true
+					}
+				}
+
+				if tick.ent == nil || tick.ent.GetDeleted() {
+					tick.deleted = true
+				} else {
+					callee := GetCallee(tick.ent.ObjTypeName())
+					for _, cl := range callee {
+						res := cl.OnTimer(tick.ent, tick.Params, tick.Count)
+						if res == 0 {
+							break
+						}
 					}
 				}
 
@@ -111,6 +109,8 @@ func (this *SceneBeat) getTick() *objectTick {
 }
 
 func (this *SceneBeat) freeTick(tick *objectTick) {
+	tick.Params = nil
+	tick.ent = nil
 	tick.next = this.freeHeart
 	this.freeHeart = tick
 }
@@ -174,7 +174,8 @@ func (this *SceneBeat) Find(oid ObjectID, beat string) bool {
 	return false
 }
 
-func (this *SceneBeat) Add(oid ObjectID, beat string, t time.Duration, count int32, param interface{}) bool {
+func (this *SceneBeat) Add(obj entity.Entityer, beat string, t time.Duration, count int32, param interface{}) bool {
+	oid := obj.GetObjId()
 	if this.find(oid, beat) != nil {
 		log.LogError("heartbeat already add", beat)
 		return false
@@ -190,15 +191,12 @@ func (this *SceneBeat) Add(oid ObjectID, beat string, t time.Duration, count int
 		return false
 	}
 
-	if _, exist := heartbeat[beat]; !exist {
-		log.LogError("heartbeat not found,", beat)
-		return false
-	}
 	tick := this.getTick()
 	this.serial++
 	tick.serial = this.serial
 	tick.Name = beat
 	tick.Oid = oid
+	tick.ent = obj
 	tick.Params = param
 	tick.Last = time.Now()
 	tick.Interval = t

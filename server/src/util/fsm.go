@@ -104,9 +104,9 @@ func (fsm *FSM) CallState(e Event) {
 func (fsm *FSM) DelayCall(timeout int64) {
 	defer recover()
 	fsm.isdelay = true
-	tick := time.Tick(time.Duration(timeout) * time.Millisecond)
+	tick := time.NewTicker(time.Duration(timeout) * time.Millisecond)
 	select {
-	case <-tick:
+	case <-tick.C:
 		fsm.l.Lock()
 		defer fsm.l.Unlock()
 		if fsm.stopped {
@@ -117,6 +117,7 @@ func (fsm *FSM) DelayCall(timeout int64) {
 	case <-fsm.delaych:
 		break
 	}
+	tick.Stop()
 	fsm.isdelay = false
 }
 

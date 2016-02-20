@@ -29,7 +29,7 @@ const (
 )
 
 type Server struct {
-	*Heartbeat
+	*Timer
 	StartArgs       *simplejson.Json
 	Type            string
 	Host            string
@@ -352,7 +352,7 @@ func NewServer(app Apper, id int32) *Server {
 	s := &Server{}
 	context.Server = s
 	s.AppId = id
-	s.Heartbeat = NewHeartbeat()
+	s.Timer = NewTimer()
 	s.WaitGroup = &util.WaitGroupWrapper{}
 	s.exitChannel = make(chan struct{})
 	s.shutdown = make(chan struct{})

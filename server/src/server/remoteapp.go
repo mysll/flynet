@@ -341,7 +341,7 @@ func AddApp(typ string, id string, host string, port int, clienthost string, cli
 		if app.Host == host ||
 			app.Port == port ||
 			app.ClientHost == clienthost ||
-			app.ClientPort == clientport { //可能是master重启了
+			app.ClientPort == clientport { //已经存在
 			return
 		}
 	}

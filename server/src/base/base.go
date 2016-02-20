@@ -68,10 +68,6 @@ func (b *BaseApp) OnStart() {
 	b.tasksystem.LoadTaskInfo()
 }
 
-func (b *BaseApp) OnBeatRun() {
-	b.Players.Pump()
-}
-
 func (b *BaseApp) OnFrame() {
 	b.Players.ClearDeleted()
 	if b.Players.Count() == 0 && b.Closing {

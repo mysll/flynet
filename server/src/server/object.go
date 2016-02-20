@@ -140,6 +140,7 @@ type Objecter interface {
 	//		self:道具
 	//		sender:使用者
 	OnUnEquip(self entity.Entityer, sender entity.Entityer, idx int) int
+
 	// 名称：OnPropertyChange
 	// 描述：属性变动
 	// 参数说明：
@@ -147,6 +148,14 @@ type Objecter interface {
 	//		prop:属性名
 	//    	old:原始值
 	OnPropertyChange(self entity.Entityer, prop string, old interface{}) int
+
+	// 名称：OnTimer
+	// 描述：定时器回调
+	// 参数说明：
+	//		self:entity
+	//		args:参数
+	//    	count:定时器剩余次数
+	OnTimer(self entity.Entityer, args interface{}, count int32) int
 }
 
 type Callee struct {
@@ -213,5 +222,9 @@ func (c *Callee) OnUnEquip(self entity.Entityer, sender entity.Entityer, idx int
 	return 1
 }
 func (c *Callee) OnPropertyChange(self entity.Entityer, prop string, old interface{}) int {
+	return 1
+}
+
+func (c *Callee) OnTimer(self entity.Entityer, args interface{}, count int32) int {
 	return 1
 }

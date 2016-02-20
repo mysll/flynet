@@ -28,7 +28,6 @@ const (
 )
 
 type BasePlayer struct {
-	*server.Heartbeat
 	Mailbox     rpc.Mailbox
 	Session     int64
 	Account     string
@@ -44,6 +43,8 @@ type BasePlayer struct {
 	propsyncer  *server.PropSync
 	tablesyncer *server.TableSync
 	lastupdate  time.Time
+	saveid      int64
+	updateid    int64
 }
 
 //客户端断开连接
@@ -58,11 +59,11 @@ func (p *BasePlayer) Disconnect() {
 	log.LogInfo("player disconnect:", p.ChooseRole, " session:", p.Session)
 }
 
-func TimeToDel(t time.Duration, count int32, args interface{}) {
+func TimeToDel(intervalid int64, t time.Duration, count int32, args interface{}) {
 	App.Players.RemovePlayer(args.(int64))
 }
 
-func (p *BasePlayer) TimeToSave(t time.Duration, count int32, args interface{}) {
+func (p *BasePlayer) TimeToSave(intervalid int64, t time.Duration, count int32, args interface{}) {
 	p.SaveToDb(false)
 }
 
@@ -122,14 +123,13 @@ func (p *BasePlayer) SaveToDb(offline bool) {
 }
 
 func (p *BasePlayer) SaveFailed() {
-
 	if p.State == STATE_SAVING {
 		now := time.Now()
 		f := fmt.Sprintf("dump/%s_%d_%d_%d_%d_%d_%d.log", p.Account, now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
 
 		log.LogError("save player failed, dump info into:", f)
 		go App.Kernel.DumpInfo(*p, f)
-		p.AddHeartbeat("playerdel", time.Second*5, 1, TimeToDel, p.Session)
+		App.Kernel.Timeout(time.Second*5, TimeToDel, p.Session)
 	}
 }
 
@@ -150,7 +150,7 @@ func (p *BasePlayer) LoadPlayer(data share.LoadUserBak) error {
 	p.Entity.SetExtraData("account", p.Account)
 	p.Entity.SetExtraData("mailbox", p.Mailbox)
 	log.LogInfo("load player succeed,", player.GetName())
-	p.AddHeartbeat("timetosave", time.Minute*5, -1, p.TimeToSave, nil)
+	p.saveid = App.Kernel.AddTimer(time.Minute*5, -1, p.TimeToSave, nil)
 
 	if player.GetLastUpdateTime() == 0 {
 		player.SetLastUpdateTime(time.Now().Unix())
@@ -171,6 +171,8 @@ func (p *BasePlayer) DeletePlayer() {
 		App.Kernel.Destroy(p.Entity.GetObjId())
 		log.LogInfo("player destroy:", p.ChooseRole, " session:", p.Session)
 	}
+	App.Kernel.CancelTimer(p.saveid)
+	App.Kernel.CancelTimer(p.updateid)
 }
 
 func (p *BasePlayer) PlayerReady() {
@@ -180,7 +182,7 @@ func (p *BasePlayer) PlayerReady() {
 	p.CheckNewDay()
 	App.tasksystem.CheckTaskInfo(player)
 	//检查邮件心跳
-	p.AddHeartbeat("updatemin", time.Minute, -1, p.updatemin, nil)
+	p.updateid = App.Kernel.AddTimer(time.Minute, -1, p.updatemin, nil)
 	//清理过期的邮件
 	DeleteExpiredLetter(player)
 	if p.LandTimes == 0 {
@@ -198,7 +200,7 @@ func (p *BasePlayer) CheckNewDay() {
 	}
 }
 
-func (p *BasePlayer) updatemin(t time.Duration, count int32, args interface{}) {
+func (p *BasePlayer) updatemin(intervalid int64, t time.Duration, count int32, args interface{}) {
 	p.CheckNewDay()
 	//任务更新
 	App.tasksystem.OnUpdate(p.Entity.(*entity.Player))

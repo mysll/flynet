@@ -73,10 +73,11 @@ func (app *app) SendList() {
 
 func (app *app) Check() {
 	app.lastcheck = time.Now()
-	heartbeat := time.Tick(5 * time.Second)
+	heartbeat := time.NewTicker(5 * time.Second)
+	updatelist := time.NewTicker(time.Minute) //每分钟同步一下app列表
 	for !app.Shutdown {
 		select {
-		case <-heartbeat: //send heartbeat pkg
+		case <-heartbeat.C: //send heartbeat pkg
 			if time.Now().Sub(app.lastcheck).Seconds() > TIMEOUTSECS {
 				app.conn.Close()
 				return
@@ -86,11 +87,14 @@ func (app *app) Check() {
 				log.LogFatalf(err)
 			}
 			app.conn.Write(data)
-
+		case <-updatelist.C:
+			app.SendList()
 		case <-app.exit:
 			return
 		}
 	}
+	heartbeat.Stop()
+	updatelist.Stop()
 }
 
 func (app *app) Loop() {
