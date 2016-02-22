@@ -54,7 +54,7 @@ func (d *DbBridge) LookLetterBack(mailbox rpc.Mailbox, params share.DBParams) er
 func (d *DbBridge) createRole(mailbox rpc.Mailbox, obj entity.Entityer, account string, name string, index int, save *share.DbSave) error {
 	db := server.GetAppByType("database")
 	if db != nil {
-		trans := App.Kernel.GetLandpos(obj)
+		trans := App.GetLandpos(obj)
 		cu := share.CreateUser{}
 		cu.Account = account
 		cu.Name = name
@@ -192,8 +192,8 @@ func (d *DbBridge) savePlayer(p *BasePlayer, typ int) error {
 		return errors.New("player not created")
 	}
 
-	App.Kernel.Save(p.Entity, typ)
-	trans := App.Kernel.GetLandpos(p.Entity)
+	App.Save(p.Entity, typ)
+	trans := App.GetLandpos(p.Entity)
 	p.trans = trans
 	save := share.UpdateUser{}
 	save.Account = p.Account
@@ -217,7 +217,7 @@ func (d *DbBridge) savePlayer(p *BasePlayer, typ int) error {
 
 func (d *DbBridge) UpdateUserInfo(mailbox rpc.Mailbox, infos share.UpdateUserBak) error {
 	for _, info := range infos.Infos {
-		if e := App.Kernel.GetEntity(info.ObjId); e != nil {
+		if e := App.GetEntity(info.ObjId); e != nil {
 			e.SetDbId(info.DBId)
 			continue
 		}

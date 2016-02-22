@@ -43,8 +43,8 @@ type BasePlayer struct {
 	propsyncer  *server.PropSync
 	tablesyncer *server.TableSync
 	lastupdate  time.Time
-	saveid      int64
-	updateid    int64
+	saveid      server.TimerID
+	updateid    server.TimerID
 }
 
 //客户端断开连接
@@ -54,16 +54,16 @@ func (p *BasePlayer) Disconnect() {
 	}
 
 	p.Offline = true
-	App.Kernel.Disconnect(p.Entity)
+	App.Disconnect(p.Entity)
 	p.Leave()
 	log.LogInfo("player disconnect:", p.ChooseRole, " session:", p.Session)
 }
 
-func TimeToDel(intervalid int64, t time.Duration, count int32, args interface{}) {
+func TimeToDel(intervalid server.TimerID, count int32, args interface{}) {
 	App.Players.RemovePlayer(args.(int64))
 }
 
-func (p *BasePlayer) TimeToSave(intervalid int64, t time.Duration, count int32, args interface{}) {
+func (p *BasePlayer) TimeToSave(intervalid server.TimerID, count int32, args interface{}) {
 	p.SaveToDb(false)
 }
 
@@ -128,8 +128,8 @@ func (p *BasePlayer) SaveFailed() {
 		f := fmt.Sprintf("dump/%s_%d_%d_%d_%d_%d_%d.log", p.Account, now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
 
 		log.LogError("save player failed, dump info into:", f)
-		go App.Kernel.DumpInfo(*p, f)
-		App.Kernel.Timeout(time.Second*5, TimeToDel, p.Session)
+		go App.DumpInfo(*p, f)
+		App.Timeout(time.Second*5, TimeToDel, p.Session)
 	}
 }
 
@@ -138,19 +138,19 @@ func (p *BasePlayer) LoadPlayer(data share.LoadUserBak) error {
 	p.RoleInfo = data.Data.RoleInfo
 	p.LandTimes = data.LandTimes
 	var err error
-	p.Entity, err = App.Kernel.CreateFromDb(data.Data)
+	p.Entity, err = App.CreateFromDb(data.Data)
 	if err != nil {
 		log.LogError(err)
 		return err
 	}
 	p.State = STATE_READY
 	player := p.Entity.(*entity.Player)
-	App.Kernel.SetRoleInfo(p.Entity, p.RoleInfo)
-	App.Kernel.SetLandpos(p.Entity, p.trans)
+	App.SetRoleInfo(p.Entity, p.RoleInfo)
+	App.SetLandpos(p.Entity, p.trans)
 	p.Entity.SetExtraData("account", p.Account)
 	p.Entity.SetExtraData("mailbox", p.Mailbox)
 	log.LogInfo("load player succeed,", player.GetName())
-	p.saveid = App.Kernel.AddTimer(time.Minute*5, -1, p.TimeToSave, nil)
+	p.saveid = App.AddTimer(time.Minute*5, -1, p.TimeToSave, nil)
 
 	if player.GetLastUpdateTime() == 0 {
 		player.SetLastUpdateTime(time.Now().Unix())
@@ -160,19 +160,19 @@ func (p *BasePlayer) LoadPlayer(data share.LoadUserBak) error {
 	}
 
 	//同步玩家
-	App.Kernel.AttachPlayer(p.Entity, p.Mailbox)
+	App.AttachPlayer(p.Entity, p.Mailbox)
 	return err
 }
 
 func (p *BasePlayer) DeletePlayer() {
 	if p.Entity != nil {
-		App.Kernel.DetachPlayer(p.Entity)
+		App.DetachPlayer(p.Entity)
 		p.Entity.SetQuiting()
-		App.Kernel.Destroy(p.Entity.GetObjId())
+		App.Destroy(p.Entity.GetObjId())
 		log.LogInfo("player destroy:", p.ChooseRole, " session:", p.Session)
 	}
-	App.Kernel.CancelTimer(p.saveid)
-	App.Kernel.CancelTimer(p.updateid)
+	App.CancelTimer(p.saveid)
+	App.CancelTimer(p.updateid)
 }
 
 func (p *BasePlayer) PlayerReady() {
@@ -182,11 +182,11 @@ func (p *BasePlayer) PlayerReady() {
 	p.CheckNewDay()
 	App.tasksystem.CheckTaskInfo(player)
 	//检查邮件心跳
-	p.updateid = App.Kernel.AddTimer(time.Minute, -1, p.updatemin, nil)
+	p.updateid = App.AddTimer(time.Minute, -1, p.updatemin, nil)
 	//清理过期的邮件
 	DeleteExpiredLetter(player)
 	if p.LandTimes == 0 {
-		App.Kernel.Command(p.Entity.GetObjId(), p.Entity.GetObjId(), share.PLAYER_FIRST_LAND, nil)
+		App.Command(p.Entity.GetObjId(), p.Entity.GetObjId(), share.PLAYER_FIRST_LAND, nil)
 	}
 
 	server.MailTo(nil, &p.Mailbox, "Role.Ready", &s2c.Void{})
@@ -200,7 +200,7 @@ func (p *BasePlayer) CheckNewDay() {
 	}
 }
 
-func (p *BasePlayer) updatemin(intervalid int64, t time.Duration, count int32, args interface{}) {
+func (p *BasePlayer) updatemin(intervalid server.TimerID, count int32, args interface{}) {
 	p.CheckNewDay()
 	//任务更新
 	App.tasksystem.OnUpdate(p.Entity.(*entity.Player))

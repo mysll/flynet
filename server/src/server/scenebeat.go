@@ -64,7 +64,7 @@ func (slot *beatSlot) Run(t time.Time) {
 				} else {
 					callee := GetCallee(tick.ent.ObjTypeName())
 					for _, cl := range callee {
-						res := cl.OnTimer(tick.ent, tick.Params, tick.Count)
+						res := cl.OnTimer(tick.ent, tick.Count, tick.Params)
 						if res == 0 {
 							break
 						}

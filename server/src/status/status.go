@@ -40,10 +40,10 @@ func (this *StatusApp) OnLost(app string) {
 func (this *StatusApp) Exit() {
 	this.shutdown = 2
 	App.rm.savetotal()
-	App.AddHeartbeat("DelayQuit", time.Second, 1, this.DelayQuit, nil)
+	App.AddTimer(time.Second, 1, this.DelayQuit, nil)
 }
 
-func (this *StatusApp) DelayQuit(t time.Duration, count int32, args interface{}) {
+func (this *StatusApp) DelayQuit(intervalid server.TimerID, count int32, args interface{}) {
 	App.Shutdown()
 }
 

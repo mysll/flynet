@@ -26,7 +26,7 @@ func (b *BaseProxy) AddPlayer(mailbox rpc.Mailbox, player share.PlayerInfo) erro
 	ap.State = STATE_GAMING
 	ap.Trans = server.Transform{player.Scene, Vector3{player.X, player.Y, player.Z}, player.Dir}
 
-	App.Kernel.EntryScene(ap.Entity)
+	App.EntryScene(ap.Entity)
 	ap.State = STATE_GAMING
 	return base.Call(&mailbox, "AreaBridge.AddPlayerBak", "ok")
 }
@@ -66,7 +66,7 @@ func (b *BaseProxy) SyncPlayerBak(mailbox rpc.Mailbox, info map[ObjectID]ObjectI
 	}
 
 	for k, v := range info {
-		ent := App.Kernel.GetEntity(k)
+		ent := App.GetEntity(k)
 		if ent == nil {
 			log.LogError("object not found")
 			continue

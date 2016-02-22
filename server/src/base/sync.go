@@ -27,12 +27,12 @@ func (s *Sync) getAllChilds(obj entity.Entityer) {
 }
 func (s *Sync) sync(info *entity.EntityInfo) (obj entity.Entityer, err error) {
 	if info.ObjId.IsNil() {
-		obj, err = App.Kernel.CreateContainer(info.Type, int(info.Caps))
+		obj, err = App.CreateContainer(info.Type, int(info.Caps))
 		if err == nil {
 			s.newobj[info.ObjId] = obj.GetObjId()
 		}
 	} else {
-		obj = App.Kernel.GetEntity(info.ObjId)
+		obj = App.GetEntity(info.ObjId)
 		if obj != nil {
 			delete(s.childs, info.ObjId)
 		}
@@ -66,7 +66,7 @@ func (s *Sync) SyncPlayer(src rpc.Mailbox, infos map[string]interface{}) error {
 	mb := infos["mailbox"].(rpc.Mailbox)
 	info := infos["data"].(*entity.EntityInfo)
 	playerid := info.ObjId
-	player := App.Kernel.GetEntity(playerid)
+	player := App.GetEntity(playerid)
 	if player == nil || player.ObjType() != PLAYER {
 		log.LogError("sync player player not found", playerid)
 		return nil
@@ -80,7 +80,7 @@ func (s *Sync) SyncPlayer(src rpc.Mailbox, infos map[string]interface{}) error {
 	s.getAllChilds(player)
 	s.sync(info)
 	for k := range s.childs { //剩余的表示需要删除
-		App.Kernel.Destroy(k)
+		App.Destroy(k)
 	}
 
 	err := server.MailTo(&mb, &src, "BaseProxy.SyncPlayerBak", s.newobj)

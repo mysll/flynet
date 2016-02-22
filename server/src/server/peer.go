@@ -77,7 +77,7 @@ func (p *peer) Close() {
 
 func (p *peer) readloop() {
 	buffer := make([]byte, 2048)
-	for !context.Server.quit {
+	for !core.quit {
 		id, msg, err := util.ReadPkg(p.rwc, buffer)
 		if err != nil {
 			if err != io.EOF && !strings.Contains(err.Error(), "use of closed network connection") {

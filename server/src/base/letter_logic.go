@@ -125,7 +125,7 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, args c2s.Reqoperatemail
 		index := -1
 		var res int32
 		for k, appendix := range appendixs {
-			item, err := App.Kernel.CreateFromConfig(appendix.Configid)
+			item, err := App.CreateFromConfig(appendix.Configid)
 			if err != nil { //物品不存在
 				log.LogError("appendix not found ", appendix.Configid)
 				continue
@@ -140,15 +140,15 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, args c2s.Reqoperatemail
 
 			container := GetContainer(player, item)
 			if container == nil {
-				App.Kernel.Destroy(item.GetObjId())
+				App.Destroy(item.GetObjId())
 				flag = true
 				res = share.ERROR_SYSTEMERROR
 				break
 			}
 
-			_, err = App.Kernel.AddChild(container.GetObjId(), item.GetObjId(), -1)
+			_, err = App.AddChild(container.GetObjId(), item.GetObjId(), -1)
 			if err != nil {
-				App.Kernel.Destroy(item.GetObjId())
+				App.Destroy(item.GetObjId())
 				flag = true
 				res = share.ERROR_CONTAINER_FULL
 				break

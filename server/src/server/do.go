@@ -52,21 +52,21 @@ func DoEvent(e *event.Event) {
 
 	switch e.Typ {
 	case NEWUSERCONN:
-		context.Server.apper.OnClientConnected(e.Args["id"].(int64))
+		core.apper.OnClientConnected(e.Args["id"].(int64))
 		return
 	case LOSTUSERCONN:
-		context.Server.apper.OnClientLost(e.Args["id"].(int64))
-		context.Server.clientList.Remove(e.Args["id"].(int64))
+		core.apper.OnClientLost(e.Args["id"].(int64))
+		core.clientList.Remove(e.Args["id"].(int64))
 		return
 	case NEWAPPREADY:
-		context.Server.apper.OnReady(e.Args["id"].(string))
+		core.apper.OnReady(e.Args["id"].(string))
 		return
 	case APPLOST:
-		context.Server.apper.OnLost(e.Args["id"].(string))
+		core.apper.OnLost(e.Args["id"].(string))
 		return
 	}
 
-	context.Server.apper.OnEvent(e.Typ, e.Args)
+	core.apper.OnEvent(e.Typ, e.Args)
 
 }
 
@@ -116,7 +116,7 @@ func Run(s *Server) {
 
 		if now.Sub(s.Time.LastBeatTime) >= BeatTime {
 			//处理心跳
-			s.Pump()
+			s.timer.Pump()
 			s.apper.OnBeatRun()
 			//场景心跳
 			s.sceneBeat.Pump()
@@ -129,7 +129,7 @@ func Run(s *Server) {
 			//更新回调
 			s.apper.OnUpdate()
 			//更新kernel调度器
-			s.Kernel.OnUpdate()
+			s.OnUpdate()
 			//更新完成后回调
 			s.apper.OnLastUpdate()
 			s.Time.LastUpdateTime = now

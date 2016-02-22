@@ -39,7 +39,7 @@ type RemoteApp struct {
 func (app *RemoteApp) SetReady(ready bool) {
 	app.Ready = ready
 	log.LogInfo(app.AppId, " is ready")
-	context.Server.Emitter.Push(NEWAPPREADY, map[string]interface{}{"id": app.AppId}, true)
+	core.Emitter.Push(NEWAPPREADY, map[string]interface{}{"id": app.AppId}, true)
 }
 
 //向客户端发起一个远程调用
@@ -66,14 +66,14 @@ func (app *RemoteApp) ClientCall(src *rpc.Mailbox, session int64, method string,
 	}
 
 	if src == nil {
-		src = &context.Server.MailBox
+		src = &core.MailBox
 	}
 
 	app.Lock()
 	defer app.Unlock()
 
-	if app.AppId == context.Server.Id {
-		return context.Server.s2chelper.Call(*src, pb)
+	if app.AppId == core.Id {
+		return core.s2chelper.Call(*src, pb)
 	}
 
 	if app.Conn == nil {
@@ -120,13 +120,13 @@ func (app *RemoteApp) ClientBroadcast(src *rpc.Mailbox, session []int64, method 
 	}
 
 	if src == nil {
-		src = &context.Server.MailBox
+		src = &core.MailBox
 	}
 	app.Lock()
 	defer app.Unlock()
 
-	if app.AppId == context.Server.Id {
-		return context.Server.s2chelper.Broadcast(*src, pb)
+	if app.AppId == core.Id {
+		return core.s2chelper.Broadcast(*src, pb)
 	}
 
 	if app.Conn == nil {
@@ -167,15 +167,15 @@ func (app *RemoteApp) Log(log_name string, log_source, log_type int32, log_conte
 func (app *RemoteApp) Call(src *rpc.Mailbox, method string, args ...interface{}) error {
 
 	if src == nil {
-		src = &context.Server.MailBox
+		src = &core.MailBox
 	}
 
 	app.Lock()
 	defer app.Unlock()
 
-	if app.AppId == context.Server.Id {
+	if app.AppId == core.Id {
 		log.LogMessage("rpc inner call:", method)
-		return context.Server.rpcServer.DirectCall("S2S"+method, *src, args...)
+		return core.rpcServer.DirectCall("S2S"+method, *src, args...)
 	}
 
 	if app.Conn == nil {
@@ -207,9 +207,9 @@ func (app *RemoteApp) Handle(src rpc.Mailbox, method string, args interface{}) e
 	app.Lock()
 	defer app.Unlock()
 
-	if app.AppId == context.Server.Id {
+	if app.AppId == core.Id {
 		log.LogMessage("rpc inner handle:", method)
-		return context.Server.rpcServer.DirectCall("C2S"+method, src, args)
+		return core.rpcServer.DirectCall("C2S"+method, src, args)
 	}
 
 	if app.Conn == nil {
@@ -241,7 +241,7 @@ func (app *RemoteApp) Close() {
 		app.Conn = nil
 	}
 
-	context.Server.Emitter.Push(APPLOST, map[string]interface{}{"id": app.AppId}, true)
+	core.Emitter.Push(APPLOST, map[string]interface{}{"id": app.AppId}, true)
 }
 
 //往DB写日志，当前app必须是database,log_name为写日志的对象名称，可以是一个玩家的名字，可以是其它的信息。
@@ -268,8 +268,8 @@ func MailTo(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args ...interfac
 	defer applock.RUnlock()
 	log.LogMessage("mailto:", *dest, "/", method)
 	var app *RemoteApp
-	if dest.Address == context.Server.Id {
-		app = &RemoteApp{AppId: context.Server.Id}
+	if dest.Address == core.Id {
+		app = &RemoteApp{AppId: core.Id}
 	} else {
 		var exist bool
 		if app, exist = RemoteApps[dest.Address]; !exist {
@@ -334,7 +334,7 @@ func GetAppIdsByType(typ string) []string {
 func AddApp(typ string, id string, host string, port int, clienthost string, clientport int, ready bool) {
 	applock.Lock()
 	defer applock.Unlock()
-	if context.Server.Id == id {
+	if core.Id == id {
 		return
 	}
 	if app, ok := RemoteApps[id]; ok {
@@ -347,10 +347,10 @@ func AddApp(typ string, id string, host string, port int, clienthost string, cli
 	}
 
 	RemoteApps[id] = &RemoteApp{Type: typ, AppId: id, Host: host, Port: port, ClientHost: clienthost, ClientPort: clientport, Ready: ready}
-	log.LogInfo(context.Server.Id, "> add server:", *RemoteApps[id])
+	log.LogInfo(core.Id, "> add server:", *RemoteApps[id])
 	if ready {
 		RemoteApps[id].SetReady(ready)
-		context.Server.Eventer.DispatchEvent("ready", id)
+		core.Eventer.DispatchEvent("ready", id)
 	}
 }
 
@@ -358,16 +358,16 @@ func AddApp(typ string, id string, host string, port int, clienthost string, cli
 func RemoveApp(id string) {
 	applock.Lock()
 	defer applock.Unlock()
-	if context.Server.Id == id {
+	if core.Id == id {
 		return
 	}
 	if _, ok := RemoteApps[id]; ok {
 		RemoteApps[id].Close()
 		delete(RemoteApps, id)
-		log.LogInfo(context.Server.Id, "> remove server:", id)
+		log.LogInfo(core.Id, "> remove server:", id)
 		return
 	}
 
-	log.LogError(context.Server.Id, "> remove server failed, ", id)
+	log.LogError(core.Id, "> remove server failed, ", id)
 
 }

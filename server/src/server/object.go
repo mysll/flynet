@@ -155,7 +155,7 @@ type Objecter interface {
 	//		self:entity
 	//		args:参数
 	//    	count:定时器剩余次数
-	OnTimer(self entity.Entityer, args interface{}, count int32) int
+	OnTimer(self entity.Entityer, count int32, args interface{}) int
 }
 
 type Callee struct {
@@ -225,6 +225,6 @@ func (c *Callee) OnPropertyChange(self entity.Entityer, prop string, old interfa
 	return 1
 }
 
-func (c *Callee) OnTimer(self entity.Entityer, args interface{}, count int32) int {
+func (c *Callee) OnTimer(self entity.Entityer, count int32, args interface{}) int {
 	return 1
 }

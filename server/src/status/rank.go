@@ -104,7 +104,7 @@ func (rm *RankManager) savetotal() {
 	}
 }
 
-func (rm *RankManager) checkexpire(t time.Duration, count int32, args interface{}) {
+func (rm *RankManager) checkexpire(intervalid server.TimerID, count int32, args interface{}) {
 	db := server.GetAppByType("database")
 	if db == nil {
 		log.LogError("db not found")
@@ -128,7 +128,7 @@ func (rm *RankManager) checkexpire(t time.Duration, count int32, args interface{
 	}
 }
 
-func (rm *RankManager) timecheck(t time.Duration, count int32, args interface{}) {
+func (rm *RankManager) timecheck(intervalid server.TimerID, count int32, args interface{}) {
 	db := server.GetAppByType("database")
 	if db == nil {
 		log.LogError("db not found")
@@ -175,8 +175,8 @@ func (rm *RankManager) load() {
 	}
 
 	server.NewDBWarp(db).QueryRows(nil, "survive_ranking", "", "score DESC", 0, 100, "RankManager.LoadSurvive", share.DBParams{"rankname": "survive_ranking"})
-	App.AddHeartbeat("checkexpire", time.Minute, -1, rm.checkexpire, nil)
-	App.AddHeartbeat("timecheck", time.Minute*5, -1, rm.timecheck, nil)
+	App.AddTimer(time.Minute, -1, rm.checkexpire, nil)
+	App.AddTimer(time.Minute*5, -1, rm.timecheck, nil)
 }
 
 func (rm *RankManager) LoadSurvive(mailbox rpc.Mailbox, params share.DBParams, result []share.DBRow, index, count int) error {

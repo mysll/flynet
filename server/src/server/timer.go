@@ -11,10 +11,11 @@ import (
 	"time"
 )
 
-type TimerCB func(intervalid int64, t time.Duration, count int32, args interface{})
+type TimerCB func(intervalid TimerID, count int32, args interface{})
 
+type TimerID int64
 type timerTick struct {
-	IntervalId int64
+	IntervalId TimerID
 	Params     interface{}
 	Last       time.Time
 	Interval   time.Duration
@@ -45,7 +46,6 @@ func (slot *tickSlot) Run(t time.Time) {
 		tick := e.Value.(*timerTick)
 		if !tick.deleted {
 			if dur := t.Sub(tick.Last); dur >= tick.Interval {
-				tick.cb(tick.IntervalId, dur, tick.Count, tick.Params)
 				tick.Last = t
 				if tick.Count > 0 {
 					tick.Count--
@@ -53,7 +53,7 @@ func (slot *tickSlot) Run(t time.Time) {
 						tick.deleted = true
 					}
 				}
-
+				tick.cb(tick.IntervalId, tick.Count, tick.Params)
 				slot.info.Remove(e)
 				slot.info.PushBack(tick)
 
@@ -75,8 +75,8 @@ type tickIndex struct {
 type Timer struct {
 	freeHeart  *timerTick
 	heartbeats map[int64]*tickSlot
-	beatHash   map[int64]*tickIndex
-	serial     int64
+	beatHash   map[TimerID]*tickIndex
+	serial     TimerID
 }
 
 func (this *Timer) getTick() *timerTick {
@@ -98,7 +98,7 @@ func (this *Timer) freeTick(tick *timerTick) {
 	this.freeHeart = tick
 }
 
-func (this *Timer) find(intervalId int64) *tickIndex {
+func (this *Timer) find(intervalId TimerID) *tickIndex {
 	if mbi, ok := this.beatHash[intervalId]; ok {
 		return mbi
 	}
@@ -134,7 +134,7 @@ func (this *Timer) deleteTick(tick *timerTick) {
 	this.freeTick(tick)
 }
 
-func (this *Timer) ResetCount(intervalId int64, count int32) bool {
+func (this *Timer) ResetCount(intervalId TimerID, count int32) bool {
 	l := this.find(intervalId)
 	if l == nil || l.elem.deleted {
 		return false
@@ -144,7 +144,7 @@ func (this *Timer) ResetCount(intervalId int64, count int32) bool {
 	return true
 }
 
-func (this *Timer) Find(intervalId int64) bool {
+func (this *Timer) Find(intervalId TimerID) bool {
 	if this.find(intervalId) != nil {
 		return true
 	}
@@ -152,11 +152,11 @@ func (this *Timer) Find(intervalId int64) bool {
 	return false
 }
 
-func (this *Timer) Timeout(t time.Duration, cb TimerCB, param interface{}) int64 {
+func (this *Timer) Timeout(t time.Duration, cb TimerCB, param interface{}) TimerID {
 	return this.AddTimer(t, 1, cb, param)
 }
 
-func (this *Timer) AddTimer(t time.Duration, count int32, cb TimerCB, param interface{}) int64 {
+func (this *Timer) AddTimer(t time.Duration, count int32, cb TimerCB, param interface{}) TimerID {
 
 	if t < time.Millisecond {
 		log.LogError("heartbeat duration must above 1 millisecond,", t)
@@ -199,7 +199,7 @@ func (this *Timer) AddTimer(t time.Duration, count int32, cb TimerCB, param inte
 	return tick.IntervalId
 }
 
-func (this *Timer) Cancel(intervalId int64) bool {
+func (this *Timer) Cancel(intervalId TimerID) bool {
 	bi := this.find(intervalId)
 	if bi != nil {
 		bi.elem.deleted = true
@@ -211,7 +211,7 @@ func (this *Timer) Cancel(intervalId int64) bool {
 func NewTimer() *Timer {
 	beat := &Timer{}
 	beat.heartbeats = make(map[int64]*tickSlot, 100)
-	beat.beatHash = make(map[int64]*tickIndex, 1000)
+	beat.beatHash = make(map[TimerID]*tickIndex, 1000)
 	beat.serial = 0
 	return beat
 }

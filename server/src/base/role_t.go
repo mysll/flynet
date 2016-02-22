@@ -20,7 +20,7 @@ type RoleCallee struct {
 func (r *RoleCallee) OnCreateRole(self entity.Entityer, args interface{}) int {
 	createinfo := args.(c2s.Create)
 	player := self.(*entity.Player)
-	err := App.Kernel.LoadFromConfig(self, fmt.Sprintf("%d", createinfo.GetSex()+1))
+	err := App.LoadFromConfig(self, fmt.Sprintf("%d", createinfo.GetSex()+1))
 	player.SetConfig("")
 	if err != nil {
 		log.LogError(err)
@@ -31,7 +31,7 @@ func (r *RoleCallee) OnCreateRole(self entity.Entityer, args interface{}) int {
 	player.SetName(createinfo.GetName())
 	player.SetSex(int8(createinfo.GetSex()))
 
-	App.Kernel.SetLandpos(self, server.Transform{"hall", Vector3{0, 0, 0}, 0})
-	App.Kernel.SetRoleInfo(self, fmt.Sprintf("%d", player.GetSex()))
+	App.SetLandpos(self, server.Transform{"hall", Vector3{0, 0, 0}, 0})
+	App.SetRoleInfo(self, fmt.Sprintf("%d", player.GetSex()))
 	return 1
 }

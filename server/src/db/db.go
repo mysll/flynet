@@ -30,6 +30,7 @@ type DBApp struct {
 	db         DBer
 	pools      int
 	rolelimit  int
+	keepid     server.TimerID
 }
 
 func parseArgs() {
@@ -126,10 +127,10 @@ func (d *DBApp) OnPrepare() bool {
 }
 
 func (d *DBApp) OnStart() {
-	d.AddHeartbeat("keepalive", time.Minute, -1, d.DbKeepAlive, nil)
+	d.keepid = App.AddTimer(time.Minute, -1, d.DbKeepAlive, nil)
 }
 
-func (d *DBApp) DbKeepAlive(t time.Duration, count int32, args interface{}) {
+func (d *DBApp) DbKeepAlive(intervalid server.TimerID, count int32, args interface{}) {
 	App.db.KeepAlive()
 }
 
@@ -146,6 +147,7 @@ func (d *DBApp) OnLost(app string) {
 
 func (d *DBApp) Exit() {
 	d.shutdown = 2
+	App.CancelTimer(d.keepid)
 	App.db.Close()
 	App.Shutdown()
 }

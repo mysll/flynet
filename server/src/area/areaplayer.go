@@ -33,7 +33,7 @@ type AreaPlayer struct {
 
 func (a *AreaPlayer) DeletePlayer() {
 	if a.Entity != nil {
-		App.Kernel.Destroy(a.Entity.GetObjId())
+		App.Destroy(a.Entity.GetObjId())
 	}
 }
 
@@ -46,7 +46,7 @@ func (a *AreaPlayer) Save(remove bool) {
 		typ = share.SAVETYPE_TIMER
 	}
 
-	App.Kernel.Save(a.Entity, typ)
+	App.Save(a.Entity, typ)
 }
 
 func (a *AreaPlayer) LevelScene() {
@@ -68,7 +68,7 @@ func (p *PlayerList) AddPlayer(mailbox rpc.Mailbox, data *entity.EntityInfo) *Ar
 		return nil
 	}
 
-	ent, err := App.Kernel.CreateFromArchive(data,
+	ent, err := App.CreateFromArchive(data,
 		map[string]interface{}{
 			"mailbox": mailbox,
 			"base":    rpc.Mailbox{Address: mailbox.Address},
@@ -81,13 +81,13 @@ func (p *PlayerList) AddPlayer(mailbox rpc.Mailbox, data *entity.EntityInfo) *Ar
 	nameinter, err := ent.Get("Name")
 	if err != nil {
 		log.LogError(err)
-		App.Kernel.Destroy(ent.GetObjId())
+		App.Destroy(ent.GetObjId())
 		return nil
 	}
 	name := nameinter.(string)
 	if _, dup := p.namelist[name]; dup {
 		log.LogError("player name conflict")
-		App.Kernel.Destroy(ent.GetObjId())
+		App.Destroy(ent.GetObjId())
 		return nil
 	}
 
@@ -107,7 +107,7 @@ func (p *PlayerList) AddPlayer(mailbox rpc.Mailbox, data *entity.EntityInfo) *Ar
 	}
 
 	pl.Cell = cell
-	App.Kernel.PlaceObj(
+	App.PlaceObj(
 		cell.scene,
 		ent,
 		Vector3{
@@ -137,7 +137,7 @@ func (p *PlayerList) GetPlayer(mailbox rpc.Mailbox) *AreaPlayer {
 func (p *PlayerList) RemovePlayer(mailbox rpc.Mailbox) bool {
 	if pl, exist := p.players[mailbox.Uid]; exist && !pl.Deleted {
 		if pl.Cell != nil {
-			err := App.Kernel.RemoveChild(pl.Cell.scene, pl.Entity)
+			err := App.RemoveChild(pl.Cell.scene, pl.Entity)
 			if err != nil {
 				log.LogError(err)
 			}

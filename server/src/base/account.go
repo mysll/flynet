@@ -40,14 +40,14 @@ func (a *Account) CreatePlayer(mailbox rpc.Mailbox, args c2s.Create) error {
 		log.LogWarning("player state not logged")
 		return nil
 	}
-	obj, err := App.Kernel.CreateRole("Player", args)
+	obj, err := App.CreateRole("Player", args)
 	if err != nil {
 		return err
 	}
 
 	save := share.GetSaveData(obj)
 	err = App.DbBridge.createRole(mailbox, obj, player.Account, args.GetName(), int(args.GetIndex()), save)
-	App.Kernel.Destroy(obj.GetObjId())
+	App.Destroy(obj.GetObjId())
 	return err
 }
 

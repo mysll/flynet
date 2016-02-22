@@ -103,7 +103,7 @@ func createRpc() *rpc.Server {
 		}
 
 		//save file
-		file, err := os.Create("interface/" + context.Server.Id + "_rpc.xml")
+		file, err := os.Create("interface/" + core.Id + "_rpc.xml")
 		if err != nil {
 			log.LogError("writer", err)
 			return rpc

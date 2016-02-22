@@ -36,7 +36,7 @@ func (mp *master_peer) Handle(id uint16, msgbody []byte) error {
 		if err != nil {
 			log.LogFatalf(err)
 		}
-		context.Server.noder.Send(data)
+		core.noder.Send(data)
 	case share.M_READY:
 		var ready share.AppReady
 		if err := share.DecodeMsg(msgbody, &ready); err != nil {
@@ -51,15 +51,15 @@ func (mp *master_peer) Handle(id uint16, msgbody []byte) error {
 	case share.M_MUSTAPPREADY:
 		{
 			log.LogMessage("must app ready")
-			context.Server.MustReady()
+			core.MustReady()
 		}
 	case share.M_SHUTDOWN:
-		context.Server.Closing = true
-		close(context.Server.exitChannel)
+		core.Closing = true
+		close(core.exitChannel)
 		return nil
 	}
 
-	context.Server.Emitter.Push(MASERTINMSG, map[string]interface{}{"msg": MasterMsg{id, msgbody}}, false)
+	core.Emitter.Push(MASERTINMSG, map[string]interface{}{"msg": MasterMsg{id, msgbody}}, false)
 	return nil
 
 }

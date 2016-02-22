@@ -76,7 +76,7 @@ func (p *Player) Store(t time.Duration, count int32, args interface{}) {
 	mb := args.(rpc.Mailbox)
 	pl := App.players.GetPlayer(mb)
 	if pl != nil {
-		App.Kernel.Save(pl.Entity, share.SAVETYPE_TIMER)
+		App.Save(pl.Entity, share.SAVETYPE_TIMER)
 	}
 }
 

@@ -101,9 +101,9 @@ type Kernel struct {
 	schedulerid int32
 }
 
-func NewKernel() *Kernel {
+func NewKernel(factory *Factory) *Kernel {
 	k := &Kernel{}
-	k.factory = context.Server.ObjectFactory
+	k.factory = factory
 	k.scheduler = make(map[int32]Scheduler, 1024)
 	return k
 }
@@ -827,43 +827,43 @@ func (k *Kernel) PlaceObj(scene entity.Entityer, object entity.Entityer, pos Vec
 	return true
 }
 
-func (k *Kernel) CancelTimer(intervalid int64) {
-	context.Server.Cancel(intervalid)
+func (k *Kernel) CancelTimer(intervalid TimerID) {
+	core.timer.Cancel(intervalid)
 }
 
 //增加一个定时器
-func (k *Kernel) AddTimer(t time.Duration, count int32, cb TimerCB, param interface{}) (intervalid int64) {
-	return context.Server.AddTimer(t, count, cb, param)
+func (k *Kernel) AddTimer(t time.Duration, count int32, cb TimerCB, param interface{}) (intervalid TimerID) {
+	return core.timer.AddTimer(t, count, cb, param)
 }
 
 //增加一个超时
-func (k *Kernel) Timeout(t time.Duration, cb TimerCB, param interface{}) (intervalid int64) {
-	return context.Server.Timeout(t, cb, param)
+func (k *Kernel) Timeout(t time.Duration, cb TimerCB, param interface{}) (intervalid TimerID) {
+	return core.timer.Timeout(t, cb, param)
 }
 
 //增加一个心跳
 func (k *Kernel) AddHeartbeat(object entity.Entityer, beat string, t time.Duration, count int32, args interface{}) bool {
-	return context.Server.sceneBeat.Add(object, beat, t, count, args)
+	return core.sceneBeat.Add(object, beat, t, count, args)
 }
 
 //移除某个心跳
 func (k *Kernel) RemoveHeartbeat(obj ObjectID, beat string) bool {
-	return context.Server.sceneBeat.Remove(obj, beat)
+	return core.sceneBeat.Remove(obj, beat)
 }
 
 //移除某个对象所有心跳
 func (k *Kernel) RemoveObjectHeartbeat(obj ObjectID) {
-	context.Server.sceneBeat.RemoveObjectBeat(obj)
+	core.sceneBeat.RemoveObjectBeat(obj)
 }
 
 //重置心跳的次数
 func (k *Kernel) ResetBeatCount(obj ObjectID, beat string, count int32) bool {
-	return context.Server.sceneBeat.ResetCount(obj, beat, count)
+	return core.sceneBeat.ResetCount(obj, beat, count)
 }
 
 //保存当前所有的心跳，并且从场景中分离出来
 func (k *Kernel) DeatchBeat(object entity.Entityer) bool {
-	return context.Server.sceneBeat.Deatch(object)
+	return core.sceneBeat.Deatch(object)
 }
 
 //sender给target发送消息

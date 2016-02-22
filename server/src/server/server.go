@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	context = &Context{}
+	core *Server
 )
 
 const (
@@ -29,7 +29,8 @@ const (
 )
 
 type Server struct {
-	*Timer
+	*Kernel
+	timer           *Timer
 	StartArgs       *simplejson.Json
 	Type            string
 	Host            string
@@ -48,7 +49,6 @@ type Server struct {
 	Eventer         *EventListener
 	WaitGroup       *util.WaitGroupWrapper
 	IsReady         bool
-	Kernel          *Kernel
 	Time            Time
 	AssetPath       string
 	Closing         bool
@@ -233,7 +233,7 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 	}
 
 	serial := (uint64(time.Now().Unix()%0x80000000) << 32) | (uint64(svr.AppId) << 24)
-	svr.Kernel.setSerial(serial)
+	svr.setSerial(serial)
 	log.LogMessage("start serial:", fmt.Sprintf("%X", serial))
 	if !svr.apper.OnPrepare() {
 
@@ -350,9 +350,9 @@ func (svr *Server) MustReady() {
 
 func NewServer(app Apper, id int32) *Server {
 	s := &Server{}
-	context.Server = s
+	core = s
 	s.AppId = id
-	s.Timer = NewTimer()
+	s.timer = NewTimer()
 	s.WaitGroup = &util.WaitGroupWrapper{}
 	s.exitChannel = make(chan struct{})
 	s.shutdown = make(chan struct{})
@@ -361,7 +361,7 @@ func NewServer(app Apper, id int32) *Server {
 	s.apper = app
 	s.Emitter = event.NewEventList()
 	s.ObjectFactory = NewFactory()
-	s.Kernel = NewKernel()
+	s.Kernel = NewKernel(s.ObjectFactory)
 	s.channel = make(map[string]*Channel, 32)
 	s.sceneBeat = NewSceneBeat()
 

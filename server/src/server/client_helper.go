@@ -26,7 +26,7 @@ func (ch *C2SHelper) Call(sender rpc.Mailbox, request c2s.Rpc) error {
 
 	var app *RemoteApp
 	if node == "." {
-		app = &RemoteApp{AppId: context.Server.Id}
+		app = &RemoteApp{AppId: core.Id}
 	} else {
 		if app = GetApp(node); app == nil {
 			return ErrAppNotFound
@@ -54,7 +54,7 @@ func NewS2CHelper() *S2CHelper {
 func (s *S2CHelper) flush() {
 	for k, v := range s.cachedata {
 		if v != nil {
-			c := context.Server.clientList.FindNode(k)
+			c := core.clientList.FindNode(k)
 			if c != nil {
 				if err := c.SendMessage(v); err != nil {
 					log.LogError(k, err)
@@ -77,7 +77,7 @@ func (s *S2CHelper) Call(src rpc.Mailbox, request share.S2CMsg) error {
 }
 
 func (s *S2CHelper) call(src rpc.Mailbox, session int64, method string, out []byte) error {
-	c := context.Server.clientList.FindNode(session)
+	c := core.clientList.FindNode(session)
 	if c == nil {
 		return ErrClientNotFound
 	}
