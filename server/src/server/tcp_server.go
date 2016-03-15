@@ -9,6 +9,8 @@ import (
 	"share"
 	"util"
 
+	"golang.org/x/net/websocket"
+
 	pb "github.com/golang/protobuf/proto"
 )
 
@@ -59,7 +61,8 @@ func (c *ClientHandler) Handle(clientconn net.Conn) {
 		clientconn.Close()
 		return
 	}
-	id := core.clientList.Add(clientconn)
+
+	id := core.clientList.Add(clientconn, clientconn.RemoteAddr().String())
 	mailbox := rpc.NewMailBox(core.Id, "session", id, core.AppId)
 	core.Emitter.Push(NEWUSERCONN, map[string]interface{}{"id": id}, true)
 	cl := core.clientList.FindNode(id)
@@ -70,6 +73,31 @@ func (c *ClientHandler) Handle(clientconn net.Conn) {
 	codec.cachebuf = make([]byte, SENDBUFLEN)
 	codec.node = cl
 	log.LogInfo("new client:", mailbox, ",", clientconn.RemoteAddr())
+	core.rpcServer.ServeCodec(codec, core.rpcCh)
+	core.Emitter.Push(LOSTUSERCONN, map[string]interface{}{"id": cl.Session}, true)
+	log.LogMessage("client handle quit")
+}
+
+type WSClientHandler struct {
+}
+
+func (c *WSClientHandler) Handle(ws *websocket.Conn) {
+	if core.Closing {
+		ws.Close()
+		return
+	}
+	rwc := NewWSConn(ws)
+	id := core.clientList.Add(rwc, ws.RemoteAddr().String())
+	mailbox := rpc.NewMailBox(core.Id, "session", id, core.AppId)
+	core.Emitter.Push(NEWUSERCONN, map[string]interface{}{"id": id}, true)
+	cl := core.clientList.FindNode(id)
+	cl.MailBox = mailbox
+	cl.Run()
+	codec := &ClientCodec{}
+	codec.rwc = rwc
+	codec.cachebuf = make([]byte, SENDBUFLEN)
+	codec.node = cl
+	log.LogInfo("new client:", mailbox, ",", ws.RemoteAddr())
 	core.rpcServer.ServeCodec(codec, core.rpcCh)
 	core.Emitter.Push(LOSTUSERCONN, map[string]interface{}{"id": cl.Session}, true)
 	log.LogMessage("client handle quit")

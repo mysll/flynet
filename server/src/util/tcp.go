@@ -3,8 +3,11 @@ package util
 import (
 	"libs/log"
 	"net"
+	"net/http"
 	"runtime"
 	"strings"
+
+	"golang.org/x/net/websocket"
 )
 
 type TCPHandler interface {
@@ -31,4 +34,15 @@ func TCPServer(listener net.Listener, handler TCPHandler) {
 	}
 
 	log.TraceInfo("TCP", "closing ", listener.Addr().String())
+}
+
+type WSHandler interface {
+	Handle(ws *websocket.Conn)
+}
+
+func WSServer(l net.Listener, handler WSHandler) {
+	log.TraceInfo("TCP", "listening on ", l.Addr().String())
+	http.Handle("/socket.io", websocket.Handler(handler.Handle))
+	http.Serve(l, nil)
+	log.TraceInfo("TCP", "closing ", l.Addr().String())
 }

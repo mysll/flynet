@@ -27,8 +27,14 @@ func (l *LoginMgr) OnPrepare() bool {
 		panic(err)
 	}
 	l.listener = listener
-	tcpserver := &handler{}
-	l.WaitGroup.Wrap(func() { util.TCPServer(listener, tcpserver) })
+	log.TraceInfo("sockettype:", l.Sockettype)
+	switch l.Sockettype {
+	case "websocket":
+		l.WaitGroup.Wrap(func() { util.WSServer(listener, &wshandler{}) })
+	default:
+		l.WaitGroup.Wrap(func() { util.TCPServer(listener, &handler{}) })
+	}
+
 	log.TraceInfo(l.Id, "start link complete")
 	return true
 }

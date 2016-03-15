@@ -34,7 +34,6 @@ func ReadPkg(r io.Reader, buff []byte) (id uint16, msgbody []byte, err error) {
 	if err = binary.Read(r, binary.LittleEndian, &size); err != nil {
 		return
 	}
-
 	if err = binary.Read(r, binary.LittleEndian, &id); err != nil {
 		return
 	}

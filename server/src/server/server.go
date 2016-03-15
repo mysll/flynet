@@ -30,44 +30,44 @@ const (
 
 type Server struct {
 	*Kernel
-	timer           *Timer
-	StartArgs       *simplejson.Json
-	Type            string
-	Host            string
-	Port            int
-	ClientHost      string
-	ClientPort      int
-	AppId           int32
-	Id              string
-	Fronted         bool
-	Debug           bool
-	PProfPort       int
-	ObjectFactory   *Factory
-	MustAppReady    bool
-	MailBox         rpc.Mailbox
-	Emitter         *event.EventList
-	Eventer         *EventListener
-	WaitGroup       *util.WaitGroupWrapper
-	IsReady         bool
-	Time            Time
-	AssetPath       string
-	Closing         bool
-	channel         map[string]*Channel
-	noder           *peer
-	clientListener  net.Listener
-	exitChannel     chan struct{}
-	shutdown        chan struct{}
-	clientTcpServer *ClientHandler //客户端
-	rpcListener     net.Listener   //rpc监听
-	rpcServer       *rpc.Server
-	rpcCh           chan *rpc.RpcCall
-	apper           Apper
-	quit            bool
-	clientList      *ClientList
-	sceneBeat       *SceneBeat
-	startTime       time.Time
-	s2chelper       *S2CHelper
-	c2shelper       *C2SHelper
+	timer          *Timer
+	StartArgs      *simplejson.Json
+	Type           string
+	Host           string
+	Port           int
+	ClientHost     string
+	ClientPort     int
+	AppId          int32
+	Id             string
+	Fronted        bool
+	Debug          bool
+	PProfPort      int
+	ObjectFactory  *Factory
+	MustAppReady   bool
+	MailBox        rpc.Mailbox
+	Emitter        *event.EventList
+	Eventer        *EventListener
+	WaitGroup      *util.WaitGroupWrapper
+	IsReady        bool
+	Time           Time
+	AssetPath      string
+	Closing        bool
+	channel        map[string]*Channel
+	noder          *peer
+	clientListener net.Listener
+	exitChannel    chan struct{}
+	shutdown       chan struct{}
+	rpcListener    net.Listener //rpc监听
+	rpcServer      *rpc.Server
+	rpcCh          chan *rpc.RpcCall
+	apper          Apper
+	quit           bool
+	clientList     *ClientList
+	sceneBeat      *SceneBeat
+	startTime      time.Time
+	s2chelper      *S2CHelper
+	c2shelper      *C2SHelper
+	Sockettype     string
 }
 
 type StartStoper interface {
@@ -156,6 +156,16 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 		svr.Fronted = v
 	}
 
+	svr.Sockettype = "native"
+	if Sockettype, ok := args.CheckGet("sockettype"); ok {
+		v, err := Sockettype.String()
+		if err != nil {
+			panic(err)
+		}
+
+		svr.Sockettype = v
+	}
+
 	//rpc端口
 	r, err := net.Listen("tcp", fmt.Sprintf("%s:%d", svr.Host, svr.Port))
 	if err != nil {
@@ -178,9 +188,13 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 			svr.ClientPort = listener.Addr().(*net.TCPAddr).Port
 		}
 
-		tcpserver := &ClientHandler{}
-		svr.clientTcpServer = tcpserver
-		svr.WaitGroup.Wrap(func() { util.TCPServer(svr.clientListener, tcpserver) })
+		switch svr.Sockettype {
+		case "websocket":
+			svr.WaitGroup.Wrap(func() { util.WSServer(svr.clientListener, &WSClientHandler{}) })
+		default:
+			svr.WaitGroup.Wrap(func() { util.TCPServer(svr.clientListener, &ClientHandler{}) })
+		}
+
 		log.TraceInfo(svr.Id, "start link complete")
 	}
 

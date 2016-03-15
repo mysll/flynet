@@ -31,7 +31,9 @@
 		"#clientport": "供客户端连接的端口，为0，则为随机端口",
 		"clientport": 0,
 		"#fronted": "是否提供客户端服务，为true,打开clientport端口",
-		"fronted": true
+		"fronted": true,
+		"#sockettype": "socket类型, 可选websocket, native, 默认为native",
+		"sockettype": "native"
 	}],
 	"loginmgr": [{
 		"#id": "appid,全局唯一，不能重复",
@@ -41,7 +43,9 @@
 		"#clientport": "供客户端连接的端口，为0，则为随机端口",
 		"clientport": 5391,
 		"#fronted": "是否提供客户端服务，为true,打开clientport端口",
-		"fronted": true
+		"fronted": true,
+		"#sockettype": "socket类型, 可选websocket, native, 默认为native",
+		"sockettype": "native"
 	}],
 	"base": [{
 		"#id": "appid,全局唯一，不能重复",
@@ -52,6 +56,8 @@
 		"clientport": 0,
 		"#fronted": "是否提供客户端服务，为true,打开clientport端口",
 		"fronted": true,
+		"#sockettype": "socket类型, 可选websocket, native, 默认为native",
+		"sockettype": "native",
 		"#assets": "资源目录",
 		"assets":"../assets",
 		"#loglevel":"日志记录等级，0:FINEST，1:FINE，2:DEBUG，3:TRACE，4:INFO，5:WARNING，6:ERROR，7:CRITICAL",

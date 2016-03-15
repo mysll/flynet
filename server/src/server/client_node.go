@@ -5,7 +5,6 @@ import (
 	"io"
 	"libs/log"
 	"libs/rpc"
-	"net"
 	"sync"
 	"time"
 )
@@ -144,14 +143,14 @@ func (cl *ClientList) CloseAll() {
 }
 
 //增加一个客户端连接
-func (cl *ClientList) Add(c net.Conn) int64 {
+func (cl *ClientList) Add(c io.ReadWriteCloser, addr string) int64 {
 	cl.l.Lock()
 	defer cl.l.Unlock()
 	cl.serial++
 	cn := NewClientNode()
 	cn.Session = cl.serial
 	cn.Connected = true
-	cn.Addr = c.RemoteAddr().String()
+	cn.Addr = addr
 	cn.rwc = c
 	cn.DelayDestroy = -1
 	cn.lastping = time.Now()
