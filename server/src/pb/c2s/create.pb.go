@@ -26,6 +26,7 @@ type Create struct {
 	Name             *string `protobuf:"bytes,1,req,name=name" json:"name,omitempty"`
 	Index            *int32  `protobuf:"varint,2,req,name=index" json:"index,omitempty"`
 	Sex              *int32  `protobuf:"varint,3,req,name=sex" json:"sex,omitempty"`
+	Roleid           *int32  `protobuf:"varint,4,req,name=roleid" json:"roleid,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
@@ -50,6 +51,13 @@ func (m *Create) GetIndex() int32 {
 func (m *Create) GetSex() int32 {
 	if m != nil && m.Sex != nil {
 		return *m.Sex
+	}
+	return 0
+}
+
+func (m *Create) GetRoleid() int32 {
+	if m != nil && m.Roleid != nil {
+		return *m.Roleid
 	}
 	return 0
 }

@@ -2,6 +2,9 @@
 
   flynet是一个游戏服务器
 
+##framework
+![framework](pic/server.png)
+
 ##Requirements
 
 - Go 1.2 +
