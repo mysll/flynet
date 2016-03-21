@@ -43,6 +43,7 @@ type Object struct {
 	Name       string     `xml:"name"`
 	Type       string     `xml:"type"`
 	Base       string     `xml:"base"`
+	Persistent string     `xml:"persistent"`
 	Include    string     `xml:"include"`
 	Interfaces []string   `xml:"interfaces>interface"`
 	Propertys  []Property `xml:"propertys>property"`

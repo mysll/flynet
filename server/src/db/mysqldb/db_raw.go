@@ -706,3 +706,77 @@ func (this *Database) ExecSql(mailbox rpc.Mailbox, sqlstr string, callback strin
 		return app.Call(nil, callback, callbackparams, eff, "")
 	})
 }
+
+func (this *Database) SaveObject(mailbox rpc.Mailbox, object *share.SaveEntity, callback string, callbackparams share.DBParams) error {
+	return this.process("SaveObject", func() error {
+		sqlconn := db.sql
+		app := server.GetApp(mailbox.Address)
+		if app == nil {
+			return server.ErrAppNotFound
+		}
+
+		err := SaveItem(sqlconn, true, object.DBId, object)
+
+		callbackparams["result"] = "ok"
+		if err != nil {
+			callbackparams["result"] = err.Error()
+		}
+		if callback != "_" {
+			return app.Call(nil, callback, callbackparams)
+		}
+
+		return err
+	})
+}
+
+func (this *Database) UpdateObject(mailbox rpc.Mailbox, object *share.SaveEntity, callback string, callbackparams share.DBParams) error {
+	return this.process("UpdateObject", func() error {
+		sqlconn := db.sql
+
+		app := server.GetApp(mailbox.Address)
+		if app == nil {
+			return server.ErrAppNotFound
+		}
+
+		err := SaveItem(sqlconn, false, object.DBId, object)
+		callbackparams["result"] = "ok"
+		if err != nil {
+			callbackparams["result"] = err.Error()
+		}
+
+		if callback != "_" {
+			return app.Call(nil, callback, callbackparams)
+		}
+
+		return err
+	})
+}
+
+func (this *Database) LoadObject(mailbox rpc.Mailbox, ent string, dbid uint64, callback string, callbackparams share.DBParams) error {
+	return this.process("UpdateObject", func() error {
+		sqlconn := db.sql
+
+		app := server.GetApp(mailbox.Address)
+		if app == nil {
+			return server.ErrAppNotFound
+		}
+
+		savedata := share.DbSave{}
+		var err error
+		savedata.Data, err = LoadEntity(sqlconn, dbid, ent, 0)
+
+		if err != nil {
+			callbackparams["result"] = err.Error()
+		} else {
+			callbackparams["result"] = "ok"
+			callbackparams["data"] = savedata
+		}
+
+		if callback == "_" || callback == "" {
+			log.LogError("need callback")
+			return nil
+		}
+
+		return app.Call(nil, callback, callbackparams)
+	})
+}

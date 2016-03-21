@@ -78,7 +78,7 @@ func checkDb(path string, role string) bool {
 	LoadAllDef(path)
 
 	for k, obj := range Defs {
-		if obj.Name == role {
+		if obj.Name == role || obj.Persistent == "true" {
 			if !checkObject(obj) {
 				l.TraceInfo("dbmgr", k, ` is changed, you need use "-sync" to sync the database `)
 				return false

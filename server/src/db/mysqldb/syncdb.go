@@ -213,7 +213,7 @@ func (s *Sync) SyncDB(path string, drop bool, role string) {
 	LoadAllDef(path)
 
 	for _, obj := range Defs {
-		if obj.Name == role {
+		if obj.Name == role || obj.Persistent == "true" {
 			s.syncObject(obj)
 			l.TraceInfo("sync", "process ", obj.Name, " complete")
 		}
