@@ -707,7 +707,7 @@ func (this *Database) ExecSql(mailbox rpc.Mailbox, sqlstr string, callback strin
 	})
 }
 
-func (this *Database) SaveObject(mailbox rpc.Mailbox, object *share.SaveEntity, callback string, callbackparams share.DBParams) error {
+func (this *Database) SaveObject(mailbox rpc.Mailbox, object *share.DbSave, callback string, callbackparams share.DBParams) error {
 	return this.process("SaveObject", func() error {
 		sqlconn := db.sql
 		app := server.GetApp(mailbox.Address)
@@ -715,7 +715,7 @@ func (this *Database) SaveObject(mailbox rpc.Mailbox, object *share.SaveEntity, 
 			return server.ErrAppNotFound
 		}
 
-		err := SaveItem(sqlconn, true, object.DBId, object)
+		err := SaveItem(sqlconn, true, object.Data.DBId, object.Data)
 
 		callbackparams["result"] = "ok"
 		if err != nil {
@@ -729,7 +729,7 @@ func (this *Database) SaveObject(mailbox rpc.Mailbox, object *share.SaveEntity, 
 	})
 }
 
-func (this *Database) UpdateObject(mailbox rpc.Mailbox, object *share.SaveEntity, callback string, callbackparams share.DBParams) error {
+func (this *Database) UpdateObject(mailbox rpc.Mailbox, object *share.DbSave, callback string, callbackparams share.DBParams) error {
 	return this.process("UpdateObject", func() error {
 		sqlconn := db.sql
 
@@ -738,7 +738,7 @@ func (this *Database) UpdateObject(mailbox rpc.Mailbox, object *share.SaveEntity
 			return server.ErrAppNotFound
 		}
 
-		err := SaveItem(sqlconn, false, object.DBId, object)
+		err := SaveItem(sqlconn, false, object.Data.DBId, object.Data)
 		callbackparams["result"] = "ok"
 		if err != nil {
 			callbackparams["result"] = err.Error()
