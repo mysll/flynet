@@ -988,6 +988,20 @@ func (k *Kernel) OnPropChange(object entity.Entityer, prop string, value interfa
 	}
 }
 
+func (k *Kernel) Ready(player entity.Entityer, first bool) {
+	if player.ObjType() != PLAYER {
+		return
+	}
+	callee := GetCallee(player.ObjTypeName())
+	var res int
+	for _, cl := range callee {
+		res = cl.OnReady(player, first)
+		if res == 0 {
+			break
+		}
+	}
+}
+
 func (k *Kernel) SetPropertyEx(object entity.Entityer, prop string, val string, opt int) error {
 	old, err := object.Get(prop)
 	if err != nil {

@@ -159,12 +159,12 @@ func (this *Timer) Timeout(t time.Duration, cb TimerCB, param interface{}) Timer
 func (this *Timer) AddTimer(t time.Duration, count int32, cb TimerCB, param interface{}) TimerID {
 
 	if t < time.Millisecond {
-		log.LogError("heartbeat duration must above 1 millisecond,", t)
+		log.LogError("heartbeat duration must >= 1 millisecond,", t)
 		return -1
 	}
 
 	if count == 0 {
-		log.LogError("heartbeat count must above 0 or -1")
+		log.LogError("heartbeat count must > 0 or -1")
 		return -1
 	}
 

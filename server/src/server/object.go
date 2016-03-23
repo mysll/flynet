@@ -156,6 +156,13 @@ type Objecter interface {
 	//		args:参数
 	//    	count:定时器剩余次数
 	OnTimer(self entity.Entityer, count int32, args interface{}) int
+
+	// 名称：OnReady
+	// 描述：客户端就绪
+	// 参数说明：
+	//		self:对象
+	//		first:  是否是进入游戏后的第一次收到客户端就绪的消息
+	OnReady(self entity.Entityer, first bool) int
 }
 
 type Callee struct {
@@ -226,5 +233,9 @@ func (c *Callee) OnPropertyChange(self entity.Entityer, prop string, old interfa
 }
 
 func (c *Callee) OnTimer(self entity.Entityer, count int32, args interface{}) int {
+	return 1
+}
+
+func (c *Callee) OnReady(self entity.Entityer, first bool) int {
 	return 1
 }
