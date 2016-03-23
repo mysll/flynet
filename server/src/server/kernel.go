@@ -988,7 +988,7 @@ func (k *Kernel) OnPropChange(object entity.Entityer, prop string, value interfa
 	}
 }
 
-func (k *Kernel) Ready(player entity.Entityer, first bool) {
+func (k *Kernel) PlayerReady(player entity.Entityer, first bool) {
 	if player.ObjType() != PLAYER {
 		return
 	}
