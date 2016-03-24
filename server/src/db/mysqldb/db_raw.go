@@ -3,11 +3,13 @@ package mysqldb
 import (
 	"bytes"
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"libs/log"
 	"libs/rpc"
 	"server"
 	"share"
+	"strings"
 	"sync/atomic"
 	"time"
 	"util"
@@ -466,7 +468,9 @@ func (this *Database) DeleteRow(mailbox rpc.Mailbox, tbl string, condition strin
 		sqlstr := fmt.Sprintf("DELETE FROM `%s`%s", tbl, condition)
 		if r, err = sqlconn.Exec(sqlstr); err != nil {
 			log.LogError("sql:", sqlstr)
-			return app.Call(nil, callback, callbackparams, 0, err.Error())
+			if callback != "_" {
+				return app.Call(nil, callback, callbackparams, 0, err.Error())
+			}
 		}
 
 		if callback == "_" {
@@ -753,7 +757,7 @@ func (this *Database) UpdateObject(mailbox rpc.Mailbox, object *share.DbSave, ca
 }
 
 func (this *Database) LoadObject(mailbox rpc.Mailbox, ent string, dbid uint64, callback string, callbackparams share.DBParams) error {
-	return this.process("UpdateObject", func() error {
+	return this.process("LoadObject", func() error {
 		sqlconn := db.sql
 
 		app := server.GetApp(mailbox.Address)
@@ -778,5 +782,39 @@ func (this *Database) LoadObject(mailbox rpc.Mailbox, ent string, dbid uint64, c
 		}
 
 		return app.Call(nil, callback, callbackparams)
+	})
+}
+
+func (this *Database) DeleteObject(mailbox rpc.Mailbox, ent string, dbid uint64, callback string, callbackparams share.DBParams) error {
+	return this.process("DeleteObject", func() error {
+		sqlconn := db.sql
+
+		app := server.GetApp(mailbox.Address)
+		if app == nil {
+			return server.ErrAppNotFound
+		}
+
+		sqlstr := fmt.Sprintf("DELETE FROM `tbl_%s` where id=？", strings.ToLower(ent))
+		var r driver.Result
+		var err error
+		if r, err = sqlconn.Exec(sqlstr, dbid); err != nil {
+			log.LogError("sql:", sqlstr)
+			callbackparams["result"] = err.Error()
+			if callback == "_" {
+				return app.Call(nil, callback, callbackparams)
+			}
+		}
+
+		if callback == "_" {
+			return nil
+		}
+
+		eff, _ := r.RowsAffected()
+		if eff > 0 {
+			callbackparams["result"] = "ok"
+			return app.Call(nil, callback, callbackparams)
+		}
+
+		return nil
 	})
 }
