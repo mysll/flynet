@@ -121,8 +121,27 @@ func (ar *LoadArchive) Seek(offset int, whence int) (int, error) {
 	return int(ret), err
 }
 
-func (ar *LoadArchive) Read(val interface{}) error {
-	return binary.Read(ar.reader, binary.LittleEndian, val)
+func (ar *LoadArchive) Read(val interface{}) (err error) {
+	switch val.(type) {
+	case *int8, *int16, *int32, *int64, *uint8, *uint16, *uint32, *uint64, *float32, *float64:
+		return binary.Read(ar.reader, binary.LittleEndian, val)
+	case *int:
+		return binary.Read(ar.reader, binary.LittleEndian, int32(val.(int)))
+	case *string:
+		inst := val.(*string)
+		*inst, err = ar.ReadString()
+		return err
+	case *ObjectID:
+		inst := val.(*ObjectID)
+		*inst, err = ar.ReadObjectID()
+		return err
+	case *[]byte:
+		inst := val.(*[]byte)
+		*inst, err = ar.ReadData()
+		return err
+	default:
+		return ar.ReadObject(val)
+	}
 }
 
 func (ar *LoadArchive) ReadInt8() (val int8, err error) {

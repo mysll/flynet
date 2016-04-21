@@ -2,17 +2,23 @@ package main
 
 import (
 	"fmt"
-	"util"
+	"server"
 )
 
+type Obj struct {
+	I int
+	J int
+}
+
 func main() {
-	ar := util.NewStoreArchiver(nil)
-	data := make([]string, 0, 2)
-	data = append(data, "123")
-	data = append(data, "456")
-	ar.Write(data)
-	lr := util.NewLoadArchiver(ar.Data())
-	var data1 []string
-	lr.ReadObject(&data1)
-	fmt.Println(data1)
+
+	msg, err := server.CreateMessage(int8(1), int16(2), "test123", []byte{4, 5, 6}, &Obj{6, 7})
+	fmt.Println(err)
+	var i int8
+	var j int16
+	var k string
+	var l []byte
+	var o Obj
+	err = server.ParseArgs(msg, &i, &j, &k, &l, &o)
+	fmt.Println(i, j, k, l, o, err)
 }

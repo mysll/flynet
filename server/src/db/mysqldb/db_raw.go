@@ -160,28 +160,15 @@ func (this *Database) backLetterBySerial(uid uint64, serial_no uint64, new_type 
 }
 
 func (this *Database) RecvLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var uid uint64
 	var serial_no uint64
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	uid, err = reader.ReadUInt64()
-	if server.Check(err) {
-		return nil
-	}
-	serial_no, err = reader.ReadUInt64()
-	if server.Check(err) {
-		return nil
-	}
-	callback, err = reader.ReadString()
-	if server.Check(err) {
+
+	if server.Check(server.ParseArgs(msg, &uid, &serial_no, &callback, &callbackparams)) {
 		return nil
 	}
 
-	if server.Check(reader.ReadObject(&callbackparams)) {
-		return nil
-	}
 	letter, err := this.recvLetterBySerial(uid, serial_no)
 	if err != nil {
 		log.LogError(err)
@@ -202,22 +189,14 @@ func (this *Database) RecvLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 }
 
 func (this *Database) LookLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var uid uint64
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	uid, err = reader.ReadUInt64()
-	if server.Check(err) {
+
+	if server.Check(server.ParseArgs(msg, &uid, &callback, &callbackparams)) {
 		return nil
 	}
-	callback, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(reader.ReadObject(&callbackparams)) {
-		return nil
-	}
+
 	letters, err := this.lookLetter(uid)
 	if err != nil {
 		log.LogError(err)
@@ -235,22 +214,14 @@ func (this *Database) LookLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 }
 
 func (this *Database) QueryLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var uid uint64
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	uid, err = reader.ReadUInt64()
-	if server.Check(err) {
+
+	if server.Check(server.ParseArgs(msg, &uid, &callback, &callbackparams)) {
 		return nil
 	}
-	callback, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(reader.ReadObject(&callbackparams)) {
-		return nil
-	}
+
 	count, _ := this.queryLetter(uid)
 	callbackparams["count"] = count
 	server.Check(server.MailTo(nil, &mailbox, callback, callbackparams))
@@ -258,49 +229,13 @@ func (this *Database) QueryLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Me
 }
 
 func (this *Database) SendSystemLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var source_name string
 	var recvacc, recvrole string
 	var typ int32
 	var title, content, appendix string
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	source_name, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	recvacc, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	recvrole, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	typ, err = reader.ReadInt32()
-	if server.Check(err) {
-		return nil
-	}
-
-	title, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	content, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	appendix, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-
-	callback, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(reader.ReadObject(&callbackparams)) {
+	if server.Check(server.ParseArgs(msg, &source_name, &recvacc, &recvrole, &typ, &title, &content, &appendix, &callback, &callbackparams)) {
 		return nil
 	}
 
@@ -342,29 +277,11 @@ func (this *Database) SendSystemLetter(mailbox rpc.Mailbox, msg *rpc.Message) *r
 }
 
 func (this *Database) Log(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var log_name string
 	var log_source, log_type int32
 	var log_content, log_comment string
-	var err error
-	log_name, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	log_source, err = reader.ReadInt32()
-	if server.Check(err) {
-		return nil
-	}
-	log_type, err = reader.ReadInt32()
-	if server.Check(err) {
-		return nil
-	}
-	log_content, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	log_comment, err = reader.ReadString()
-	if server.Check(err) {
+
+	if server.Check(server.ParseArgs(msg, &log_name, &log_source, &log_type, &log_content, &log_comment)) {
 		return nil
 	}
 
@@ -380,32 +297,18 @@ func (this *Database) Log(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 }
 
 func (this *Database) Count(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var tbl string
 	var condition string
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	tbl, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	condition, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
 
-	callback, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(reader.ReadObject(&callbackparams)) {
+	if server.Check(server.ParseArgs(msg, &tbl, &condition, &callback, &callbackparams)) {
 		return nil
 	}
 
 	sqlconn := db.sql
 	var r *sql.Rows
-
+	var err error
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
@@ -437,36 +340,19 @@ func (this *Database) Count(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message 
 }
 
 func (this *Database) InsertRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var tbl string
 	var keys []string
 	var values []interface{}
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	tbl, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
 
-	if server.Check(reader.ReadObject(&keys)) {
-		return nil
-	}
-
-	if server.Check(reader.ReadObject(&values)) {
-		return nil
-	}
-
-	callback, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(reader.ReadObject(&callbackparams)) {
+	if server.Check(server.ParseArgs(msg, &tbl, &keys, &values, &callback, &callbackparams)) {
 		return nil
 	}
 
 	sqlconn := db.sql
 	var r sql.Result
+	var err error
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
@@ -525,31 +411,18 @@ func (this *Database) InsertRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 }
 
 func (this *Database) InsertRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var tbl string
 	var values map[string]interface{}
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	tbl, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
 
-	if server.Check(reader.ReadObject(&values)) {
-		return nil
-	}
-
-	callback, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(reader.ReadObject(&callbackparams)) {
+	if server.Check(server.ParseArgs(msg, &tbl, &values, &callback, &callbackparams)) {
 		return nil
 	}
 
 	sqlconn := db.sql
 	var r sql.Result
+	var err error
 
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
@@ -592,32 +465,18 @@ func (this *Database) InsertRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 }
 
 func (this *Database) DeleteRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var tbl string
 	var condition string
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	tbl, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
 
-	condition, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-
-	callback, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(reader.ReadObject(&callbackparams)) {
+	if server.Check(server.ParseArgs(msg, &tbl, &condition, &callback, &callbackparams)) {
 		return nil
 	}
 
 	sqlconn := db.sql
 	var r sql.Result
+	var err error
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
@@ -647,37 +506,19 @@ func (this *Database) DeleteRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 }
 
 func (this *Database) UpdateRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var tbl string
 	var values map[string]interface{}
 	var condition string
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	tbl, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
 
-	if server.Check(reader.ReadObject(&values)) {
-		return nil
-	}
-
-	condition, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-
-	callback, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(reader.ReadObject(&callbackparams)) {
+	if server.Check(server.ParseArgs(msg, &tbl, &values, &condition, &callback, &callbackparams)) {
 		return nil
 	}
 
 	sqlconn := db.sql
 	var r sql.Result
+	var err error
 
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
@@ -723,38 +564,19 @@ func (this *Database) UpdateRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 }
 
 func (this *Database) QueryRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var tbl string
 	var condition string
 	var orderby string
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	tbl, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
 
-	condition, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-
-	orderby, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-
-	callback, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(reader.ReadObject(&callbackparams)) {
+	if server.Check(server.ParseArgs(msg, &tbl, &condition, &orderby, &callback, &callbackparams)) {
 		return nil
 	}
 
 	sqlconn := db.sql
 	var r *sql.Rows
+	var err error
 
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
@@ -808,49 +630,20 @@ func (this *Database) QueryRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messa
 }
 
 func (this *Database) QueryRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var tbl string
 	var condition string
 	var orderby string
 	var index, count int32
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	tbl, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
 
-	condition, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-
-	orderby, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-
-	index, err = reader.ReadInt32()
-	if server.Check(err) {
-		return nil
-	}
-
-	count, err = reader.ReadInt32()
-	if server.Check(err) {
-		return nil
-	}
-	callback, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(reader.ReadObject(&callbackparams)) {
+	if server.Check(server.ParseArgs(msg, &tbl, &condition, &orderby, &index, &count, &callback, &callbackparams)) {
 		return nil
 	}
 
 	sqlconn := db.sql
 	var r *sql.Rows
-
+	var err error
 	if count <= 0 {
 		log.LogError("count must above zero")
 		return nil
@@ -909,26 +702,17 @@ func (this *Database) QueryRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 }
 
 func (this *Database) QuerySql(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var sqlstr string
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	sqlstr, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
 
-	callback, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(reader.ReadObject(&callbackparams)) {
+	if server.Check(server.ParseArgs(msg, &sqlstr, &callback, &callbackparams)) {
 		return nil
 	}
 
 	sqlconn := db.sql
 	var r *sql.Rows
+	var err error
 
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
@@ -978,26 +762,18 @@ func (this *Database) QuerySql(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messa
 }
 
 func (this *Database) ExecSql(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var sqlstr string
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	sqlstr, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
 
-	callback, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(reader.ReadObject(&callbackparams)) {
+	if server.Check(server.ParseArgs(msg, &sqlstr, &callback, &callbackparams)) {
 		return nil
 	}
 
 	sqlconn := db.sql
 	var r sql.Result
+	var err error
+
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
@@ -1016,20 +792,10 @@ func (this *Database) ExecSql(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messag
 }
 
 func (this *Database) SaveObject(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	r := server.NewMessageReader(msg)
 	var object share.DbSave
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	if server.Check(r.ReadObject(&object)) {
-		return nil
-	}
-
-	callback, err = r.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(r.ReadObject(&callbackparams)) {
+	if server.Check(server.ParseArgs(msg, &object, &callback, &callbackparams)) {
 		return nil
 	}
 
@@ -1040,7 +806,7 @@ func (this *Database) SaveObject(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 		return nil
 	}
 
-	err = SaveItem(sqlconn, true, object.Data.DBId, object.Data)
+	err := SaveItem(sqlconn, true, object.Data.DBId, object.Data)
 
 	callbackparams["result"] = "ok"
 	if err != nil {
@@ -1055,20 +821,11 @@ func (this *Database) SaveObject(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 }
 
 func (this *Database) UpdateObject(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	r := server.NewMessageReader(msg)
 	var object share.DbSave
 	var callback string
 	var callbackparams share.DBParams
-	var err error
-	if server.Check(r.ReadObject(&object)) {
-		return nil
-	}
 
-	callback, err = r.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(r.ReadObject(&callbackparams)) {
+	if server.Check(server.ParseArgs(msg, &object, &callback, &callbackparams)) {
 		return nil
 	}
 
@@ -1080,7 +837,7 @@ func (this *Database) UpdateObject(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.M
 		return nil
 	}
 
-	err = SaveItem(sqlconn, false, object.Data.DBId, object.Data)
+	err := SaveItem(sqlconn, false, object.Data.DBId, object.Data)
 	callbackparams["result"] = "ok"
 	if err != nil {
 		callbackparams["result"] = err.Error()
@@ -1096,28 +853,12 @@ func (this *Database) UpdateObject(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.M
 }
 
 func (this *Database) LoadObject(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	r := server.NewMessageReader(msg)
 	var ent string
 	var dbid uint64
 	var callback string
 	var callbackparams share.DBParams
 	var err error
-
-	ent, err = r.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-
-	dbid, err = r.ReadUInt64()
-	if server.Check(err) {
-		return nil
-	}
-
-	callback, err = r.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(r.ReadObject(&callbackparams)) {
+	if server.Check(server.ParseArgs(msg, &ent, &dbid, &callback, &callbackparams)) {
 		return nil
 	}
 
@@ -1149,28 +890,13 @@ func (this *Database) LoadObject(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 }
 
 func (this *Database) DeleteObject(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	reader := server.NewMessageReader(msg)
 	var ent string
 	var dbid uint64
 	var callback string
 	var callbackparams share.DBParams
 	var err error
 
-	ent, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-
-	dbid, err = reader.ReadUInt64()
-	if server.Check(err) {
-		return nil
-	}
-
-	callback, err = reader.ReadString()
-	if server.Check(err) {
-		return nil
-	}
-	if server.Check(reader.ReadObject(&callbackparams)) {
+	if server.Check(server.ParseArgs(msg, &ent, &dbid, &callback, &callbackparams)) {
 		return nil
 	}
 

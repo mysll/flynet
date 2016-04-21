@@ -34,10 +34,8 @@ func (a *Account) ClearStatus(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messag
 		return nil
 	}
 
-	_, err = db.sql.Exec("UPDATE `role_info` SET `status`=?, `serverid`=? WHERE `status`=? and `serverid`=?", 0, "", 1, serverid)
-	server.Check(err)
+	server.Check2(db.sql.Exec("UPDATE `role_info` SET `status`=?, `serverid`=? WHERE `status`=? and `serverid`=?", 0, "", 1, serverid))
 	return nil
-
 }
 
 func (a *Account) LoadUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {

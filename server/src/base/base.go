@@ -17,7 +17,6 @@ type BaseApp struct {
 	*server.Server
 	Players    *PlayerList
 	startinit  sync.Once
-	Proxy      *Proxy
 	Account    *Account
 	DbBridge   *DbBridge
 	AreaBridge *AreaBridge
@@ -55,7 +54,6 @@ func (b *BaseApp) OnClientLost(id int64) {
 func (b *BaseApp) StartInit() {
 	db := server.GetAppByType("database")
 	db.Call(nil, "Account.ClearStatus", b.Name)
-	//server.NewDBWarp(db).SendSystemLetter(nil, "system", "", "", 1, "测试", "这是一封测试邮件", "", "_", share.DBParams{})
 }
 
 func (b *BaseApp) OnMustAppReady() {

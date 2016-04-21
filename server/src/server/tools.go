@@ -70,6 +70,22 @@ func ProtoParse(msg *rpc.Message, obj proto.Message) error {
 	return proto.Unmarshal(data, obj)
 }
 
+func ParseArgs(msg *rpc.Message, args ...interface{}) error {
+	if len(args) == 0 || msg == nil {
+		return nil
+	}
+
+	ar := NewMessageReader(msg)
+	for i := 0; i < len(args); i++ {
+		err := ar.Read(args[i])
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func Check(err error) bool {
 	if err != nil {
 		log4go.LogCallerDepth = 4
@@ -90,4 +106,20 @@ func Check2(_ interface{}, err error) bool {
 	}
 
 	return false
+}
+
+func CreateMessage(args ...interface{}) (*rpc.Message, error) {
+	if len(args) > 0 {
+		msg := NewMessage()
+		for i := 0; i < len(args); i++ {
+			err := msg.Write(args[i])
+			if err != nil {
+				msg.Free()
+				return nil, err
+			}
+		}
+		msg.Flush()
+		return msg.GetMessage(), nil
+	}
+	return nil, nil
 }
