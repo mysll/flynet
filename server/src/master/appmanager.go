@@ -23,7 +23,7 @@ func Ready(app *app) {
 	ismustapp := false
 	for _, v := range context.AppDef.MustApps {
 		if app.typ == v {
-			mustapps[app.typ] = app.id
+			mustapps[app.typ] = app.name
 			ismustapp = true
 
 			if len(mustapps) == len(context.AppDef.MustApps) {
@@ -65,7 +65,7 @@ func AddApp(app *app) {
 	applock.Lock()
 	defer applock.Unlock()
 
-	out, err := share.CreateAddServerMsg(app.typ, app.id, app.host, app.port, app.clienthost, app.clientport, app.ready)
+	out, err := share.CreateAddServerMsg(app.typ, app.id, app.name, app.host, app.port, app.clienthost, app.clientport, app.ready)
 	if err != nil {
 		log.LogFatalf(err)
 	}
@@ -76,7 +76,7 @@ func AddApp(app *app) {
 	context.app[app.id] = app
 }
 
-func RemoveApp(id string) {
+func RemoveApp(id int32) {
 	applock.Lock()
 	defer applock.Unlock()
 	if _, ok := context.app[id]; !ok {

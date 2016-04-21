@@ -41,6 +41,6 @@ func CreateService(rs *Server, l net.Listener, ch chan *RpcCall) {
 		}
 		//启动服务
 		log.LogInfo("new rpc client,", conn.RemoteAddr())
-		go rs.ServeConn(conn, ch)
+		go rs.ServeConn(conn, MAX_BUF_LEN, ch)
 	}
 }

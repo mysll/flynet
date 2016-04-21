@@ -34,7 +34,7 @@ func NewAccount(pool int) *Account {
 
 func (a *Account) Push(r *rpc.RpcCall) bool {
 	if !a.quit {
-		mb := r.Src.Interface().(rpc.Mailbox)
+		mb := r.GetSrc()
 		a.queue[int(mb.Uid)%a.pools] <- r // 队列满了，就会阻塞在这里
 	} else {
 		log.LogWarning("it's quit, drop the message")
@@ -51,7 +51,7 @@ func (a *Account) work(id int) {
 	for {
 		select {
 		case caller := <-a.queue[id]:
-			log.LogMessage(caller.Src.Interface(), " rpc call:", caller.Req.ServiceMethod, ", thread:", id)
+			log.LogMessage(caller.GetSrc(), " rpc call:", caller.GetMethod(), ", thread:", id)
 			start_time = time.Now()
 			err := caller.Call()
 			if err != nil {
@@ -59,7 +59,7 @@ func (a *Account) work(id int) {
 			}
 			delay = time.Now().Sub(start_time)
 			if delay > warninglvl {
-				log.LogWarning("rpc call ", caller.Req.ServiceMethod, " delay:", delay.Nanoseconds()/1000000, "ms")
+				log.LogWarning("rpc call ", caller.GetMethod(), " delay:", delay.Nanoseconds()/1000000, "ms")
 			}
 			caller.Free()
 			break
@@ -112,7 +112,7 @@ func (a *Account) ClearStatus(mailbox rpc.Mailbox, serverid string) error {
 func (a *Account) LoadUser(mailbox rpc.Mailbox, info share.LoadUser) error {
 	return a.process("LoadUser", func() error {
 		bak := share.LoadUserBak{}
-		app := server.GetApp(mailbox.Address)
+		app := server.GetAppById(mailbox.App)
 		if app == nil {
 			return server.ErrAppNotFound
 		}
@@ -137,7 +137,7 @@ func (a *Account) LoadUser(mailbox rpc.Mailbox, info share.LoadUser) error {
 			return err
 		}
 
-		c.Update(bson.M{"rolename": roleinfo.Rolename}, bson.M{"$set": bson.M{"lastlogintime": time.Now(), "status": 1, "serverid": mailbox.Address}})
+		c.Update(bson.M{"rolename": roleinfo.Rolename}, bson.M{"$set": bson.M{"lastlogintime": time.Now(), "status": 1, "serverid": mailbox.App}})
 
 		bak.Name = info.RoleName
 		bak.Scene = roleinfo.Scene
@@ -158,7 +158,7 @@ func (a *Account) CreateUser(mailbox rpc.Mailbox, info share.CreateUser) error {
 		return errors.New("save data is nil")
 	}
 	return a.process("CreateUser", func() error {
-		app := server.GetApp(mailbox.Address)
+		app := server.GetAppById(mailbox.App)
 		if app == nil {
 			return server.ErrAppNotFound
 		}
@@ -264,8 +264,7 @@ func (a *Account) ClearPlayerStatus(mailbox rpc.Mailbox, info share.ClearUser) e
 
 func (a *Account) SavePlayer(mailbox rpc.Mailbox, data share.UpdateUser) error {
 	return a.process("SavePlayer", func() error {
-		base := rpc.Mailbox{}
-		base.Address = mailbox.Address
+		base := rpc.NewMailBox(0, 0, mailbox.App)
 
 		//save
 		if err := SaveToDb(db.DB, 0, &data.SaveData); err != nil {

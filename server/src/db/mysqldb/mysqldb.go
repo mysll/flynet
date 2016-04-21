@@ -4,7 +4,6 @@ import (
 	"errors"
 	"libs/log"
 	"server"
-	"util"
 )
 
 var (
@@ -18,8 +17,8 @@ type MysqlDB struct {
 	DBRaw   *Database
 	dbname  string
 	ds      string
-	wg      util.WaitGroupWrapper
-	limit   int
+	//wg      util.WaitGroupWrapper
+	limit int
 }
 
 func (self *MysqlDB) InitDB(db string, source string, threads int, entity string, role string, limit int) error {
@@ -36,13 +35,12 @@ func (self *MysqlDB) InitDB(db string, source string, threads int, entity string
 	if !checkDb(entity, role) {
 		return errors.New("database need sync")
 	}
-
 	self.Account = NewAccount(self.pools)
 	self.DBRaw = NewRaw(self.pools)
-	self.Account.Do()
-	self.DBRaw.Do()
 	server.RegisterRemote("Account", self.Account)
 	server.RegisterRemote("Database", self.DBRaw)
+	self.Account.Start()
+	self.DBRaw.Start()
 	log.LogMessage("connect to mysql:", source)
 	return nil
 }
@@ -52,9 +50,10 @@ func (self *MysqlDB) KeepAlive() {
 }
 
 func (self *MysqlDB) Close() {
-	self.Account.quit = true
-	self.DBRaw.quit = true
-	self.wg.Wait()
+	self.Account.Quit = true
+	self.DBRaw.Quit = true
+	self.Account.Wait()
+	self.DBRaw.Wait()
 	self.sql.Close()
 }
 

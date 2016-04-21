@@ -14,7 +14,8 @@ const (
 
 type app struct {
 	typ        string
-	id         string
+	id         int32
+	name       string
 	conn       net.Conn
 	host       string
 	port       int
@@ -60,7 +61,7 @@ func (app *app) SendList() {
 
 	rs := make([]share.AddApp, 0, size)
 	for _, v := range context.app {
-		rs = append(rs, share.AddApp{v.typ, v.id, v.host, v.port, v.clienthost, v.clientport, v.ready})
+		rs = append(rs, share.AddApp{v.typ, v.id, v.name, v.host, v.port, v.clienthost, v.clientport, v.ready})
 	}
 
 	outmsg, err := share.CreateServerListMsg(rs)
@@ -116,7 +117,7 @@ func (app *app) Loop() {
 }
 
 func (app *app) CreateApp(create share.CreateApp) {
-	context.CreateApp(create.ReqId, create.AppId, 0, create.Type, create.Args, create.CallApp)
+	context.CreateApp(create.ReqId, create.AppName, 0, create.Type, create.Args, create.CallApp)
 }
 
 func (app *app) Handle(id uint16, body []byte) error {

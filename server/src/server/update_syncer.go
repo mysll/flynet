@@ -58,7 +58,7 @@ func (ps *PropSync) Update(index int16, value interface{}) {
 	update.Self = proto.Bool(true)
 	update.Index = proto.Int32(0)
 	update.Serial = proto.Int32(0)
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	ar.Write(index)
 	ar.Write(value)
 	update.Propinfo = ar.Data()

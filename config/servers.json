@@ -9,7 +9,7 @@
 		"waitagents":0
 	},
 	"login": [{
-		"id": "login_1",
+		"name": "login_1",
 		"host": "127.0.0.1",
 		"port": 0,
 		"clientport": 0,
@@ -17,7 +17,7 @@
 		"sockettype": "websocket"
 	}],
 	"loginmgr": [{
-		"id": "loginmgr",
+		"name": "loginmgr",
 		"host": "127.0.0.1",
 		"port": 0,
 		"clienthost": "192.168.1.102",
@@ -26,7 +26,7 @@
 		"sockettype": "websocket"
 	}],
 	"base": [{
-		"id": "base_1",
+		"name": "base_1",
 		"host": "127.0.0.1",
 		"port": 0,
 		"clienthost": "192.168.1.102",
@@ -39,23 +39,23 @@
 		"pprof":6800
 	}],
 	"basemgr": [{
-		"id": "basemgr",
+		"name": "basemgr",
 		"host": "127.0.0.1",
 		"port": 0
 	}],
 	"status": [{
-		"id": "status",
+		"name": "status",
 		"host": "127.0.0.1",
 		"port": 0
 	}],
 	"database": [{
-		"id": "db_1",
+		"name": "db_1",
 		"host": "127.0.0.1",
 		"port": 0,
 		"type": "mysql",
-		"datasource": "root:@tcp(192.168.1.10:3306)/mmosll?charset=utf8",
+		"datasource": "root:@tcp(192.168.1.10:3306)/mmotest?charset=utf8",
 		"role": "Player",
-		"db": "mmosll",
+		"db": "mmotest",
 		"entity": "../assets/def",
 		"pools": 4,
 		"rolelimit": 1

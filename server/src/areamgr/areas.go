@@ -32,7 +32,7 @@ func (a *Areas) GetArea(mailbox rpc.Mailbox, id string) error {
 	defer a.l.Unlock()
 
 	log.LogMessage("GetArea")
-	app := server.GetApp(mailbox.Address)
+	app := server.GetAppByName(mailbox.App)
 	if app == nil {
 		return server.ErrAppNotFound
 	}
@@ -54,7 +54,7 @@ func (a *Areas) GetArea(mailbox rpc.Mailbox, id string) error {
 		fmt.Sprintf(`{ "id":"%s", "host":"127.0.0.1", "port":0, "areaid":"%s"}`,
 			appid,
 			id),
-		App.Id,
+		App.Name,
 	)
 	if err != nil {
 		log.LogError(err)
@@ -98,7 +98,7 @@ func (a *Areas) createAppBak(bak share.CreateAppBak) {
 		next = e.Next()
 		mailbox := e.Value.(rpc.Mailbox)
 		p.Remove(e)
-		app := server.GetApp(mailbox.Address)
+		app := server.GetAppByName(mailbox.App)
 		if app == nil {
 			continue
 		}

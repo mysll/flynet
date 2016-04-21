@@ -84,15 +84,15 @@ func (a *Agent) Register(agentid string, nobalance bool) error {
 }
 
 func (a *Agent) CreateApp(create share.CreateApp) {
-	err := CreateApp(create.AppId, create.AppUid, create.Type, create.Args)
+	err := CreateApp(create.AppName, create.AppUid, create.Type, create.Args)
 	res := "ok"
 	if err != nil {
 		res = err.Error()
 		log.LogError(err)
 	}
 
-	if create.CallApp != "" {
-		data, err := share.CreateAppBakMsg(create.ReqId, create.AppId, res)
+	if create.CallApp != 0 {
+		data, err := share.CreateAppBakMsg(create.ReqId, create.AppUid, res)
 		if err != nil {
 			log.LogError(err)
 			return

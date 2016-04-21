@@ -16,6 +16,12 @@ type AreaBridge struct {
 	buf     []byte
 }
 
+func (t *AreaBridge) RegisterCallback(s rpc.Servicer) {
+	s.RegisterCallback("GetAreaBak", t.GetAreaBak)
+	s.RegisterCallback("AddPlayerBak", t.AddPlayerBak)
+	s.RegisterCallback("RemovePlayerBak", t.RemovePlayerBak)
+}
+
 func (a *AreaBridge) getArea(mailbox rpc.Mailbox, id string) error {
 	app := server.GetAppByType("areamgr")
 	if app == nil {
@@ -29,7 +35,12 @@ func (a *AreaBridge) getArea(mailbox rpc.Mailbox, id string) error {
 	return err
 }
 
-func (a *AreaBridge) GetAreaBak(mailbox rpc.Mailbox, areaid string) error {
+func (a *AreaBridge) GetAreaBak(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	r := server.NewMessageReader(msg)
+	areaid, err := r.ReadString()
+	if server.Check(err) {
+		return nil
+	}
 	if areaid == "" {
 		log.LogError("enter area failed")
 		return nil
@@ -47,7 +58,7 @@ func (a *AreaBridge) GetAreaBak(mailbox rpc.Mailbox, areaid string) error {
 }
 
 func (a *AreaBridge) enterArea(player *BasePlayer, areaid string) error {
-	ap := server.GetApp(areaid)
+	ap := server.GetAppByName(areaid)
 	if ap == nil {
 		if _, ok := a.pending[areaid]; ok {
 			a.pending[areaid].PushBack(player.Mailbox)
@@ -69,7 +80,7 @@ func (a *AreaBridge) enterArea(player *BasePlayer, areaid string) error {
 
 func (a *AreaBridge) checkPending(appid string) {
 	if l, ok := a.pending[appid]; ok {
-		ap := server.GetApp(appid)
+		ap := server.GetAppByName(appid)
 		var next *list.Element
 		for e := l.Front(); e != nil; e = next {
 			next = e.Next()
@@ -102,7 +113,12 @@ func (a *AreaBridge) areaAddPlayer(ap *server.RemoteApp, player *BasePlayer) err
 	return nil
 }
 
-func (a *AreaBridge) AddPlayerBak(mailbox rpc.Mailbox, res string) error {
+func (a *AreaBridge) AddPlayerBak(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	r := server.NewMessageReader(msg)
+	res, err := r.ReadString()
+	if server.Check(err) {
+		return nil
+	}
 	if res == "ok" {
 		player := App.Players.GetPlayer(mailbox.Id)
 		if player == nil {
@@ -120,13 +136,14 @@ func (a *AreaBridge) AddPlayerBak(mailbox rpc.Mailbox, res string) error {
 	} else {
 		err := &s2c.Error{}
 		err.ErrorNo = proto.Int32(share.ERROR_ROLE_ENTERAREA_ERROR)
-		return server.MailTo(nil, &mailbox, "error", err)
+		server.Check(server.MailTo(nil, &mailbox, "error", err))
+		return nil
 	}
 
 }
 
 func (a *AreaBridge) areaRemovePlayer(player *BasePlayer, typ int) {
-	area := server.GetApp(player.AreaId)
+	area := server.GetAppByName(player.AreaId)
 	if area == nil {
 		player.SaveToDb(true)
 		return
@@ -140,7 +157,7 @@ func (a *AreaBridge) areaRemovePlayer(player *BasePlayer, typ int) {
 
 }
 
-func (a *AreaBridge) RemovePlayerBak(mailbox rpc.Mailbox, res string) error {
+func (a *AreaBridge) RemovePlayerBak(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	player := App.Players.GetPlayer(mailbox.Id)
 	if player == nil {
 		log.LogFatalf("can not be nil", mailbox)

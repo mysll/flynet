@@ -30,8 +30,8 @@ type BaseApp struct {
 }
 
 func (b *BaseApp) OnPrepare() bool {
-	rand.Seed(time.Now().UTC().UnixNano() + int64(hash.DJBHash(App.Id)))
-	log.LogMessage(b.Id, " prepared")
+	rand.Seed(time.Now().UTC().UnixNano() + int64(hash.DJBHash(App.Name)))
+	log.LogMessage(b.Name, " prepared")
 	return true
 }
 
@@ -54,7 +54,7 @@ func (b *BaseApp) OnClientLost(id int64) {
 
 func (b *BaseApp) StartInit() {
 	db := server.GetAppByType("database")
-	db.Call(nil, "Account.ClearStatus", b.Id)
+	db.Call(nil, "Account.ClearStatus", b.Name)
 	//server.NewDBWarp(db).SendSystemLetter(nil, "system", "", "", 1, "测试", "这是一封测试邮件", "", "_", share.DBParams{})
 }
 

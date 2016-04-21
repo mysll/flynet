@@ -11,13 +11,13 @@ import (
 	"sync/atomic"
 )
 
-func Start(startapp string, id string, appuid int32, typ string, startargs string) error {
-	ferr, err := os.Create(fmt.Sprintf("log/%s_err.log", id))
+func Start(startapp string, name string, appuid int32, typ string, startargs string) error {
+	ferr, err := os.Create(fmt.Sprintf("log/%s_err.log", name))
 	if err != nil {
 		log.LogError(err)
 		return err
 	}
-	fout, err := os.Create(fmt.Sprintf("log/%s_trace.log", id))
+	fout, err := os.Create(fmt.Sprintf("log/%s_trace.log", name))
 	if err != nil {
 		log.LogError(err)
 		return err
@@ -40,7 +40,7 @@ func Start(startapp string, id string, appuid int32, typ string, startargs strin
 		cmd.Wait()
 		ferr.Close()
 		fout.Close()
-		log.LogMessage(id, " is quit")
+		log.LogMessage(name, " is quit")
 		atomic.AddInt32(&Load, -1)
 	})
 	return nil

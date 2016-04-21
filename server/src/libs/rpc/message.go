@@ -1,11 +1,13 @@
-package server
+package rpc
 
 import (
 	"sync/atomic"
 )
 
 type Message struct {
+	Header []byte
 	Body   []byte
+	hbuf   []byte
 	bbuf   []byte
 	bsize  int
 	refcnt int32
@@ -66,10 +68,12 @@ func NewMessage(sz int) *Message {
 	default:
 		m = &Message{}
 		m.bbuf = make([]byte, 0, sz)
+		m.hbuf = make([]byte, 0, 64)
 		m.bsize = sz
 	}
 
 	m.refcnt = 1
 	m.Body = m.bbuf
+	m.Header = m.hbuf
 	return m
 }

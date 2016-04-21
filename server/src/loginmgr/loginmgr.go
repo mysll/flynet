@@ -21,7 +21,7 @@ type LoginMgr struct {
 }
 
 func (l *LoginMgr) OnPrepare() bool {
-	log.TraceInfo(l.Id, "init link")
+	log.TraceInfo(l.Name, "init link")
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", l.ClientHost, l.ClientPort))
 	if err != nil {
 		panic(err)
@@ -35,7 +35,7 @@ func (l *LoginMgr) OnPrepare() bool {
 		l.WaitGroup.Wrap(func() { util.TCPServer(listener, &handler{}) })
 	}
 
-	log.TraceInfo(l.Id, "start link complete")
+	log.TraceInfo(l.Name, "start link complete")
 	return true
 }
 

@@ -7,6 +7,8 @@ import (
 	"pb/c2s"
 	"share"
 	"util"
+
+	"github.com/golang/protobuf/proto"
 )
 
 var (
@@ -20,33 +22,52 @@ type C2SHelper struct {
 	sendbuf []byte
 }
 
+func (t *C2SHelper) RegisterCallback(s rpc.Servicer) {
+	s.RegisterCallback("Call", t.Call)
+}
+
 //处理客户端的调用
-func (ch *C2SHelper) Call(sender rpc.Mailbox, request c2s.Rpc) error {
+func (ch *C2SHelper) Call(sender rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	request := &c2s.Rpc{}
+
+	if err := proto.Unmarshal(msg.Body, request); err != nil {
+		log.LogError(err)
+		return nil
+	}
+
 	node := request.GetNode()
 
 	var app *RemoteApp
 	if node == "." {
-		app = &RemoteApp{AppId: core.Id}
+		app = &RemoteApp{Name: core.Name}
 	} else {
-		if app = GetApp(node); app == nil {
-			return ErrAppNotFound
+		if app = GetAppByName(node); app == nil {
+			log.LogError(ErrAppNotFound)
+			return nil
 		}
 	}
 
 	log.LogMessage("client call: ", node, "/", request.GetServicemethod())
-	return app.Handle(sender, request.GetServicemethod(), request.GetData())
+	if err := app.Handle(sender, request.GetServicemethod(), request.GetData()); err != nil {
+		log.LogError(err)
+	}
+	return nil
 }
 
 //服务器向客户端的远程调用
 type S2CHelper struct {
 	sendbuf   []byte
-	cachedata map[int64]*Message
+	cachedata map[int64]*rpc.Message
+}
+
+func (t *S2CHelper) RegisterCallback(s rpc.Servicer) {
+	s.RegisterCallback("Call", t.Call)
 }
 
 func NewS2CHelper() *S2CHelper {
 	sc := &S2CHelper{}
 	sc.sendbuf = make([]byte, 0, SENDBUFLEN)
-	sc.cachedata = make(map[int64]*Message)
+	sc.cachedata = make(map[int64]*rpc.Message)
 	return sc
 }
 
@@ -67,13 +88,26 @@ func (s *S2CHelper) flush() {
 }
 
 //处理服务器向客户端的调用，对消息进行封装转成客户端的协议
-func (s *S2CHelper) Call(src rpc.Mailbox, request share.S2CMsg) error {
-	out, err := util.CreateMsg(s.sendbuf, request.Data, share.S2C_RPC)
-	if err != nil {
-		return err
+func (s *S2CHelper) Call(src rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	request := &share.S2CMsg{}
+	reader := NewMessageReader(msg)
+	if err := reader.ReadObject(request); err != nil {
+		log.LogError(err)
+		return nil
 	}
 
-	return s.call(src, request.To, request.Method, out)
+	out, err := util.CreateMsg(s.sendbuf, request.Data, share.S2C_RPC)
+	if err != nil {
+		log.LogError(err)
+		return nil
+	}
+
+	err = s.call(src, request.To, request.Method, out)
+	if err != nil {
+		log.LogError(err)
+	}
+
+	return nil
 }
 
 func (s *S2CHelper) call(src rpc.Mailbox, session int64, method string, out []byte) error {
@@ -108,20 +142,28 @@ func (s *S2CHelper) call(src rpc.Mailbox, session int64, method string, out []by
 	}
 
 	//写入缓冲区
-	cachedata = NewMessage(packagesize)
+	cachedata = rpc.NewMessage(packagesize)
 	s.cachedata[session] = cachedata
 	cachedata.Body = append(cachedata.Body, out...)
 	return nil
 }
 
 //处理服务器向客户端的广播
-func (s *S2CHelper) Broadcast(src rpc.Mailbox, request share.S2CBrocast) error {
-	for _, to := range request.To {
-		out, err := util.CreateMsg(s.sendbuf, request.Data, share.S2C_RPC)
-		if err != nil {
-			return err
-		}
+func (s *S2CHelper) Broadcast(src rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	request := &share.S2CBrocast{}
+	reader := NewMessageReader(msg)
+	if err := reader.ReadObject(request); err != nil {
+		log.LogError(err)
+		return nil
+	}
 
+	out, err := util.CreateMsg(s.sendbuf, request.Data, share.S2C_RPC)
+	if err != nil {
+		log.LogError(err)
+		return nil
+	}
+
+	for _, to := range request.To {
 		if err = s.call(src, to, request.Method, out); err != nil {
 			log.LogError(to, err)
 		}

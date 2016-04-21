@@ -29,7 +29,7 @@ func GetLogin() (host string, port int, err error) {
 	sort.Sort(sort.StringSlice(ls))
 	if len(ls) > 0 {
 		idx := App.serial % len(ls)
-		a := server.GetApp(ls[idx])
+		a := server.GetAppByName(ls[idx])
 		return a.ClientHost, a.ClientPort, nil
 	}
 
@@ -51,7 +51,7 @@ func (hd *handler) Handle(conn net.Conn) {
 	}
 
 	r := &s2c.Rpc{}
-	r.Sender = proto.String(App.Id)
+	r.Sender = proto.String(App.Name)
 
 	h, p, err := GetLogin()
 	if err != nil {
@@ -124,7 +124,7 @@ func (hd *wshandler) Handle(conn *websocket.Conn) {
 	}
 
 	r := &s2c.Rpc{}
-	r.Sender = proto.String(App.Id)
+	r.Sender = proto.String(App.Name)
 
 	h, p, err := GetLogin()
 	if err != nil {

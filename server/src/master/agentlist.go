@@ -33,7 +33,7 @@ func (a *AgentNode) HandleMsg(id uint16, msg []byte) error {
 			log.LogError(err)
 			return err
 		}
-		err = context.SendToApp(forward.AppId, forward.Data)
+		err = context.SendToApp(forward.Id, forward.Data)
 		if err != nil {
 			log.LogError(err)
 			return err
@@ -49,7 +49,7 @@ func (a *AgentNode) Close() {
 	a.quit = true
 }
 
-func (a *AgentNode) CreateApp(reqid string, appid string, appuid int32, typ string, args string, callapp string) error {
+func (a *AgentNode) CreateApp(reqid string, appid string, appuid int32, typ string, args string, callapp int32) error {
 	data, err := share.CreateAppMsg(typ, reqid, appid, appuid, args, callapp)
 	if err != nil {
 		log.LogError(err)

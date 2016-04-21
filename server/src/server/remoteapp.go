@@ -14,18 +14,12 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-var (
-	applock        sync.RWMutex
-	RemoteApps     = make(map[string]*RemoteApp)
-	ErrNotFoundApp = errors.New("app not found")
-	ErrUnreachable = errors.New("unreachable router")
-)
-
 //远程进程
 type RemoteApp struct {
 	sync.Mutex
+	Id         int32
 	Type       string
-	AppId      string
+	Name       string
 	Host       string
 	Port       int
 	ClientHost string
@@ -38,8 +32,8 @@ type RemoteApp struct {
 //进程就绪
 func (app *RemoteApp) SetReady(ready bool) {
 	app.Ready = ready
-	log.LogInfo(app.AppId, " is ready")
-	core.Emitter.Push(NEWAPPREADY, map[string]interface{}{"id": app.AppId}, true)
+	log.LogInfo(app.Name, " is ready")
+	core.Emitter.Push(NEWAPPREADY, map[string]interface{}{"id": app.Name}, true)
 }
 
 //向客户端发起一个远程调用
@@ -47,11 +41,11 @@ func (app *RemoteApp) ClientCall(src *rpc.Mailbox, session int64, method string,
 
 	var err error
 	var pb share.S2CMsg
-	pb.Sender = app.AppId
+	pb.Sender = app.Name
 	pb.To = session
 	pb.Method = method
 	r := &s2c.Rpc{}
-	r.Sender = proto.String(app.AppId)
+	r.Sender = proto.String(app.Name)
 	r.Servicemethod = proto.String(method)
 	if val, ok := args.(proto.Message); ok {
 		if r.Data, err = proto.Marshal(val); err != nil {
@@ -72,8 +66,13 @@ func (app *RemoteApp) ClientCall(src *rpc.Mailbox, session int64, method string,
 	app.Lock()
 	defer app.Unlock()
 
-	if app.AppId == core.Id {
-		return core.s2chelper.Call(*src, pb)
+	if app.Id == core.AppId { //进程内调用
+		msg := NewMessage()
+		msg.Write(pb)
+		msg.Flush()
+		core.s2chelper.Call(*src, msg.GetMessage())
+		msg.Free()
+		return nil
 	}
 
 	if app.Conn == nil {
@@ -84,7 +83,7 @@ func (app *RemoteApp) ClientCall(src *rpc.Mailbox, session int64, method string,
 			}
 			app.Conn = conn
 			app.RpcClient = rpc.NewClient(conn)
-			log.LogMessage("rpc connected:", app.AppId, ",", fmt.Sprintf("%s:%d", app.Host, app.Port))
+			log.LogMessage("rpc connected:", app.Name, ",", fmt.Sprintf("%s:%d", app.Host, app.Port))
 		}
 	}
 
@@ -101,11 +100,11 @@ func (app *RemoteApp) ClientBroadcast(src *rpc.Mailbox, session []int64, method 
 
 	var err error
 	var pb share.S2CBrocast
-	pb.Sender = app.AppId
+	pb.Sender = app.Name
 	pb.To = session
 	pb.Method = method
 	r := &s2c.Rpc{}
-	r.Sender = proto.String(app.AppId)
+	r.Sender = proto.String(app.Name)
 	r.Servicemethod = proto.String(method)
 	if val, ok := args.(proto.Message); ok {
 		if r.Data, err = proto.Marshal(val); err != nil {
@@ -125,8 +124,13 @@ func (app *RemoteApp) ClientBroadcast(src *rpc.Mailbox, session []int64, method 
 	app.Lock()
 	defer app.Unlock()
 
-	if app.AppId == core.Id {
-		return core.s2chelper.Broadcast(*src, pb)
+	if app.Id == core.AppId { //进程内调用
+		msg := NewMessage()
+		msg.Write(pb)
+		msg.Flush()
+		core.s2chelper.Broadcast(*src, msg.GetMessage())
+		msg.Free()
+		return nil
 	}
 
 	if app.Conn == nil {
@@ -138,7 +142,7 @@ func (app *RemoteApp) ClientBroadcast(src *rpc.Mailbox, session []int64, method 
 			}
 			app.Conn = conn
 			app.RpcClient = rpc.NewClient(conn)
-			log.LogMessage("rpc connected:", app.AppId, ",", fmt.Sprintf("%s:%d", app.Host, app.Port))
+			log.LogMessage("rpc connected:", app.Name, ",", fmt.Sprintf("%s:%d", app.Host, app.Port))
 		}
 	}
 
@@ -173,13 +177,12 @@ func (app *RemoteApp) Call(src *rpc.Mailbox, method string, args ...interface{})
 	app.Lock()
 	defer app.Unlock()
 
-	if app.AppId == core.Id {
+	if app.Id == core.AppId { //进程内调用
 		log.LogMessage("rpc inner call:", method)
-		return core.rpcServer.DirectCall("S2S"+method, *src, args...)
+		return core.rpcServer.Call("S2S"+method, *src, args...)
 	}
 
 	if app.Conn == nil {
-
 		if app.Conn == nil {
 			conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", app.Host, app.Port), time.Second)
 			if err != nil {
@@ -188,11 +191,48 @@ func (app *RemoteApp) Call(src *rpc.Mailbox, method string, args ...interface{})
 			}
 			app.Conn = conn
 			app.RpcClient = rpc.NewClient(conn)
-			log.LogMessage("rpc connected:", app.AppId, ",", fmt.Sprintf("%s:%d", app.Host, app.Port))
+			log.LogMessage("rpc connected:", app.Name, ",", fmt.Sprintf("%s:%d", app.Host, app.Port))
 		}
 	}
-	log.LogMessage("remote call:", app.AppId, "/", method)
+	log.LogMessage("remote call:", app.Name, "/", method)
 	err := app.RpcClient.Call("S2S"+method, *src, args...)
+
+	if err != nil {
+		app.Close()
+		log.LogError(err)
+	}
+
+	return err
+}
+
+func (app *RemoteApp) CallBack(src *rpc.Mailbox, method string, cb rpc.ReplyCB, args ...interface{}) error {
+
+	if src == nil {
+		src = &core.MailBox
+	}
+
+	app.Lock()
+	defer app.Unlock()
+
+	if app.Id == core.AppId { //进程内调用
+		log.LogMessage("rpc inner call:", method)
+		return core.rpcServer.CallBack("S2S"+method, *src, cb, args...)
+	}
+
+	if app.Conn == nil {
+		if app.Conn == nil {
+			conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", app.Host, app.Port), time.Second)
+			if err != nil {
+				log.LogError(err)
+				return err
+			}
+			app.Conn = conn
+			app.RpcClient = rpc.NewClient(conn)
+			log.LogMessage("rpc connected:", app.Name, ",", fmt.Sprintf("%s:%d", app.Host, app.Port))
+		}
+	}
+	log.LogMessage("remote call:", app.Name, "/", method)
+	err := app.RpcClient.CallBack("S2S"+method, *src, cb, args...)
 
 	if err != nil {
 		app.Close()
@@ -207,9 +247,9 @@ func (app *RemoteApp) Handle(src rpc.Mailbox, method string, args interface{}) e
 	app.Lock()
 	defer app.Unlock()
 
-	if app.AppId == core.Id {
+	if app.Id == core.AppId {
 		log.LogMessage("rpc inner handle:", method)
-		return core.rpcServer.DirectCall("C2S"+method, src, args)
+		return core.rpcServer.Call("C2S"+method, src, args)
 	}
 
 	if app.Conn == nil {
@@ -221,10 +261,10 @@ func (app *RemoteApp) Handle(src rpc.Mailbox, method string, args interface{}) e
 			}
 			app.Conn = conn
 			app.RpcClient = rpc.NewClient(conn)
-			log.LogMessage("rpc connected:", app.AppId, ",", fmt.Sprintf("%s:%d", app.Host, app.Port))
+			log.LogMessage("rpc connected:", app.Name, ",", fmt.Sprintf("%s:%d", app.Host, app.Port))
 		}
 	}
-	log.LogMessage("remote handle:", app.AppId, "/", method)
+	log.LogMessage("remote handle:", app.Name, "/", method)
 	err := app.RpcClient.Call("C2S"+method, src, args)
 	if err == rpc.ErrShutdown {
 		log.LogError(err)
@@ -241,133 +281,5 @@ func (app *RemoteApp) Close() {
 		app.Conn = nil
 	}
 
-	core.Emitter.Push(APPLOST, map[string]interface{}{"id": app.AppId}, true)
-}
-
-//往DB写日志，当前app必须是database,log_name为写日志的对象名称，可以是一个玩家的名字，可以是其它的信息。
-//log_source记录的大类别, log_type记录的小类别,log_content, log_comment则为记录的具体内容和注释
-func Log(log_name string, log_source, log_type int32, log_content, log_comment string) error {
-	db := GetAppByType("database")
-	if db == nil {
-		return ErrAppNotFound
-	}
-
-	return db.Log(log_name, log_source, log_type, log_content, log_comment)
-}
-
-//发送一个错误提示
-func Error(src *rpc.Mailbox, dest *rpc.Mailbox, method string, errno int32) error {
-	errmsg := &s2c.Error{}
-	errmsg.ErrorNo = proto.Int32(errno)
-	return MailTo(src, dest, method, errmsg)
-}
-
-//rpc调用，src==>dest, src 为空，则自动填充为当前app
-func MailTo(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args ...interface{}) error {
-	applock.RLock()
-	defer applock.RUnlock()
-	log.LogMessage("mailto:", *dest, "/", method)
-	var app *RemoteApp
-	if dest.Address == core.Id {
-		app = &RemoteApp{AppId: core.Id}
-	} else {
-		var exist bool
-		if app, exist = RemoteApps[dest.Address]; !exist {
-			return ErrNotFoundApp
-		}
-	}
-
-	if dest.Type == "" {
-		return app.Call(src, method, args...)
-	} else if dest.Type == "session" {
-		return app.ClientCall(src, dest.Id, method, args[0])
-	} else {
-		return ErrUnreachable
-	}
-
-	return nil
-}
-
-//获取远程进程的个数
-func GetAppCount() int {
-	applock.RLock()
-	defer applock.RUnlock()
-	return len(RemoteApps)
-}
-
-//通过appid获取远程进程
-func GetApp(id string) *RemoteApp {
-	applock.RLock()
-	defer applock.RUnlock()
-	if k, exist := RemoteApps[id]; exist {
-		return k
-	}
-	return nil
-}
-
-//通过类型获取远程进程
-func GetAppByType(typ string) *RemoteApp {
-	applock.RLock()
-	defer applock.RUnlock()
-	for _, v := range RemoteApps {
-		if v.Type == typ {
-			return v
-		}
-	}
-	return nil
-}
-
-//获取某个类型的所有远程进程的appid
-func GetAppIdsByType(typ string) []string {
-	applock.RLock()
-	defer applock.RUnlock()
-	ret := make([]string, 0, 10)
-	for _, v := range RemoteApps {
-		if v.Type == typ {
-			ret = append(ret, v.AppId)
-		}
-	}
-	return ret
-}
-
-//增加一个远程进程
-func AddApp(typ string, id string, host string, port int, clienthost string, clientport int, ready bool) {
-	applock.Lock()
-	defer applock.Unlock()
-	if core.Id == id {
-		return
-	}
-	if app, ok := RemoteApps[id]; ok {
-		if app.Host == host ||
-			app.Port == port ||
-			app.ClientHost == clienthost ||
-			app.ClientPort == clientport { //已经存在
-			return
-		}
-	}
-
-	RemoteApps[id] = &RemoteApp{Type: typ, AppId: id, Host: host, Port: port, ClientHost: clienthost, ClientPort: clientport, Ready: ready}
-	log.LogInfo(core.Id, "> add server:", *RemoteApps[id])
-	if ready {
-		RemoteApps[id].SetReady(ready)
-		core.Eventer.DispatchEvent("ready", id)
-	}
-}
-
-//移除一个远程进程
-func RemoveApp(id string) {
-	applock.Lock()
-	defer applock.Unlock()
-	if core.Id == id {
-		return
-	}
-	if _, ok := RemoteApps[id]; ok {
-		RemoteApps[id].Close()
-		delete(RemoteApps, id)
-		log.LogInfo(core.Id, "> remove server:", id)
-		return
-	}
-
-	log.LogError(core.Id, "> remove server failed, ", id)
-
+	core.Emitter.Push(APPLOST, map[string]interface{}{"id": app.Name}, true)
 }

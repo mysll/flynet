@@ -19,13 +19,13 @@
 		"#waitagents": "主服务器需要多少个代理服务器，如果这个值大于0，则主服务器会等待代理服务器的接入，满足要求后，才会启动整个服务",
 		"waitagents": 1,
 		"#startuid": "当前服务器的服务起始ID段，用来产生唯一的服务ID",
-		"startuid": 100000,
+		"startuid": 1000,
 		"#nobalance": "不参与负载均衡，主服务器不会在当前服务器中启动其它服务，用来做独占服务，比如数据库服务。",
 		"nobalance":true
 	},
 	"login": [{
-		"#id": "appid,全局唯一，不能重复",
-		"id": "login_1",
+		"#name": "名称,全局唯一，不能重复",
+		"name": "login_1",
 		"#port": "端口，为0，则为随机端口",
 		"port": 0,
 		"#clientport": "供客户端连接的端口，为0，则为随机端口",
@@ -36,8 +36,8 @@
 		"sockettype": "native"
 	}],
 	"loginmgr": [{
-		"#id": "appid,全局唯一，不能重复",
-		"id": "loginmgr",
+		"#name": "名称,全局唯一，不能重复",
+		"name": "loginmgr",
 		"#port": "端口，为0，则为随机端口",
 		"port": 0,
 		"#clientport": "供客户端连接的端口，为0，则为随机端口",
@@ -48,8 +48,8 @@
 		"sockettype": "native"
 	}],
 	"base": [{
-		"#id": "appid,全局唯一，不能重复",
-		"id": "base_1",
+		"#name": "名称,全局唯一，不能重复",
+		"name": "base_1",
 		"#port": "端口，为0，则为随机端口",
 		"port": 0,
 		"#clientport": "供客户端连接的端口，为0，则为随机端口",
@@ -68,20 +68,20 @@
 		"pprof":6800
 	}],
 	"basemgr": [{
-		"#id": "appid,全局唯一，不能重复",
-		"id": "basemgr",
+		"#name": "名称,全局唯一，不能重复",
+		"name": "basemgr",
 		"#port": "端口，为0，则为随机端口",
 		"port": 0
 	}],
 	"status": [{
-		"#id": "appid,全局唯一，不能重复",
-		"id": "status",
+		"#name": "名称,全局唯一，不能重复",
+		"name": "status",
 		"#port": "端口，为0，则为随机端口",
 		"port": 0
 	}],
 	"database": [{
-		"#id": "appid,全局唯一，不能重复",
-		"id": "db_1",
+		"#name": "名称,全局唯一，不能重复",
+		"name": "db_1",
 		"#port": "端口，为0，则为随机端口",
 		"port": 0,
 		"#type": "数据库类型，mysql, mongodb",

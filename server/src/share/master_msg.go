@@ -23,7 +23,8 @@ const (
 
 type RegisterApp struct {
 	Type       string
-	AppId      string
+	Id         int32
+	Name       string
 	Host       string
 	Port       int
 	ClientHost string
@@ -37,7 +38,8 @@ type RegisterAgent struct {
 
 type AddApp struct {
 	Type       string
-	AppId      string
+	Id         int32
+	Name       string
 	Host       string
 	Port       int
 	ClientHost string
@@ -46,7 +48,7 @@ type AddApp struct {
 }
 
 type RemoveApp struct {
-	AppId string
+	Id int32
 }
 
 type AppInfo struct {
@@ -54,7 +56,7 @@ type AppInfo struct {
 }
 
 type AppReady struct {
-	AppId string
+	Id int32
 }
 
 type MustAppReady struct {
@@ -63,24 +65,24 @@ type MustAppReady struct {
 type CreateApp struct {
 	Type    string
 	ReqId   string
-	AppId   string
+	AppName string
 	AppUid  int32
 	Args    string
-	CallApp string
+	CallApp int32
 }
 
 type CreateAppBak struct {
 	Id    string
-	AppId string
+	AppId int32
 	Res   string
 }
 
 type SendAppMsg struct {
-	AppId string
-	Data  []byte
+	Id   int32
+	Data []byte
 }
 
-func CreateForwardMsg(appid string, msg []byte) (data []byte, err error) {
+func CreateForwardMsg(appid int32, msg []byte) (data []byte, err error) {
 	forward := &SendAppMsg{appid, msg}
 	out, e := EncodeMsg(forward)
 	if e != nil {
@@ -100,7 +102,7 @@ func CreateRegisterAgent(id string, nobalance bool) (data []byte, err error) {
 	return util.CreateMsg(nil, out, M_REGISTER_AGENT)
 }
 
-func CreateAppMsg(typ string, reqid string, appid string, appuid int32, args string, callapp string) (data []byte, err error) {
+func CreateAppMsg(typ string, reqid string, appid string, appuid int32, args string, callapp int32) (data []byte, err error) {
 	create := &CreateApp{typ, reqid, appid, appuid, args, callapp}
 	out, e := EncodeMsg(create)
 	if e != nil {
@@ -110,7 +112,7 @@ func CreateAppMsg(typ string, reqid string, appid string, appuid int32, args str
 	return util.CreateMsg(nil, out, M_CREATEAPP)
 }
 
-func CreateAppBakMsg(reqid string, appid string, res string) (data []byte, err error) {
+func CreateAppBakMsg(reqid string, appid int32, res string) (data []byte, err error) {
 	create := &CreateAppBak{reqid, appid, res}
 	out, e := EncodeMsg(create)
 	if e != nil {
@@ -130,7 +132,7 @@ func CreateMustAppReadyMsg() (data []byte, err error) {
 	return util.CreateMsg(nil, out, M_MUSTAPPREADY)
 }
 
-func CreateReadyMsg(id string) (data []byte, err error) {
+func CreateReadyMsg(id int32) (data []byte, err error) {
 	ready := &AppReady{id}
 	out, e := EncodeMsg(ready)
 	if e != nil {
@@ -140,8 +142,8 @@ func CreateReadyMsg(id string) (data []byte, err error) {
 	return util.CreateMsg(nil, out, M_READY)
 }
 
-func CreateRegisterAppMsg(typ string, id string, host string, port int, clienthost string, clientport int) (data []byte, err error) {
-	si := &RegisterApp{typ, id, host, port, clienthost, clientport}
+func CreateRegisterAppMsg(typ string, id int32, name string, host string, port int, clienthost string, clientport int) (data []byte, err error) {
+	si := &RegisterApp{typ, id, name, host, port, clienthost, clientport}
 	out, e := EncodeMsg(si)
 	if e != nil {
 		err = e
@@ -162,8 +164,8 @@ func CreateServerListMsg(slist []AddApp) (data []byte, err error) {
 	return util.CreateMsg(nil, out, M_SERVER_LIST)
 }
 
-func CreateAddServerMsg(typ string, id string, host string, port int, clienthost string, clientport int, ready bool) (data []byte, err error) {
-	as := &AddApp{typ, id, host, port, clienthost, clientport, ready}
+func CreateAddServerMsg(typ string, id int32, name string, host string, port int, clienthost string, clientport int, ready bool) (data []byte, err error) {
+	as := &AddApp{typ, id, name, host, port, clienthost, clientport, ready}
 	out, e := EncodeMsg(as)
 	if e != nil {
 		err = e
@@ -173,8 +175,8 @@ func CreateAddServerMsg(typ string, id string, host string, port int, clienthost
 	return util.CreateMsg(nil, out, M_ADD_SERVER)
 }
 
-func CreateRemoveServerMsg(id string) (data []byte, err error) {
-	rs := &RemoveApp{AppId: id}
+func CreateRemoveServerMsg(id int32) (data []byte, err error) {
+	rs := &RemoveApp{id}
 	out, e := EncodeMsg(rs)
 	if e != nil {
 		err = e

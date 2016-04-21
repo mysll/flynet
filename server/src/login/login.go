@@ -14,7 +14,7 @@ type LoginApp struct {
 }
 
 func (l *LoginApp) OnPrepare() bool {
-	log.LogMessage(l.Id, " prepared")
+	log.LogMessage(l.Name, " prepared")
 	return true
 }
 

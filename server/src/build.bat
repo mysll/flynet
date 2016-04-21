@@ -1,7 +1,7 @@
 del ..\pkg\* /s/q
 go build -o ../../bin/tools/data.exe ./app/tools/data/
 go build -o ../../bin/tools/dbsync.exe ./app/tools/dbsync/
-go build -o ../../bin/tools/rpcmaker ./app/tools/rpcmaker/
+go build -o ../../bin/tools/rpcmaker.exe ./app/tools/rpcmaker/
 go build -o ../../bin/master.exe ./app/master/
 go build -o ../../bin/db.exe ./app/db/
 go build -o ../../bin/baseapp.exe ./app/base/

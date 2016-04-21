@@ -24,20 +24,17 @@ type Login struct {
 	Cached map[string]cacheUser
 }
 
-func (l *Login) AddClient(mailbox rpc.Mailbox, user string) error {
-
-	serial := rand.Int31()
-	log.LogMessage("client serial:", serial)
-	l.Cached[user] = cacheUser{serial, time.Now()}
-
-	ret := &s2c.Loginsucceed{}
-	ret.Host = proto.String(App.ClientHost)
-	ret.Port = proto.Int32(int32(App.ClientPort))
-	ret.Key = proto.Int32(serial)
-	return server.MailTo(nil, &mailbox, "Login.LoginResult", ret)
+func (t *Login) RegisterCallback(s rpc.Servicer) {
+	s.RegisterCallback("AddClient", t.AddClient)
+	s.RegisterCallback("SwitchPlayer", t.SwitchPlayer)
 }
 
-func (l *Login) SwitchPlayer(mailbox rpc.Mailbox, user string) error {
+func (l *Login) AddClient(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	r := server.NewMessageReader(msg)
+	user, err := r.ReadString()
+	if server.Check(err) {
+		return nil
+	}
 	serial := rand.Int31()
 	log.LogMessage("client serial:", serial)
 	l.Cached[user] = cacheUser{serial, time.Now()}
@@ -46,7 +43,26 @@ func (l *Login) SwitchPlayer(mailbox rpc.Mailbox, user string) error {
 	ret.Host = proto.String(App.ClientHost)
 	ret.Port = proto.Int32(int32(App.ClientPort))
 	ret.Key = proto.Int32(serial)
-	return server.MailTo(nil, &mailbox, "Login.SwitchBase", ret)
+	server.Check(server.MailTo(nil, &mailbox, "Login.LoginResult", ret))
+	return nil
+}
+
+func (l *Login) SwitchPlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	r := server.NewMessageReader(msg)
+	user, err := r.ReadString()
+	if server.Check(err) {
+		return nil
+	}
+	serial := rand.Int31()
+	log.LogMessage("client serial:", serial)
+	l.Cached[user] = cacheUser{serial, time.Now()}
+
+	ret := &s2c.Loginsucceed{}
+	ret.Host = proto.String(App.ClientHost)
+	ret.Port = proto.Int32(int32(App.ClientPort))
+	ret.Key = proto.Int32(serial)
+	server.Check(server.MailTo(nil, &mailbox, "Login.SwitchBase", ret))
+	return nil
 }
 
 func (l *Login) checkClient(user string, key int32) bool {
