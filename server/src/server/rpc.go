@@ -73,8 +73,8 @@ type RpcCollection struct {
 	Infos []RpcInfo
 }
 
-func createRpc() *rpc.Server {
-	rpc, err := rpc.CreateRpcService(remotes, handlers)
+func createRpc(ch chan *rpc.RpcCall) *rpc.Server {
+	rpc, err := rpc.CreateRpcService(remotes, handlers, ch)
 	if err != nil {
 		log.LogFatalf(err)
 	}

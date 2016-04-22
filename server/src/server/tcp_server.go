@@ -55,6 +55,10 @@ func (c *ClientCodec) Close() error {
 	return c.rwc.Close()
 }
 
+func (c *ClientCodec) GetConn() io.ReadWriteCloser {
+	return c.rwc
+}
+
 func (c *ClientCodec) Mailbox() *rpc.Mailbox {
 	return &c.node.MailBox
 }
@@ -79,7 +83,7 @@ func (c *ClientHandler) Handle(clientconn net.Conn) {
 	codec.cachebuf = make([]byte, SENDBUFLEN)
 	codec.node = cl
 	log.LogInfo("new client:", mailbox, ",", clientconn.RemoteAddr())
-	core.rpcServer.ServeCodec(codec, rpc.MAX_BUF_LEN, core.rpcCh)
+	core.rpcServer.ServeCodec(codec, rpc.MAX_BUF_LEN)
 	core.Emitter.Push(LOSTUSERCONN, map[string]interface{}{"id": cl.Session}, true)
 	log.LogMessage("client handle quit")
 }
@@ -104,7 +108,7 @@ func (c *WSClientHandler) Handle(ws *websocket.Conn) {
 	codec.cachebuf = make([]byte, SENDBUFLEN)
 	codec.node = cl
 	log.LogInfo("new client:", mailbox, ",", ws.RemoteAddr())
-	core.rpcServer.ServeCodec(codec, rpc.MAX_BUF_LEN, core.rpcCh)
+	core.rpcServer.ServeCodec(codec, rpc.MAX_BUF_LEN)
 	core.Emitter.Push(LOSTUSERCONN, map[string]interface{}{"id": cl.Session}, true)
 	log.LogMessage("client handle quit")
 }

@@ -23,7 +23,6 @@ func (t *TaskLogic) RegisterCallback(s rpc.Servicer) {
 func (t *TaskLogic) Submit(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	args := &c2s.Reqreceivetask{}
 	if server.Check(server.ProtoParse(msg, args)) {
-		log.LogError(err)
 		return nil
 	}
 	p := App.Players.GetPlayer(mailbox.Id)

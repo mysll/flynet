@@ -6,8 +6,8 @@ import (
 	"runtime"
 )
 
-func CreateRpcService(service map[string]interface{}, handle map[string]interface{}) (rpcsvr *Server, err error) {
-	rpcsvr = NewServer()
+func CreateRpcService(service map[string]interface{}, handle map[string]interface{}, ch chan *RpcCall) (rpcsvr *Server, err error) {
+	rpcsvr = NewServer(ch)
 	for k, v := range service {
 		err = rpcsvr.RegisterName("S2S"+k, v)
 		if err != nil {
@@ -25,7 +25,7 @@ func CreateRpcService(service map[string]interface{}, handle map[string]interfac
 	return
 }
 
-func CreateService(rs *Server, l net.Listener, ch chan *RpcCall) {
+func CreateService(rs *Server, l net.Listener) {
 
 	log.LogMessage("rpc start at:", l.Addr().String())
 	for {
@@ -41,6 +41,6 @@ func CreateService(rs *Server, l net.Listener, ch chan *RpcCall) {
 		}
 		//启动服务
 		log.LogInfo("new rpc client,", conn.RemoteAddr())
-		go rs.ServeConn(conn, MAX_BUF_LEN, ch)
+		go rs.ServeConn(conn, MAX_BUF_LEN)
 	}
 }

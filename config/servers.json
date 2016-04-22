@@ -14,7 +14,7 @@
 		"port": 0,
 		"clientport": 0,
 		"fronted": true,
-		"sockettype": "websocket"
+		"sockettype": "native"
 	}],
 	"loginmgr": [{
 		"name": "loginmgr",
@@ -23,7 +23,7 @@
 		"clienthost": "192.168.1.102",
 		"clientport": 5391,
 		"fronted": true,
-		"sockettype": "websocket"
+		"sockettype": "native"
 	}],
 	"base": [{
 		"name": "base_1",
@@ -32,7 +32,7 @@
 		"clienthost": "192.168.1.102",
 		"clientport": 0,
 		"fronted": true,
-		"sockettype": "websocket",
+		"sockettype": "native",
 		"assets": "../assets",
 		"loglevel":1,
 		"debug":true,

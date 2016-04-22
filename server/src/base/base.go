@@ -92,7 +92,6 @@ func init() {
 	App = &BaseApp{
 		Players:    NewPlayerList(),
 		Login:      NewLogin(),
-		Proxy:      NewProxy(),
 		Account:    NewAccount(),
 		DbBridge:   NewDbBridge(),
 		AreaBridge: NewAreaBridge(),

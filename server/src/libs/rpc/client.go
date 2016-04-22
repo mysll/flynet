@@ -97,7 +97,7 @@ type ClientCodec interface {
 	// WriteRequest must be safe for concurrent use by multiple goroutines.
 	WriteRequest(sync.Mutex, uint64, *Call) error
 	ReadMessage() (*Message, error)
-
+	GetAddress() string
 	Close() error
 }
 
@@ -163,7 +163,7 @@ func (client *Client) input() {
 	for err == nil {
 		message, err := client.codec.ReadMessage()
 		if err != nil {
-			log.LogError(err)
+			log.LogError(client.codec.GetAddress(), err)
 			break
 		}
 
@@ -261,6 +261,10 @@ type byteClientCodec struct {
 	rwc    io.ReadWriteCloser
 	encBuf *bufio.Writer
 	maxrx  uint16
+}
+
+func (c *byteClientCodec) GetAddress() string {
+	return c.rwc.(net.Conn).RemoteAddr().String()
 }
 
 func (c *byteClientCodec) WriteRequest(sending sync.Mutex, seq uint64, call *Call) (err error) {

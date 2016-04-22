@@ -39,7 +39,7 @@ func (ch *C2SHelper) Call(sender rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 
 	var app *RemoteApp
 	if node == "." {
-		app = &RemoteApp{Name: core.Name}
+		app = &RemoteApp{Id: core.AppId, Name: core.Name}
 	} else {
 		if app = GetAppByName(node); app == nil {
 			log.LogError(ErrAppNotFound)

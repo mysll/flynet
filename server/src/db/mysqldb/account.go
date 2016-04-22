@@ -35,6 +35,7 @@ func (a *Account) ClearStatus(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messag
 	}
 
 	server.Check2(db.sql.Exec("UPDATE `role_info` SET `status`=?, `serverid`=? WHERE `status`=? and `serverid`=?", 0, "", 1, serverid))
+	log.LogMessage("clear server:", serverid)
 	return nil
 }
 
@@ -94,7 +95,7 @@ func (a *Account) LoadUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 		return nil
 	}
 
-	if _, err = sqlconn.Exec("UPDATE `role_info` set `lastlogintime`=?,`status`=?,`serverid`=?,`landtimes`=`landtimes`+1 WHERE `rolename`=? LIMIT 1", time.Now().Format("2006-01-02 15:04:05"), 1, mailbox.App, info.RoleName); err != nil {
+	if _, err = sqlconn.Exec("UPDATE `role_info` set `lastlogintime`=?,`status`=?,`serverid`=?,`landtimes`=`landtimes`+1 WHERE `rolename`=? LIMIT 1", time.Now().Format("2006-01-02 15:04:05"), 1, app.Name, info.RoleName); err != nil {
 		log.LogError(err)
 		return nil
 	}

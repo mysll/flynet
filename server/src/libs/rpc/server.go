@@ -8,6 +8,7 @@ import (
 	"io"
 	"libs/log"
 	"strings"
+	"sync"
 	"time"
 	"util"
 )
@@ -36,7 +37,6 @@ func NewRpcCall() *RpcCall {
 	case call = <-rpccallCache:
 	default:
 		call = &RpcCall{}
-
 	}
 	return call
 }
@@ -93,6 +93,7 @@ func (r *Response) Free() {
 }
 
 type RpcCall struct {
+	session uint64
 	srv     *service
 	header  *Header
 	message *Message
@@ -127,6 +128,7 @@ func (call *RpcCall) Free() error {
 	call.message = nil
 	call.srv = nil
 	call.cb = nil
+	call.session = 0
 	if call.reply != nil {
 		call.reply.Free()
 		call.reply = nil
@@ -162,13 +164,20 @@ func (srv *service) ThreadPush(call *RpcCall) bool {
 	return false
 }
 
+type Session struct {
+	rwc       io.ReadWriteCloser
+	codec     ServerCodec
+	sendQueue chan *Response
+	quit      bool
+}
+
 type Server struct {
-	codec      ServerCodec
-	ch         chan *RpcCall
+	mutex      sync.RWMutex
+	serial     uint64
 	serviceMap map[string]*service
+	sessions   map[uint64]*Session
 	sendQueue  chan *Response
-	maxrx      uint16
-	quit       bool
+	ch         chan *RpcCall
 }
 
 func (server *Server) getCall(servicemethod string, src Mailbox, cb ReplyCB, args ...interface{}) (*RpcCall, error) {
@@ -236,21 +245,58 @@ func (server *Server) CallBack(servicemethod string, src Mailbox, cb ReplyCB, ar
 	return err
 }
 
-func (server *Server) ServeConn(conn io.ReadWriteCloser, maxlen uint16, ch chan *RpcCall) {
+func (server *Server) ServeConn(conn io.ReadWriteCloser, maxlen uint16) {
 	codec := &byteServerCodec{
 		rwc:    conn,
 		encBuf: bufio.NewWriter(conn),
 	}
-	go server.send()
-	server.ServeCodec(codec, maxlen, ch)
+	server.ServeCodec(codec, maxlen)
 }
 
-func (server *Server) send() {
+func (server *Server) ServeCodec(codec ServerCodec, maxlen uint16) {
+	var serial uint64
+	server.mutex.Lock()
+	serial = server.serial
+	server.serial++
+	session := &Session{rwc: codec.GetConn(), codec: codec, sendQueue: make(chan *Response, 32)}
+	server.sessions[serial] = session
+	server.mutex.Unlock()
+	go session.send()
+	log.LogMessage("start new service:", serial)
+	for {
+		msg, err := codec.ReadRequest(maxlen)
+		if err != nil {
+			if err != io.EOF &&
+				!strings.Contains(err.Error(), "An existing connection was forcibly closed by the remote host") &&
+				!strings.Contains(err.Error(), "use of closed network connection") {
+				log.LogError("rpc err:", err)
+			} else {
+				log.LogMessage("service client closed")
+			}
+			break
+		}
+
+		call := server.createCall(msg)
+		call.session = serial
+		if call != nil {
+			server.ch <- call
+		}
+	}
+
+	session.quit = true
+	codec.Close()
+	log.LogMessage("service quit:", serial)
+	server.mutex.Lock()
+	delete(server.sessions, serial)
+	server.mutex.Unlock()
+}
+
+func (session *Session) send() {
 	for {
 		select {
-		case resp := <-server.sendQueue:
+		case resp := <-session.sendQueue:
 			if resp.Seq != 0 {
-				err := server.codec.WriteResponse(resp.Seq, resp.Reply)
+				err := session.codec.WriteResponse(resp.Seq, resp.Reply)
 				if err != nil {
 					resp.Free()
 					log.LogError(err)
@@ -261,7 +307,7 @@ func (server *Server) send() {
 			}
 			resp.Free()
 		default:
-			if server.quit {
+			if session.quit {
 				return
 			}
 			time.Sleep(time.Millisecond)
@@ -270,6 +316,14 @@ func (server *Server) send() {
 }
 
 func (server *Server) sendResponse(call *RpcCall) error {
+
+	server.mutex.RLock()
+	session := server.sessions[call.session]
+	server.mutex.RUnlock()
+	if session == nil {
+		return fmt.Errorf("session not found", call.session)
+	}
+
 	resp := NewResponse()
 	resp.Seq = call.header.Seq
 	resp.cb = call.cb
@@ -281,34 +335,8 @@ func (server *Server) sendResponse(call *RpcCall) error {
 		msg = NewMessage(1)
 	}
 	resp.Reply = msg
-	server.sendQueue <- resp
+	session.sendQueue <- resp
 	return nil
-}
-
-func (server *Server) ServeCodec(codec ServerCodec, maxlen uint16, ch chan *RpcCall) {
-	server.codec = codec
-	server.ch = ch
-	server.maxrx = maxlen
-	for {
-		msg, err := server.codec.ReadRequest(maxlen)
-		if err != nil {
-			if err != io.EOF &&
-				!strings.Contains(err.Error(), "An existing connection was forcibly closed by the remote host") &&
-				!strings.Contains(err.Error(), "use of closed network connection") {
-				log.LogError("rpc err:", err)
-			}
-			break
-		}
-
-		call := server.createCall(msg)
-		if call != nil {
-			server.ch <- call
-		}
-	}
-
-	server.codec.Close()
-	server.quit = true
-	log.LogMessage("server loop quit")
 }
 
 func (server *Server) createCall(msg *Message) *RpcCall {
@@ -423,10 +451,15 @@ func (server *Server) GetRpcInfo(name string) []string {
 	return ret
 }
 
-func NewServer() *Server {
+func NewServer(ch chan *RpcCall) *Server {
 	s := &Server{}
 	s.serviceMap = make(map[string]*service)
-	s.sendQueue = make(chan *Response, 32)
+	s.ch = ch
+	s.sessions = make(map[uint64]*Session)
+	s.sessions[0] = &Session{} //本地回调
+	s.sessions[0].sendQueue = make(chan *Response, 32)
+	s.serial = 1
+	go s.sessions[0].send() //读取本地消息回调
 	return s
 }
 
@@ -468,9 +501,13 @@ func (c *byteServerCodec) Close() error {
 	return c.rwc.Close()
 }
 
+func (c *byteServerCodec) GetConn() io.ReadWriteCloser {
+	return c.rwc
+}
+
 type ServerCodec interface {
 	ReadRequest(maxrc uint16) (*Message, error)
 	WriteResponse(seq uint64, body *Message) (err error)
-
+	GetConn() io.ReadWriteCloser
 	Close() error
 }

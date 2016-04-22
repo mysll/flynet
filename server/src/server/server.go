@@ -103,7 +103,7 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 	//now := time.Now()
 	//log.WriteToFile(fmt.Sprintf("log/%s_%d_%d_%d_%d_%d_%d.log", svr.Name, now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second()))
 
-	log.LogMessage("id:", svr.AppId)
+	log.LogMessage("id:", svr.AppId, ", name:", svr.Name)
 
 	svr.Host = localip
 	if svr.Host == "" {
@@ -259,9 +259,9 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 	}
 
 	//内部rpc注册
-	svr.rpcServer = createRpc()
 	svr.rpcCh = make(chan *rpc.RpcCall, RPCBUFFER)
-	svr.WaitGroup.Wrap(func() { rpc.CreateService(svr.rpcServer, svr.rpcListener, svr.rpcCh) })
+	svr.rpcServer = createRpc(svr.rpcCh)
+	svr.WaitGroup.Wrap(func() { rpc.CreateService(svr.rpcServer, svr.rpcListener) })
 
 	svr.Ready()
 
