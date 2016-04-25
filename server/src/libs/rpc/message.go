@@ -53,6 +53,23 @@ func (m *Message) Dup() *Message {
 	return m
 }
 
+func (m *Message) Copy(copyheader bool) *Message {
+	var msg *Message
+	if len(m.Body) > 0 {
+		msg = NewMessage(len(m.Body))
+
+		msg.Body = append(msg.Body, m.Body...)
+	} else {
+		msg = NewMessage(1)
+	}
+
+	if copyheader {
+		msg.Header = append(msg.Header, m.Header...)
+	}
+
+	return msg
+}
+
 func NewMessage(sz int) *Message {
 	var m *Message
 	var ch chan *Message

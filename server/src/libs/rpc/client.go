@@ -59,6 +59,14 @@ func NewCall() *Call {
 }
 
 func (call *Call) Free() {
+	if call.Args != nil {
+		call.Args.Free()
+	}
+
+	if call.Reply != nil {
+		call.Reply.Free()
+	}
+
 	call.Args = nil
 	call.Reply = nil
 	call.CB = nil
@@ -216,17 +224,8 @@ func (client *Client) Process() {
 }
 
 func (call *Call) done() {
-
 	if call.CB != nil {
 		call.CB(call.Reply)
-	}
-
-	if call.Args != nil {
-		call.Args.Free()
-	}
-
-	if call.Reply != nil {
-		call.Reply.Free()
 	}
 
 	call.Free()
@@ -271,6 +270,7 @@ func (c *byteClientCodec) WriteRequest(sending sync.Mutex, seq uint64, call *Cal
 	sending.Lock()
 	defer sending.Unlock()
 	msg := call.Args
+	msg.Header = msg.Header[:0]
 	w := util.NewStoreArchiver(msg.Header)
 	w.Write(seq)
 	w.Write(call.mb.Uid)
@@ -318,16 +318,8 @@ func (client *Client) Close() error {
 // Call invokes the named function, waits for it to complete, and returns its error status.
 func (client *Client) SyncCall(serviceMethod string, src Mailbox, args *Message) error {
 	call := NewCall()
-	var msg *Message
-	if args != nil && len(args.Body) > 0 {
-		msg = NewMessage(len(args.Body))
-		msg.Body = append(msg.Body, args.Body...)
-	} else {
-		msg = NewMessage(1)
-	}
-
 	call.ServiceMethod = serviceMethod
-	call.Args = msg
+	call.Args = args.Dup()
 	call.noreply = true
 	call.mb = src
 	return client.send(call)
@@ -335,15 +327,8 @@ func (client *Client) SyncCall(serviceMethod string, src Mailbox, args *Message)
 
 func (client *Client) SyncCallBack(serviceMethod string, src Mailbox, args *Message, reply ReplyCB) error {
 	call := NewCall()
-	var msg *Message
-	if args != nil && len(args.Body) > 0 {
-		msg = NewMessage(len(args.Body))
-		msg.Body = append(msg.Body, args.Body...)
-	} else {
-		msg = NewMessage(1)
-	}
 	call.ServiceMethod = serviceMethod
-	call.Args = msg
+	call.Args = args.Dup()
 	call.CB = reply
 	call.noreply = false
 	call.mb = src
@@ -352,15 +337,8 @@ func (client *Client) SyncCallBack(serviceMethod string, src Mailbox, args *Mess
 
 func (client *Client) CallMessage(serviceMethod string, src Mailbox, args *Message) error {
 	call := NewCall()
-	var msg *Message
-	if args != nil && len(args.Body) > 0 {
-		msg = NewMessage(len(args.Body))
-		msg.Body = append(msg.Body, args.Body...)
-	} else {
-		msg = NewMessage(1)
-	}
 	call.ServiceMethod = serviceMethod
-	call.Args = msg
+	call.Args = args.Dup()
 	call.noreply = true
 	call.mb = src
 	client.sendqueue <- call
@@ -369,15 +347,8 @@ func (client *Client) CallMessage(serviceMethod string, src Mailbox, args *Messa
 
 func (client *Client) CallMessageBack(serviceMethod string, src Mailbox, args *Message, reply ReplyCB) error {
 	call := NewCall()
-	var msg *Message
-	if args != nil && len(args.Body) > 0 {
-		msg = NewMessage(len(args.Body))
-		msg.Body = append(msg.Body, args.Body...)
-	} else {
-		msg = NewMessage(1)
-	}
 	call.ServiceMethod = serviceMethod
-	call.Args = msg
+	call.Args = args.Dup()
 	call.CB = reply
 	call.noreply = false
 	call.mb = src

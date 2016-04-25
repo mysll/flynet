@@ -295,16 +295,18 @@ func (session *Session) send() {
 	for {
 		select {
 		case resp := <-session.sendQueue:
-			if resp.Seq != 0 {
-				err := session.codec.WriteResponse(resp.Seq, resp.Reply)
-				if err != nil {
-					resp.Free()
-					log.LogError(err)
-					return
-				}
-			} else if resp.cb != nil {
-				resp.cb(resp.Reply)
+			if resp.Seq == 0 {
+				resp.Free()
+				log.LogFatalf("resp.seq is zero")
 			}
+
+			err := session.codec.WriteResponse(resp.Seq, resp.Reply)
+			if err != nil {
+				resp.Free()
+				log.LogError(err)
+				return
+			}
+
 			resp.Free()
 		default:
 			if session.quit {
@@ -316,6 +318,10 @@ func (session *Session) send() {
 }
 
 func (server *Server) sendResponse(call *RpcCall) error {
+	if call.cb != nil { //本地回调
+		call.cb(call.reply)
+		return nil
+	}
 
 	server.mutex.RLock()
 	session := server.sessions[call.session]
@@ -327,14 +333,7 @@ func (server *Server) sendResponse(call *RpcCall) error {
 	resp := NewResponse()
 	resp.Seq = call.header.Seq
 	resp.cb = call.cb
-	var msg *Message
-	if call.reply != nil && len(call.reply.Body) > 0 {
-		msg = NewMessage(len(call.reply.Body))
-		msg.Body = append(msg.Body, call.reply.Body...)
-	} else {
-		msg = NewMessage(1)
-	}
-	resp.Reply = msg
+	resp.Reply = call.reply.Dup()
 	session.sendQueue <- resp
 	return nil
 }
@@ -456,10 +455,6 @@ func NewServer(ch chan *RpcCall) *Server {
 	s.serviceMap = make(map[string]*service)
 	s.ch = ch
 	s.sessions = make(map[uint64]*Session)
-	s.sessions[0] = &Session{} //本地回调
-	s.sessions[0].sendQueue = make(chan *Response, 32)
-	s.serial = 1
-	go s.sessions[0].send() //读取本地消息回调
 	return s
 }
 
@@ -475,7 +470,7 @@ func (c *byteServerCodec) ReadRequest(maxrc uint16) (*Message, error) {
 
 func (c *byteServerCodec) WriteResponse(seq uint64, body *Message) (err error) {
 	if body == nil {
-		body = NewMessage(16)
+		body = NewMessage(1)
 	}
 
 	w := util.NewStoreArchiver(body.Header)
