@@ -97,6 +97,8 @@
 		"#pools": "数据库操作线程数",
 		"pools": 4,
 		"#rolelimit": "帐号角色数量上限",
-		"rolelimit":1
+		"rolelimit":1,
+		"#rolenameunique": "帐号角色名是否唯一，0不唯一，1唯一",
+		"rolenameunique":1
 	}]
 }

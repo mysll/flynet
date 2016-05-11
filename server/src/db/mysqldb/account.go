@@ -152,20 +152,22 @@ func (a *Account) CreateUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message
 		return nil
 	}
 
-	if r, err = sqlconn.Query("SELECT `uid` FROM `role_info` WHERE `account`=? and `rolename`=? LIMIT 1", info.Account, info.Name); err != nil {
-		log.LogError(err)
-		server.Check(app.Call(&mailbox, "DbBridge.CreateRoleBack", err.Error()))
-		return nil
-	}
-	if r.Next() {
-		log.LogError("name conflict")
+	if db.nameunique { //名称是否唯一
+		if r, err = sqlconn.Query("SELECT `uid` FROM `role_info` WHERE `account`=? and `rolename`=? LIMIT 1", info.Account, info.Name); err != nil {
+			log.LogError(err)
+			server.Check(app.Call(&mailbox, "DbBridge.CreateRoleBack", err.Error()))
+			return nil
+		}
+		if r.Next() {
+			log.LogError("name conflict")
+			r.Close()
+			errmsg := &s2c.Error{}
+			errmsg.ErrorNo = proto.Int32(share.ERROR_NAME_CONFLIT)
+			server.Check(server.MailTo(&mailbox, &mailbox, "Role.Error", errmsg))
+			return nil
+		}
 		r.Close()
-		errmsg := &s2c.Error{}
-		errmsg.ErrorNo = proto.Int32(share.ERROR_NAME_CONFLIT)
-		server.Check(server.MailTo(&mailbox, &mailbox, "Role.Error", errmsg))
-		return nil
 	}
-	r.Close()
 
 	uid, err := sqlconn.GetUid("userid")
 	if err != nil {

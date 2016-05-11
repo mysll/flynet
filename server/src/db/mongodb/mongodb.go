@@ -1,9 +1,10 @@
 package mongodb
 
 import (
+	"libs/log"
+
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"libs/log"
 	//. "libs/parser"
 	//"os"
 	"server"
@@ -26,7 +27,7 @@ type MongoDB struct {
 	limit   int
 }
 
-func (self *MongoDB) InitDB(db string, source string, threads int, entity string, role string, limit int) error {
+func (self *MongoDB) InitDB(db string, source string, threads int, entity string, role string, limit int, nameunique bool) error {
 	session, err := mgo.Dial(source)
 	if err != nil {
 		return err

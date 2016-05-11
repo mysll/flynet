@@ -13,7 +13,7 @@ var (
 )
 
 type DBer interface {
-	InitDB(db string, source string, threads int, entity string, role string, limit int) error
+	InitDB(db string, source string, threads int, entity string, role string, limit int, nameunique bool) error
 	Close()
 	KeepAlive()
 }
@@ -30,6 +30,7 @@ type DBApp struct {
 	db         DBer
 	pools      int
 	rolelimit  int
+	nameunique bool
 	keepid     server.TimerID
 }
 
@@ -106,6 +107,17 @@ func parseArgs() {
 			App.rolelimit = v
 		}
 	}
+
+	App.nameunique = true
+	if l, ok := args.CheckGet("rolenameunique"); ok {
+		v, err := l.Int()
+		if err != nil {
+			log.LogFatalf(err)
+		}
+		if v == 0 {
+			App.nameunique = false
+		}
+	}
 }
 
 func (d *DBApp) OnPrepare() bool {
@@ -119,7 +131,7 @@ func (d *DBApp) OnPrepare() bool {
 		panic("unknown database")
 	}
 
-	if err := App.db.InitDB(App.dbname, App.ds, App.pools, App.entity, App.roleEntity, App.rolelimit); err != nil {
+	if err := App.db.InitDB(App.dbname, App.ds, App.pools, App.entity, App.roleEntity, App.rolelimit, App.nameunique); err != nil {
 		panic(err)
 	}
 

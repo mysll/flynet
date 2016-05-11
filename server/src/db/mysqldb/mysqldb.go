@@ -11,17 +11,18 @@ var (
 )
 
 type MysqlDB struct {
-	pools   int
-	sql     SqlWrapper
-	Account *Account
-	DBRaw   *Database
-	dbname  string
-	ds      string
+	pools      int
+	sql        SqlWrapper
+	Account    *Account
+	DBRaw      *Database
+	dbname     string
+	ds         string
+	nameunique bool
 	//wg      util.WaitGroupWrapper
 	limit int
 }
 
-func (self *MysqlDB) InitDB(db string, source string, threads int, entity string, role string, limit int) error {
+func (self *MysqlDB) InitDB(db string, source string, threads int, entity string, role string, limit int, nameunique bool) error {
 	var err error
 	self.sql, err = NewConn("mysql", source)
 	if err != nil {
@@ -32,6 +33,7 @@ func (self *MysqlDB) InitDB(db string, source string, threads int, entity string
 	self.ds = source
 	self.dbname = db
 	self.limit = limit
+	self.nameunique = nameunique
 	if !checkDb(entity, role) {
 		return errors.New("database need sync")
 	}
