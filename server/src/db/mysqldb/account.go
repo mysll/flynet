@@ -50,13 +50,14 @@ func (a *Account) LoadUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	var r *sql.Rows
 	var err error
 	bak := share.LoadUserBak{}
+	bak.Account = info.Account
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
 		return nil
 	}
 
-	if r, err = sqlconn.Query("SELECT `uid`,`locktime`,`locked`,`entity`, `status`, `serverid`, `scene`, `scene_x`, `scene_y`, `scene_z`, `scene_dir`, `roleinfo`, `landtimes` FROM `role_info` WHERE `rolename`=? and `roleindex`=? LIMIT 1", info.RoleName, info.Index); err != nil {
+	if r, err = sqlconn.Query("SELECT `uid`,`locktime`,`locked`,`entity`, `status`, `serverid`, `scene`, `scene_x`, `scene_y`, `scene_z`, `scene_dir`, `roleinfo`, `landtimes` FROM `role_info` WHERE `account`=? and `rolename`=? and `roleindex`=? LIMIT 1", info.Account, info.RoleName, info.Index); err != nil {
 		server.Check(err)
 		return nil
 	}
@@ -95,11 +96,12 @@ func (a *Account) LoadUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 		return nil
 	}
 
-	if _, err = sqlconn.Exec("UPDATE `role_info` set `lastlogintime`=?,`status`=?,`serverid`=?,`landtimes`=`landtimes`+1 WHERE `rolename`=? LIMIT 1", time.Now().Format("2006-01-02 15:04:05"), 1, app.Name, info.RoleName); err != nil {
+	if _, err = sqlconn.Exec("UPDATE `role_info` set `lastlogintime`=?,`status`=?,`serverid`=?,`landtimes`=`landtimes`+1 WHERE `account`=? and `rolename`=? LIMIT 1", time.Now().Format("2006-01-02 15:04:05"), 1, app.Name, info.Account, info.RoleName); err != nil {
 		log.LogError(err)
 		return nil
 	}
 	data.RoleInfo = roleinfo
+	bak.Account = info.Account
 	bak.Name = info.RoleName
 	bak.Scene = scene
 	bak.X = x
@@ -150,7 +152,7 @@ func (a *Account) CreateUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message
 		return nil
 	}
 
-	if r, err = sqlconn.Query("SELECT `uid` FROM `role_info` WHERE `rolename`=? LIMIT 1", info.Name); err != nil {
+	if r, err = sqlconn.Query("SELECT `uid` FROM `role_info` WHERE `account`=? and `rolename`=? LIMIT 1", info.Account, info.Name); err != nil {
 		log.LogError(err)
 		server.Check(app.Call(&mailbox, "DbBridge.CreateRoleBack", err.Error()))
 		return nil
@@ -236,7 +238,7 @@ func (a *Account) ClearPlayerStatus(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.
 	}
 
 	sqlconn := db.sql
-	_, err := sqlconn.Exec("UPDATE `role_info` SET `status`=?, `serverid`=? WHERE `rolename`=?", 0, "", info.Name)
+	_, err := sqlconn.Exec("UPDATE `role_info` SET `status`=?, `serverid`=? WHERE `account`=? and `rolename`=?", 0, "", info.Account, info.Name)
 	if err != nil {
 		log.LogError(err)
 		return nil
@@ -266,11 +268,12 @@ func (a *Account) SavePlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message
 	}
 
 	if data.Type == share.SAVETYPE_OFFLINE {
-		_, err := db.sql.Exec("UPDATE `role_info` SET `status`=?, `serverid`=?, `scene`=?, `scene_x`=?, `scene_y`=?, `scene_z`=?, `scene_dir`=?, `roleinfo`=? WHERE `rolename`=?",
+		_, err := db.sql.Exec("UPDATE `role_info` SET `status`=?, `serverid`=?, `scene`=?, `scene_x`=?, `scene_y`=?, `scene_z`=?, `scene_dir`=?, `roleinfo`=? WHERE `account`=? and `rolename`=?",
 			0,
 			"",
 			data.Scene, data.X, data.Y, data.Z, data.Dir,
 			data.SaveData.RoleInfo,
+			data.Account,
 			data.Name,
 		)
 		if err != nil {

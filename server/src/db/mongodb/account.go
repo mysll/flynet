@@ -273,7 +273,7 @@ func (a *Account) SavePlayer(mailbox rpc.Mailbox, data share.UpdateUser) error {
 		}
 
 		if data.Type == share.SAVETYPE_OFFLINE {
-			if err := a.ClearPlayerStatus(mailbox, share.ClearUser{Name: data.Name}); err != nil {
+			if err := a.ClearPlayerStatus(mailbox, share.ClearUser{Account: data.Account, Name: data.Name}); err != nil {
 				log.LogError(err)
 				return server.MailTo(&mailbox, &base, "DbBridge.SavePlayerBak", err.Error())
 			}

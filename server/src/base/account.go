@@ -37,7 +37,7 @@ func (a *Account) SelectUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message
 	}
 
 	player.ChooseRole = args.GetRolename()
-	err := App.DbBridge.selectUser(mailbox, args.GetRolename(), int(args.GetRoleindex()))
+	err := App.DbBridge.selectUser(mailbox, player.Account, args.GetRolename(), int(args.GetRoleindex()))
 	if err != nil {
 		log.LogError(err)
 	}
@@ -84,7 +84,7 @@ func (a *Account) Login(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 			pl.State = STATE_LOGGED
 			if args.GetRolename() != "" {
 				pl.ChooseRole = args.GetRolename()
-				server.Check(App.DbBridge.selectUser(mailbox, args.GetRolename(), int(args.GetRoleindex())))
+				server.Check(App.DbBridge.selectUser(mailbox, pl.Account, args.GetRolename(), int(args.GetRoleindex())))
 				return nil
 			}
 			server.Check(App.DbBridge.getUserInfo(mailbox, args.GetUser()))

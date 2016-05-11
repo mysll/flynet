@@ -122,11 +122,12 @@ func (d *DbBridge) getUserInfo(mailbox rpc.Mailbox, account string) error {
 	return server.ErrAppNotFound
 }
 
-func (d *DbBridge) selectUser(mailbox rpc.Mailbox, rolename string, index int) error {
+func (d *DbBridge) selectUser(mailbox rpc.Mailbox, account string, rolename string, index int) error {
 	db := server.GetAppByType("database")
 
 	if db != nil {
 		loaduser := share.LoadUser{}
+		loaduser.Account = account
 		loaduser.RoleName = rolename
 		loaduser.Index = index
 		return db.Call(&mailbox, "Account.LoadUser", loaduser)
@@ -168,7 +169,7 @@ func (d *DbBridge) SelectUserBak(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 		return nil
 	}
 	db := server.GetAppByType("database")
-	info := share.ClearUser{save.Name}
+	info := share.ClearUser{save.Account, save.Name}
 	player := App.Players.GetPlayer(mailbox.Id)
 	if player == nil {
 		log.LogError("player not found, id:", mailbox.Id)
