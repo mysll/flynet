@@ -44,9 +44,8 @@ var (
 			Field{"landtimes", "INT(10) UNSIGNED", false, false},
 		},
 		IndexInfo: map[string][]string{
-			"PRIMARY":                 []string{"uid"},
-			"UNIQUE INDEX `rolename`": []string{"rolename"},
-			"INDEX `role`":            []string{"account", "rolename"},
+			"PRIMARY":      []string{"uid"},
+			"INDEX `role`": []string{"account", "rolename"},
 		},
 	}
 )
