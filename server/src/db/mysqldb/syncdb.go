@@ -223,7 +223,7 @@ func (s *Sync) SyncDB(path string, drop bool, role string) {
 
 func CreateSyncDB(db string, datasource string) *Sync {
 	s := &Sync{}
-	c, err := NewMysqlConn(datasource)
+	conn, err := NewMysqlConn(datasource)
 	if err != nil {
 		l.TraceInfo("dbmgr", err)
 		panic(err)

@@ -19,15 +19,15 @@ func GetInfo() map[string]interface{} {
 		path = filepath.VolumeName(file)
 	}
 
-	diskinfo := disk.DiskUsageStat{}
-	if v, err := disk.DiskUsage(path); err == nil {
+	diskinfo := disk.UsageStat{}
+	if v, err := disk.Usage(path); err == nil {
 		var i interface{}
 		i = v
 		switch inst := i.(type) {
-		case disk.DiskUsageStat:
+		case disk.UsageStat:
 			diskinfo = inst
 			break
-		case *disk.DiskUsageStat:
+		case *disk.UsageStat:
 			if inst != nil {
 				diskinfo = *inst
 			}
@@ -54,7 +54,7 @@ func GetInfo() map[string]interface{} {
 
 	var cpupercent float64
 
-	ps, err := cpu.CPUPercent(time.Millisecond, true)
+	ps, err := cpu.Percent(time.Millisecond, true)
 	if err == nil && len(ps) > 0 {
 		for _, v := range ps {
 			cpupercent += v

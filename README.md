@@ -7,7 +7,7 @@
 
 ##Requirements
 
-- Go 1.2 +
+- Go 1.5.2 +
 - Mongodb or Mysql
 - github.com/golang/progobuf
 - github.com/bitly/go-simplejson

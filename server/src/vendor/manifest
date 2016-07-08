@@ -1,0 +1,232 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/FiloSottile/gvt",
+			"repository": "https://github.com/FiloSottile/gvt",
+			"vcs": "git",
+			"revision": "02e2422ab1f16e3872045e4117af370c5c10b24c",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/StackExchange/wmi",
+			"repository": "https://github.com/StackExchange/wmi",
+			"vcs": "git",
+			"revision": "f3e2bae1e0cb5aef83e319133eabfee30013a4a5",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/bitly/go-simplejson",
+			"repository": "https://github.com/bitly/go-simplejson",
+			"vcs": "git",
+			"revision": "aabad6e819789e569bd6aabf444c935aa9ba1e44",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/bmizerany/assert",
+			"repository": "https://github.com/bmizerany/assert",
+			"vcs": "git",
+			"revision": "b7ed37b82869576c289d7d97fb2bbd8b64a0cb28",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/go-ole/go-ole",
+			"repository": "https://github.com/go-ole/go-ole",
+			"vcs": "git",
+			"revision": "be49f7c07711fcb603cff39e1de7c67926dc0ba7",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/go-sql-driver/mysql",
+			"repository": "https://github.com/go-sql-driver/mysql",
+			"vcs": "git",
+			"revision": "3654d25ec346ee8ce71a68431025458d52a38ac0",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/golang/protobuf",
+			"repository": "https://github.com/golang/protobuf",
+			"vcs": "git",
+			"revision": "3852dcfda249c2097355a6aabb199a28d97b30df",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/gonuts/commander",
+			"repository": "https://github.com/gonuts/commander",
+			"vcs": "git",
+			"revision": "f8ba4e959ca914268227c3ebbd7f6bf0bb35541a",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/gonuts/flag",
+			"repository": "https://github.com/gonuts/flag",
+			"vcs": "git",
+			"revision": "741a6cbd37a30dedc93f817e7de6aaf0ca38a493",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/gorilla/context",
+			"repository": "https://github.com/gorilla/context",
+			"vcs": "git",
+			"revision": "aed02d124ae4a0e94fea4541c8effd05bf0c8296",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/gorilla/mux",
+			"repository": "https://github.com/gorilla/mux",
+			"vcs": "git",
+			"revision": "9fa818a44c2bf1396a17f9d5a3c0f6dd39d2ff8e",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/gorilla/securecookie",
+			"repository": "https://github.com/gorilla/securecookie",
+			"vcs": "git",
+			"revision": "ff356348f74133a59d3e93aa24b5b4551b6fe90d",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/gorilla/sessions",
+			"repository": "https://github.com/gorilla/sessions",
+			"vcs": "git",
+			"revision": "56ba4b0a11da87516629a57408a5f7e4c8ea7b0b",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/jimmykuu/wtforms",
+			"repository": "https://github.com/jimmykuu/wtforms",
+			"vcs": "git",
+			"revision": "05bf93d9d14a7319154e974aae24d37fb07744b5",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/kr/pretty",
+			"repository": "https://github.com/kr/pretty",
+			"vcs": "git",
+			"revision": "7497514e37543f8a9dfdb86a97c2e8d175a0f8a0",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/kr/pty",
+			"repository": "https://github.com/kr/pty",
+			"vcs": "git",
+			"revision": "a6bad5ee6fc60cad43d219214dd2449bf077f3f5",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/kr/text",
+			"repository": "https://github.com/kr/text",
+			"vcs": "git",
+			"revision": "7cafcd837844e784b526369c9bce262804aebc60",
+			"branch": "main",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/mysll/go-uuid",
+			"repository": "https://github.com/mysll/go-uuid",
+			"vcs": "git",
+			"revision": "ed3ca8a15a931b141440a7e98e4f716eec255f7d",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/mysll/log4go",
+			"repository": "https://github.com/mysll/log4go",
+			"vcs": "git",
+			"revision": "32b2ceb9eaa996a1d8645f865c0b0ef45c914a01",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/shirou/gopsutil",
+			"repository": "https://github.com/shirou/gopsutil",
+			"vcs": "git",
+			"revision": "2728d81cdef579d6ed88d2fd5c71e85aa83eaba8",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/shirou/w32",
+			"repository": "https://github.com/shirou/w32",
+			"vcs": "git",
+			"revision": "3c9377fc6748f222729a8270fe2775d149a249ad",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/stretchr/testify/\\vendor\\github.com\\davecgh\\go-spew\\spew",
+			"repository": "https://github.com/stretchr/testify",
+			"vcs": "git",
+			"revision": "d77da356e56a7428ad25149ca77381849a6a5232",
+			"branch": "master",
+			"path": "\\vendor\\github.com\\davecgh\\go-spew\\spew",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/stretchr/testify/\\vendor\\github.com\\pmezard\\go-difflib\\difflib",
+			"repository": "https://github.com/stretchr/testify",
+			"vcs": "git",
+			"revision": "d77da356e56a7428ad25149ca77381849a6a5232",
+			"branch": "master",
+			"path": "\\vendor\\github.com\\pmezard\\go-difflib\\difflib",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/stretchr/testify/assert",
+			"repository": "https://github.com/stretchr/testify",
+			"vcs": "git",
+			"revision": "d77da356e56a7428ad25149ca77381849a6a5232",
+			"branch": "master",
+			"path": "/assert",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/check.v1",
+			"repository": "https://gopkg.in/check.v1",
+			"vcs": "git",
+			"revision": "4f90aeace3a26ad7021961c297b22c42160c7b25",
+			"branch": "v1",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/mgo.v2",
+			"repository": "https://gopkg.in/mgo.v2",
+			"vcs": "git",
+			"revision": "29cc868a5ca65f401ff318143f9408d02f4799cc",
+			"branch": "v2",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/tomb.v2",
+			"repository": "https://gopkg.in/tomb.v2",
+			"vcs": "git",
+			"revision": "14b3d72120e8d10ea6e6b7f87f7175734b1faab8",
+			"branch": "v2",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/yaml.v2",
+			"repository": "https://gopkg.in/yaml.v2",
+			"vcs": "git",
+			"revision": "a83829b6f1293c91addabc89d0571c246397bbf4",
+			"branch": "v2",
+			"notests": true
+		}
+	]
+}
