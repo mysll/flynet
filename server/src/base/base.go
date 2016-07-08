@@ -17,7 +17,6 @@ type BaseApp struct {
 	*server.Server
 	Players    *PlayerList
 	startinit  sync.Once
-	Proxy      *Proxy
 	Account    *Account
 	DbBridge   *DbBridge
 	AreaBridge *AreaBridge
@@ -30,8 +29,8 @@ type BaseApp struct {
 }
 
 func (b *BaseApp) OnPrepare() bool {
-	rand.Seed(time.Now().UTC().UnixNano() + int64(hash.DJBHash(App.Id)))
-	log.LogMessage(b.Id, " prepared")
+	rand.Seed(time.Now().UTC().UnixNano() + int64(hash.DJBHash(App.Name)))
+	log.LogMessage(b.Name, " prepared")
 	return true
 }
 
@@ -54,8 +53,7 @@ func (b *BaseApp) OnClientLost(id int64) {
 
 func (b *BaseApp) StartInit() {
 	db := server.GetAppByType("database")
-	db.Call(nil, "Account.ClearStatus", b.Id)
-	//server.NewDBWarp(db).SendSystemLetter(nil, "system", "", "", 1, "测试", "这是一封测试邮件", "", "_", share.DBParams{})
+	db.Call(nil, "Account.ClearStatus", b.Name)
 }
 
 func (b *BaseApp) OnMustAppReady() {
@@ -94,7 +92,6 @@ func init() {
 	App = &BaseApp{
 		Players:    NewPlayerList(),
 		Login:      NewLogin(),
-		Proxy:      NewProxy(),
 		Account:    NewAccount(),
 		DbBridge:   NewDbBridge(),
 		AreaBridge: NewAreaBridge(),

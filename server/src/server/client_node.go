@@ -15,7 +15,7 @@ type ClientNode struct {
 	DelayDestroy int
 	Connected    bool
 	rwc          io.ReadWriteCloser
-	Sendbuf      chan *Message
+	Sendbuf      chan *rpc.Message
 	Addr         string
 	quit         bool
 	MailBox      rpc.Mailbox
@@ -24,7 +24,7 @@ type ClientNode struct {
 
 func NewClientNode() *ClientNode {
 	cn := &ClientNode{}
-	cn.Sendbuf = make(chan *Message, 32)
+	cn.Sendbuf = make(chan *rpc.Message, 32)
 
 	return cn
 }
@@ -34,7 +34,7 @@ func (c *ClientNode) Ping() {
 }
 
 //向客户端发包，存进一个消息队列，异步发送
-func (c *ClientNode) SendMessage(message *Message) error {
+func (c *ClientNode) SendMessage(message *rpc.Message) error {
 	if c.quit {
 		return fmt.Errorf("client is quit")
 	}
@@ -53,7 +53,7 @@ func (c *ClientNode) Send(data []byte) error {
 	if c.quit {
 		return fmt.Errorf("client is quit")
 	}
-	message := NewMessage(len(data))
+	message := rpc.NewMessage(len(data))
 	message.Body = append(message.Body, data...)
 	select {
 	case c.Sendbuf <- message:

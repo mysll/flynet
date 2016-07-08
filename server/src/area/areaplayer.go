@@ -71,7 +71,7 @@ func (p *PlayerList) AddPlayer(mailbox rpc.Mailbox, data *entity.EntityInfo) *Ar
 	ent, err := App.CreateFromArchive(data,
 		map[string]interface{}{
 			"mailbox": mailbox,
-			"base":    rpc.Mailbox{Address: mailbox.Address},
+			"base":    rpc.Mailbox{Address: mailbox.App},
 			"sync":    true})
 	if err != nil {
 		log.LogError(err)
@@ -94,7 +94,7 @@ func (p *PlayerList) AddPlayer(mailbox rpc.Mailbox, data *entity.EntityInfo) *Ar
 	pl := &AreaPlayer{}
 	pl.Heartbeat = server.NewHeartbeat()
 	pl.Mailbox = mailbox
-	pl.Base = rpc.Mailbox{Address: mailbox.Address}
+	pl.Base = rpc.Mailbox{Address: mailbox.App}
 	pl.Name = name
 	pl.Entity = ent
 	pl.Deleted = false

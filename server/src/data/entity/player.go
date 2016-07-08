@@ -1829,7 +1829,7 @@ func (rec *PlayerMailBox) GetSyncer() TableSyncer {
 
 //序列化
 func (rec *PlayerMailBox) Serial() ([]byte, error) {
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	for _, v := range rec.Rows {
 		ar.Write(v.Source_uid)
 		ar.WriteString(v.Source_name)
@@ -1849,7 +1849,7 @@ func (rec *PlayerMailBox) SerialRow(row int) ([]byte, error) {
 	if row < 0 || row >= len(rec.Rows) {
 		return nil, ErrRowError
 	}
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	v := rec.Rows[row]
 	ar.Write(v.Source_uid)
 	ar.WriteString(v.Source_name)
@@ -2776,7 +2776,7 @@ func (rec *PlayerTaskAccepted) GetSyncer() TableSyncer {
 
 //序列化
 func (rec *PlayerTaskAccepted) Serial() ([]byte, error) {
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	for _, v := range rec.Rows {
 		ar.WriteString(v.ID)
 		ar.Write(v.Flag)
@@ -2789,7 +2789,7 @@ func (rec *PlayerTaskAccepted) SerialRow(row int) ([]byte, error) {
 	if row < 0 || row >= len(rec.Rows) {
 		return nil, ErrRowError
 	}
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	v := rec.Rows[row]
 	ar.WriteString(v.ID)
 	ar.Write(v.Flag)
@@ -3240,7 +3240,7 @@ func (rec *PlayerTaskRecord) GetSyncer() TableSyncer {
 
 //序列化
 func (rec *PlayerTaskRecord) Serial() ([]byte, error) {
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	for _, v := range rec.Rows {
 		ar.WriteString(v.ID)
 		ar.Write(v.Typ)
@@ -3257,7 +3257,7 @@ func (rec *PlayerTaskRecord) SerialRow(row int) ([]byte, error) {
 	if row < 0 || row >= len(rec.Rows) {
 		return nil, ErrRowError
 	}
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	v := rec.Rows[row]
 	ar.WriteString(v.ID)
 	ar.Write(v.Typ)
@@ -3980,7 +3980,7 @@ func (rec *PlayerTaskCanAccept) GetSyncer() TableSyncer {
 
 //序列化
 func (rec *PlayerTaskCanAccept) Serial() ([]byte, error) {
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	for _, v := range rec.Rows {
 		ar.WriteString(v.ID)
 	}
@@ -3992,7 +3992,7 @@ func (rec *PlayerTaskCanAccept) SerialRow(row int) ([]byte, error) {
 	if row < 0 || row >= len(rec.Rows) {
 		return nil, ErrRowError
 	}
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	v := rec.Rows[row]
 	ar.WriteString(v.ID)
 	return ar.Data(), nil
@@ -4375,7 +4375,7 @@ func (rec *PlayerTaskTimeLimit) GetSyncer() TableSyncer {
 
 //序列化
 func (rec *PlayerTaskTimeLimit) Serial() ([]byte, error) {
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	for _, v := range rec.Rows {
 		ar.WriteString(v.ID)
 		ar.Write(v.StartTime)
@@ -4389,7 +4389,7 @@ func (rec *PlayerTaskTimeLimit) SerialRow(row int) ([]byte, error) {
 	if row < 0 || row >= len(rec.Rows) {
 		return nil, ErrRowError
 	}
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	v := rec.Rows[row]
 	ar.WriteString(v.ID)
 	ar.Write(v.StartTime)
@@ -4908,7 +4908,7 @@ func (rec *PlayerTaskGlobalRecord) GetSyncer() TableSyncer {
 
 //序列化
 func (rec *PlayerTaskGlobalRecord) Serial() ([]byte, error) {
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	for _, v := range rec.Rows {
 		ar.Write(v.Typ)
 		ar.WriteString(v.Key)
@@ -4922,7 +4922,7 @@ func (rec *PlayerTaskGlobalRecord) SerialRow(row int) ([]byte, error) {
 	if row < 0 || row >= len(rec.Rows) {
 		return nil, ErrRowError
 	}
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	v := rec.Rows[row]
 	ar.Write(v.Typ)
 	ar.WriteString(v.Key)
@@ -5441,7 +5441,7 @@ func (rec *PlayerTaskPropRecord) GetSyncer() TableSyncer {
 
 //序列化
 func (rec *PlayerTaskPropRecord) Serial() ([]byte, error) {
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	for _, v := range rec.Rows {
 		ar.WriteString(v.ID)
 		ar.WriteString(v.Property)
@@ -5455,7 +5455,7 @@ func (rec *PlayerTaskPropRecord) SerialRow(row int) ([]byte, error) {
 	if row < 0 || row >= len(rec.Rows) {
 		return nil, ErrRowError
 	}
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	v := rec.Rows[row]
 	ar.WriteString(v.ID)
 	ar.WriteString(v.Property)
@@ -6188,7 +6188,7 @@ func (obj *Player) baseInit(dirty, modify, extra map[string]interface{}) {
 }
 
 func (obj *Player) Serial() ([]byte, error) {
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	ps := obj.GetVisiblePropertys(0)
 	ar.Write(int16(len(ps)))
 
@@ -6221,7 +6221,7 @@ func (obj *Player) SerialModify() ([]byte, error) {
 	if len(obj.Mmodify) == 0 {
 		return nil, nil
 	}
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	ar.Write(int16(len(obj.Mmodify)))
 	for k, v := range obj.Mmodify {
 		if !obj.PropertyIsPrivate(k) {

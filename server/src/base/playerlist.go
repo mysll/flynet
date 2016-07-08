@@ -63,7 +63,7 @@ func (p *PlayerList) AddPlayer(session int64) *BasePlayer {
 	}
 
 	pl := &BasePlayer{}
-	pl.Mailbox = rpc.NewMailBox(App.Id, "session", session, App.AppId)
+	pl.Mailbox = rpc.NewMailBox(1, session, App.AppId)
 	pl.Session = session
 	p.players[session] = pl
 	return pl

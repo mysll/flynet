@@ -38,7 +38,7 @@ type Server struct {
 	ClientHost     string
 	ClientPort     int
 	AppId          int32
-	Id             string
+	Name           string
 	Fronted        bool
 	Debug          bool
 	PProfPort      int
@@ -89,21 +89,21 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 
 	svr.Type = typ
 	svr.StartArgs = args
-	if id, ok := args.CheckGet("id"); ok {
-		v, err := id.String()
+	if name, ok := args.CheckGet("name"); ok {
+		v, err := name.String()
 		if err != nil {
 			panic(err)
 		}
-		svr.Id = v
+		svr.Name = v
 	} else {
 		panic("app id not defined")
 	}
-	svr.MailBox = rpc.Mailbox{Address: svr.Id, Type: ""}
+	svr.MailBox = rpc.NewMailBox(0, 0, svr.AppId)
 
 	//now := time.Now()
-	//log.WriteToFile(fmt.Sprintf("log/%s_%d_%d_%d_%d_%d_%d.log", svr.Id, now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second()))
+	//log.WriteToFile(fmt.Sprintf("log/%s_%d_%d_%d_%d_%d_%d.log", svr.Name, now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second()))
 
-	log.LogMessage("id:", svr.AppId)
+	log.LogMessage("id:", svr.AppId, ", name:", svr.Name)
 
 	svr.Host = localip
 	if svr.Host == "" {
@@ -114,7 +114,7 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 			}
 			svr.Host = v
 		} else {
-			panic(svr.Id + " host not defined")
+			panic(svr.Name + " host not defined")
 		}
 	}
 
@@ -125,7 +125,7 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 		}
 		svr.Port = v
 	} else {
-		panic(svr.Id + "port not defined")
+		panic(svr.Name + "port not defined")
 	}
 
 	svr.ClientHost = outerip
@@ -177,7 +177,7 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 	}
 
 	if svr.Fronted && !svr.apper.RawSock() {
-		log.TraceInfo(svr.Id, "init link")
+		log.TraceInfo(svr.Name, "init link")
 		listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", svr.ClientHost, svr.ClientPort))
 		if err != nil {
 			panic(err)
@@ -195,7 +195,7 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 			svr.WaitGroup.Wrap(func() { util.TCPServer(svr.clientListener, &ClientHandler{}) })
 		}
 
-		log.TraceInfo(svr.Id, "start link complete")
+		log.TraceInfo(svr.Name, "start link complete")
 	}
 
 	master_peer := &master_peer{}
@@ -259,9 +259,9 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 	}
 
 	//内部rpc注册
-	svr.rpcServer = createRpc()
 	svr.rpcCh = make(chan *rpc.RpcCall, RPCBUFFER)
-	svr.WaitGroup.Wrap(func() { rpc.CreateService(svr.rpcServer, svr.rpcListener, svr.rpcCh) })
+	svr.rpcServer = createRpc(svr.rpcCh)
+	svr.WaitGroup.Wrap(func() { rpc.CreateService(svr.rpcServer, svr.rpcListener) })
 
 	svr.Ready()
 
@@ -290,7 +290,7 @@ func (svr *Server) Wait() {
 	}
 
 	<-svr.exitChannel
-	log.TraceInfo(svr.Id, "is shutdown")
+	log.TraceInfo(svr.Name, "is shutdown")
 	//通知app进程即将退出
 	if svr.apper.OnShutdown() {
 		svr.Shutdown()
@@ -307,7 +307,7 @@ func (svr *Server) Wait() {
 		svr.rpcListener.Close()
 	}
 	svr.WaitGroup.Wait()
-	log.TraceInfo(svr.Id, " stopped")
+	log.TraceInfo(svr.Name, " stopped")
 	//等待日志写入完毕
 	<-time.After(time.Second)
 	log.CloseLogger()

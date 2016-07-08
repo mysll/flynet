@@ -15,7 +15,7 @@ type BaseMgr struct {
 }
 
 func (b *BaseMgr) OnPrepare() bool {
-	log.LogMessage(b.Id, " prepared")
+	log.LogMessage(b.Name, " prepared")
 	return true
 }
 

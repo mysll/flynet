@@ -12,38 +12,35 @@ var (
 
 type StatusApp struct {
 	*server.Server
-	rm       *RankManager
 	pl       *PlayerList
 	shutdown int
 }
 
-func (this *StatusApp) OnPrepare() bool {
-	log.LogMessage(this.Id, " prepared")
+func (status *StatusApp) OnPrepare() bool {
+	log.LogMessage(status.Name, " prepared")
 	return true
 }
 
-func (this *StatusApp) OnMustAppReady() {
-	App.rm.load()
+func (status *StatusApp) OnMustAppReady() {
 }
 
-func (this *StatusApp) OnShutdown() bool {
-	this.shutdown = 1
+func (status *StatusApp) OnShutdown() bool {
+	status.shutdown = 1
 	return false
 }
 
-func (this *StatusApp) OnLost(app string) {
-	if server.GetAppByType("base") == nil && this.shutdown == 1 {
-		this.Exit()
+func (status *StatusApp) OnLost(app string) {
+	if server.GetAppByType("base") == nil && status.shutdown == 1 {
+		status.Exit()
 	}
 }
 
-func (this *StatusApp) Exit() {
-	this.shutdown = 2
-	App.rm.savetotal()
-	App.AddTimer(time.Second, 1, this.DelayQuit, nil)
+func (status *StatusApp) Exit() {
+	status.shutdown = 2
+	App.AddTimer(time.Second, 1, status.DelayQuit, nil)
 }
 
-func (this *StatusApp) DelayQuit(intervalid server.TimerID, count int32, args interface{}) {
+func (status *StatusApp) DelayQuit(intervalid server.TimerID, count int32, args interface{}) {
 	App.Shutdown()
 }
 
@@ -53,9 +50,7 @@ func GetAllHandler() map[string]interface{} {
 
 func init() {
 	App = &StatusApp{
-		rm: NewRankManager(),
 		pl: NewPlayerList(),
 	}
-	server.RegisterRemote("RankManager", App.rm)
 	server.RegisterRemote("PlayerList", App.pl)
 }

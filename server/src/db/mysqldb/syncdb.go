@@ -44,9 +44,8 @@ var (
 			Field{"landtimes", "INT(10) UNSIGNED", false, false},
 		},
 		IndexInfo: map[string][]string{
-			"PRIMARY":                 []string{"uid"},
-			"UNIQUE INDEX `rolename`": []string{"rolename"},
-			"INDEX `role`":            []string{"account", "rolename"},
+			"PRIMARY":      []string{"uid"},
+			"INDEX `role`": []string{"account", "rolename"},
 		},
 	}
 )
@@ -224,17 +223,12 @@ func (s *Sync) SyncDB(path string, drop bool, role string) {
 
 func CreateSyncDB(db string, datasource string) *Sync {
 	s := &Sync{}
-	c, err := NewConn("mysql", datasource)
+	conn, err := NewMysqlConn(datasource)
 	if err != nil {
 		l.TraceInfo("dbmgr", err)
 		panic(err)
 	}
 
-	var conn *MySql
-	var ok bool
-	if conn, ok = c.(*MySql); !ok {
-		panic("convert failed")
-	}
 	s.conn = conn
 	s.db = db
 	s.datasrouce = datasource

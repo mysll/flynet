@@ -22,18 +22,19 @@ func RpcProcess(ch chan *rpc.RpcCall) {
 	var delay time.Duration
 	for {
 		select {
-		case caller := <-ch:
-			if caller.Service.Push(caller) {
+		case call := <-ch:
+			if call.IsThreadWork() {
 				busy = true
 			} else {
-				log.LogDebug(caller.Src.Interface(), " rpc call:", caller.Req.ServiceMethod)
+				log.LogDebug(call.GetSrc(), " rpc call:", call.GetMethod())
 				start_time = time.Now()
-				err := caller.Call()
+				err := call.Call()
 				delay = time.Now().Sub(start_time)
 				if delay > warninglvl {
-					log.LogWarning("rpc call ", caller.Req.ServiceMethod, " delay:", delay.Nanoseconds()/1000000, "ms")
+					log.LogWarning("rpc call ", call.GetMethod(), " delay:", delay.Nanoseconds()/1000000, "ms")
 				}
-				caller.Free()
+				call.Done()
+				call.Free()
 				busy = true
 				if err != nil {
 					log.LogError("rpc error:", err)
@@ -44,7 +45,17 @@ func RpcProcess(ch chan *rpc.RpcCall) {
 			return
 		}
 	}
+}
 
+//rpc 回调处理
+func RpcResponseProcess() {
+	applock.RLock()
+	for _, app := range RemoteApps {
+		if app.RpcClient != nil {
+			app.RpcClient.Process()
+		}
+	}
+	applock.RUnlock()
 }
 
 //事件执行
@@ -113,7 +124,8 @@ func Run(s *Server) {
 
 		EventProcess(s.Emitter)
 		RpcProcess(s.rpcCh)
-
+		RpcResponseProcess()
+		
 		if now.Sub(s.Time.LastBeatTime) >= BeatTime {
 			//处理心跳
 			s.timer.Pump()

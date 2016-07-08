@@ -26,6 +26,13 @@ const (
 type LetterSystem struct {
 }
 
+func (t *LetterSystem) RegisterCallback(s rpc.Servicer) {
+	s.RegisterCallback("DeleteAllLetter", t.DeleteAllLetter)
+	s.RegisterCallback("DeleteLetter", t.DeleteLetter)
+	s.RegisterCallback("RecvAppendix", t.RecvAppendix)
+	s.RegisterCallback("ReadLetter", t.ReadLetter)
+}
+
 func NewLetterSystem() *LetterSystem {
 	return &LetterSystem{}
 }
@@ -43,7 +50,7 @@ func DeleteExpiredLetter(player *entity.Player) {
 }
 
 //删除所有信件
-func (l *LetterSystem) DeleteAllLetter(mailbox rpc.Mailbox, void c2s.Void) error {
+func (l *LetterSystem) DeleteAllLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	p := App.Players.GetPlayer(mailbox.Id)
 	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
@@ -56,7 +63,11 @@ func (l *LetterSystem) DeleteAllLetter(mailbox rpc.Mailbox, void c2s.Void) error
 }
 
 //删除信件
-func (l *LetterSystem) DeleteLetter(mailbox rpc.Mailbox, args c2s.Reqoperatemail) error {
+func (l *LetterSystem) DeleteLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	args := &c2s.Reqoperatemail{}
+	if server.Check(server.ProtoParse(msg, args)) {
+		return nil
+	}
 	p := App.Players.GetPlayer(mailbox.Id)
 	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
@@ -80,7 +91,11 @@ func (l *LetterSystem) DeleteLetter(mailbox rpc.Mailbox, args c2s.Reqoperatemail
 }
 
 //接收附件
-func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, args c2s.Reqoperatemail) error {
+func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	args := &c2s.Reqoperatemail{}
+	if server.Check(server.ProtoParse(msg, args)) {
+		return nil
+	}
 	p := App.Players.GetPlayer(mailbox.Id)
 	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
@@ -171,7 +186,11 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, args c2s.Reqoperatemail
 }
 
 //读信件
-func (l *LetterSystem) ReadLetter(mailbox rpc.Mailbox, args c2s.Reqoperatemail) error {
+func (l *LetterSystem) ReadLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	args := &c2s.Reqoperatemail{}
+	if server.Check(server.ProtoParse(msg, args)) {
+		return nil
+	}
 	p := App.Players.GetPlayer(mailbox.Id)
 	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)

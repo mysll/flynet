@@ -147,7 +147,8 @@ type UpdateUser struct {
 }
 
 type ClearUser struct {
-	Name string
+	Account string
+	Name    string
 }
 
 type ObjectInfo struct {
@@ -160,11 +161,13 @@ type UpdateUserBak struct {
 }
 
 type LoadUser struct {
+	Account  string
 	RoleName string
 	Index    int
 }
 
 type LoadUserBak struct {
+	Account   string
 	Name      string
 	Scene     string
 	X         float32

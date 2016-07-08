@@ -1079,7 +1079,7 @@ func (obj *Container) baseInit(dirty, modify, extra map[string]interface{}) {
 }
 
 func (obj *Container) Serial() ([]byte, error) {
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	ps := obj.GetVisiblePropertys(0)
 	ar.Write(int16(len(ps)))
 
@@ -1090,7 +1090,7 @@ func (obj *Container) SerialModify() ([]byte, error) {
 	if len(obj.Mmodify) == 0 {
 		return nil, nil
 	}
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	ar.Write(int16(len(obj.Mmodify)))
 	for k, v := range obj.Mmodify {
 		if !obj.PropertyIsPrivate(k) {

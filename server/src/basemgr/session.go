@@ -1,6 +1,7 @@
 package basemgr
 
 import (
+	"libs/log"
 	"libs/rpc"
 	"server"
 	"sort"
@@ -13,7 +14,16 @@ type Session struct {
 	serial int
 }
 
-func (s *Session) GetBaseAndId(mailbox rpc.Mailbox, user string) error {
+func (t *Session) RegisterCallback(s rpc.Servicer) {
+	s.RegisterCallback("GetBaseAndId", t.GetBaseAndId)
+}
+
+func (s *Session) GetBaseAndId(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	r := server.NewMessageReader(msg)
+	user, err := r.ReadString()
+	if server.Check(err) {
+		return nil
+	}
 	s.l.Lock()
 	defer s.l.Unlock()
 
@@ -27,12 +37,15 @@ func (s *Session) GetBaseAndId(mailbox rpc.Mailbox, user string) error {
 		idx := s.serial % len(bases)
 		baseid := bases[idx]
 		s.id++
-		if base := server.GetApp(baseid); base != nil {
-			return base.Call(&mailbox, "Login.AddClient", user)
+		if base := server.GetAppByName(baseid); base != nil {
+			server.Check(base.Call(&mailbox, "Login.AddClient", user))
+			return nil
 		}
 
-		return server.ErrNotFoundApp
+		log.LogError(server.ErrNotFoundApp)
+		return nil
 	}
 
-	return server.ErrNotFoundApp
+	log.LogError(server.ErrNotFoundApp)
+	return nil
 }

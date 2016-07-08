@@ -6,7 +6,7 @@ import (
 )
 
 func TestArchive(t *testing.T) {
-	ar := NewStoreArchive()
+	ar := NewStoreArchive(nil)
 	ar.WriteInt8(-8)
 	ar.WriteUint8(8)
 	ar.WriteInt16(-1600)

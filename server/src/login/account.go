@@ -13,11 +13,20 @@ import (
 type Account struct {
 }
 
-func (a *Account) Login(mailbox rpc.Mailbox, logindata c2s.Loginuser) error {
+func (t *Account) RegisterCallback(s rpc.Servicer) {
+	s.RegisterCallback("Login", t.Login)
+}
+
+func (a *Account) Login(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	logindata := &c2s.Loginuser{}
+	if server.Check(server.ProtoParse(msg, logindata)) {
+		return nil
+	}
 	if logindata.GetPassword() == "123" {
-		apps := server.GetApp("basemgr")
+		apps := server.GetAppByName("basemgr")
 		if apps != nil {
-			return apps.Call(&mailbox, "Session.GetBaseAndId", logindata.GetUser())
+			server.Check(apps.Call(&mailbox, "Session.GetBaseAndId", logindata.GetUser()))
+			return nil
 		}
 	} else {
 		e := &s2c.Error{}

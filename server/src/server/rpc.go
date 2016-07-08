@@ -73,8 +73,8 @@ type RpcCollection struct {
 	Infos []RpcInfo
 }
 
-func createRpc() *rpc.Server {
-	rpc, err := rpc.CreateRpcService(remotes, handlers)
+func createRpc(ch chan *rpc.RpcCall) *rpc.Server {
+	rpc, err := rpc.CreateRpcService(remotes, handlers, ch)
 	if err != nil {
 		log.LogFatalf(err)
 	}
@@ -103,7 +103,7 @@ func createRpc() *rpc.Server {
 		}
 
 		//save file
-		file, err := os.Create("interface/" + core.Id + "_rpc.xml")
+		file, err := os.Create("interface/" + core.Name + "_rpc.xml")
 		if err != nil {
 			log.LogError("writer", err)
 			return rpc

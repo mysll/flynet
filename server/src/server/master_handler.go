@@ -16,20 +16,20 @@ func (mp *master_peer) Handle(id uint16, msgbody []byte) error {
 		if err := share.DecodeMsg(msgbody, &as); err != nil {
 			return err
 		}
-		AddApp(as.Type, as.AppId, as.Host, as.Port, as.ClientHost, as.ClientPort, as.Ready)
+		AddApp(as.Type, as.Id, as.Name, as.Host, as.Port, as.ClientHost, as.ClientPort, as.Ready)
 	case share.M_REMOVE_SERVER:
 		var rs share.RemoveApp
 		if err := share.DecodeMsg(msgbody, &rs); err != nil {
 			return err
 		}
-		RemoveApp(rs.AppId)
+		RemoveAppById(rs.Id)
 	case share.M_SERVER_LIST:
 		var sl share.AppInfo
 		if err := share.DecodeMsg(msgbody, &sl); err != nil {
 			return err
 		}
 		for _, a := range sl.Apps {
-			AddApp(a.Type, a.AppId, a.Host, a.Port, a.ClientHost, a.ClientPort, a.Ready)
+			AddApp(a.Type, a.Id, a.Name, a.Host, a.Port, a.ClientHost, a.ClientPort, a.Ready)
 		}
 	case share.M_HEARTBEAT:
 		data, err := util.CreateMsg(nil, []byte{}, share.M_HEARTBEAT)
@@ -42,7 +42,7 @@ func (mp *master_peer) Handle(id uint16, msgbody []byte) error {
 		if err := share.DecodeMsg(msgbody, &ready); err != nil {
 			return err
 		}
-		app := GetApp(ready.AppId)
+		app := GetAppById(ready.Id)
 		if app != nil {
 			app.SetReady(true)
 		} else {

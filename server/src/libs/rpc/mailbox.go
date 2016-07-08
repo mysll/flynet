@@ -9,14 +9,14 @@ import (
 )
 
 type Mailbox struct {
-	Address string
-	Type    string
-	Id      int64
-	Uid     int64
+	App  int32
+	Flag int8
+	Id   int64
+	Uid  uint64
 }
 
 func (m Mailbox) String() string {
-	return fmt.Sprintf("mailbox://%s/%s/%x", m.Address, m.Type, m.Uid)
+	return fmt.Sprintf("mailbox://%x", m.Uid)
 }
 
 func NewMailBoxFromStr(mb string) (Mailbox, error) {
@@ -25,33 +25,42 @@ func NewMailBoxFromStr(mb string) (Mailbox, error) {
 		return mbox, errors.New("mailbox string error")
 	}
 	vals := strings.Split(mb, "/")
-	if len(vals) != 5 {
+	if len(vals) != 3 {
 		return mbox, errors.New("mailbox string error")
 	}
 
-	var uid int64
+	var val uint64
 	var err error
-	if vals[4] != "" {
-		uid, err = strconv.ParseInt(vals[4], 16, 64)
-		if err != nil {
-			return mbox, err
-		}
-	}
 
-	mbox.Address = vals[2]
-	mbox.Type = vals[3]
-	mbox.Id = uid & 0xFFFFFFFFFFFF
-	mbox.Uid = uid
+	val, err = strconv.ParseUint(vals[2], 16, 64)
+	if err != nil {
+		return mbox, err
+	}
+	mbox.Uid = val
+	mbox.Id = int64(mbox.Uid & 0x7FFFFFFFFFFF)
+	mbox.Flag = int8((mbox.Uid >> 47) & 1)
+	mbox.App = int32((mbox.Uid >> 48) & 0xFFFF)
 	return mbox, nil
 }
 
-func NewMailBox(address string, typ string, id int64, appid int32) Mailbox {
-	m := Mailbox{}
-	m.Address = address
-	m.Type = typ
-	m.Id = id
+func NewMailBoxFromUid(val uint64) Mailbox {
+	mbox := Mailbox{}
+	mbox.Uid = val
+	mbox.Id = int64(mbox.Uid & 0x7FFFFFFFFFFF)
+	mbox.Flag = int8((mbox.Uid >> 47) & 1)
+	mbox.App = int32((mbox.Uid >> 48) & 0xFFFF)
+	return mbox
+}
 
-	m.Uid = ((int64(appid) << 48) & 0x7FFF000000000000) | id
+func NewMailBox(flag int8, id int64, appid int32) Mailbox {
+	if id > 0x7FFFFFFFFFFF || appid > 0xFFFF {
+		panic("id is wrong")
+	}
+	m := Mailbox{}
+	m.App = appid
+	m.Flag = flag
+	m.Id = id
+	m.Uid = ((uint64(appid) << 48) & 0xFFFF000000000000) | ((uint64(flag) & 1) << 47) | (uint64(id) & 0x7FFFFFFFFFFF)
 	return m
 }
 

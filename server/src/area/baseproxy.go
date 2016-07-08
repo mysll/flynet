@@ -14,7 +14,7 @@ type BaseProxy struct {
 
 func (b *BaseProxy) AddPlayer(mailbox rpc.Mailbox, player share.PlayerInfo) error {
 
-	base := server.GetApp(mailbox.Address)
+	base := server.GetAppByName(mailbox.App)
 	if base == nil {
 		return server.ErrAppNotFound
 	}

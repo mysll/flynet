@@ -1115,7 +1115,7 @@ func (rec *{{$Obj}}{{.Name}}) GetSyncer() TableSyncer{
 
 //序列化
 func (rec *{{$Obj}}{{.Name}}) Serial()([]byte, error){
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	for _, v := range rec.Rows { {{range .Columns}}
 		{{if eq .Type "string"}}ar.WriteString(v.{{.Name}}){{else if eq .Type "ObjectID"}}ar.WriteObject(v.{{.Name}}){{else}}ar.Write(v.{{.Name}}){{end}}{{end}}
 	}
@@ -1127,7 +1127,7 @@ func (rec *{{$Obj}}{{.Name}}) SerialRow(row int)([]byte, error){
 	if row < 0 || row >= len(rec.Rows) {
 		return nil, ErrRowError
 	}
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	v := rec.Rows[row] {{range .Columns}}
 	{{if eq .Type "string"}}ar.WriteString(v.{{.Name}}){{else if eq .Type "ObjectID"}}ar.WriteObject(v.{{.Name}}){{else}}ar.Write(v.{{.Name}}){{end}}{{end}}
 	return ar.Data(), nil
@@ -1661,7 +1661,7 @@ func (obj *{{$Obj}}) baseInit(dirty, modify, extra map[string]interface{}) {
 }
 
 func (obj *{{$Obj}}) Serial()([]byte, error) {
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	ps := obj.GetVisiblePropertys(0)
 	ar.Write(int16(len(ps)))
 	{{range  $idx, $p := .Propertys}}{{if eq (isprivate $p.Public) "true"}}
@@ -1674,7 +1674,7 @@ func (obj *{{$Obj}}) SerialModify()([]byte, error) {
 	if len(obj.Mmodify) == 0 {
 		return nil, nil
 	}
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	ar.Write(int16(len(obj.Mmodify)))
 	for k, v := range obj.Mmodify {
 		if !obj.PropertyIsPrivate(k) {

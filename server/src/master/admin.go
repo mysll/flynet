@@ -1,10 +1,13 @@
 package master
 
 import (
+	"libs/log"
+	"net/http"
+	"strconv"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/jimmykuu/wtforms"
-	"net/http"
 )
 
 var (
@@ -18,7 +21,8 @@ type User struct {
 
 type Status struct {
 	Type       string
-	Id         string
+	Id         int32
+	Name       string
 	Host       string
 	Port       int
 	ClientPort int
@@ -83,9 +87,15 @@ func logoutHandler(handler Handler) {
 // URL:view/{appid}/info
 // 查看某个机器的具体信息
 func infoHandler(handler Handler) {
-	appid := mux.Vars(handler.Request)["appid"]
-	if app, ok := master.app[appid]; ok {
-		renderBaseHtml(handler, "base.html", "info.html", map[string]interface{}{"app": Status{app.typ, app.id, app.host, app.port, app.clientport, app.ready}})
+	val := mux.Vars(handler.Request)["appid"]
+	appid, err := strconv.ParseInt(val, 10, 32)
+	if err != nil {
+		log.LogError(err)
+		return
+	}
+
+	if app, ok := master.app[int32(appid)]; ok {
+		renderBaseHtml(handler, "base.html", "info.html", map[string]interface{}{"app": Status{app.typ, app.id, app.name, app.host, app.port, app.clientport, app.ready}})
 	} else {
 		renderBaseHtml(handler, "base.html", "error.html", map[string]interface{}{"error": "app not found"})
 	}

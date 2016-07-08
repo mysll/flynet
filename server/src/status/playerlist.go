@@ -30,13 +30,32 @@ type PlayerList struct {
 	accounts map[string]*AccountInfo
 }
 
+func (t *PlayerList) RegisterCallback(s rpc.Servicer) {
+	s.RegisterCallback("UpdatePlayer", t.UpdatePlayer)
+	s.RegisterCallback("GetPlayerBase", t.GetPlayerBase)
+}
+
 func NewPlayerList() *PlayerList {
 	pl := &PlayerList{}
 	pl.accounts = make(map[string]*AccountInfo, 1024)
 	return pl
 }
 
-func (pl *PlayerList) UpdatePlayer(mailbox rpc.Mailbox, account string, role_name string, base_id string) error {
+func (pl *PlayerList) UpdatePlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	r := server.NewMessageReader(msg)
+	account, err := r.ReadString()
+	if server.Check(err) {
+		return nil
+	}
+	role_name, err := r.ReadString()
+	if server.Check(err) {
+		return nil
+	}
+	base_id, err := r.ReadString()
+	if server.Check(err) {
+		return nil
+	}
+
 	if base_id == "" {
 		if acc, ok := pl.accounts[account]; ok {
 			pl := acc.GetPlayInfo(role_name)
@@ -72,18 +91,35 @@ func (pl *PlayerList) UpdatePlayer(mailbox rpc.Mailbox, account string, role_nam
 	return nil
 }
 
-func (pl *PlayerList) GetPlayerBase(mailbox rpc.Mailbox, account string, role_name string, callback string) error {
-	app := server.GetApp(mailbox.Address)
+func (pl *PlayerList) GetPlayerBase(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	r := server.NewMessageReader(msg)
+	account, err := r.ReadString()
+	if server.Check(err) {
+		return nil
+	}
+	role_name, err := r.ReadString()
+	if server.Check(err) {
+		return nil
+	}
+	callback, err := r.ReadString()
+	if server.Check(err) {
+		return nil
+	}
+
+	app := server.GetAppById(mailbox.App)
 	if app == nil {
-		return server.ErrAppNotFound
+		server.Check(server.ErrAppNotFound)
+		return nil
 	}
 
 	if acc, ok := pl.accounts[account]; ok {
 		pl := acc.GetPlayInfo(role_name)
 		if pl != nil {
-			return app.Call(&mailbox, callback, account, role_name, pl.BaseId)
+			server.Check(app.Call(&mailbox, callback, account, role_name, pl.BaseId))
+			return nil
 		}
 	}
 
-	return app.Call(&mailbox, callback, account, role_name, "")
+	server.Check(app.Call(&mailbox, callback, account, role_name, ""))
+	return nil
 }

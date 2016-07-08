@@ -38,13 +38,13 @@ func StartApp(m *Master) {
 			}
 
 			appargs, _ := app.MarshalJSON()
-			id, err := app.Get("id").String()
+			name, err := app.Get("name").String()
 			if err != nil {
-				log.LogFatalf("app id not set")
+				log.LogFatalf("app name not set")
 				return
 			}
 
-			Start(startapp, id, GetAppUid(), k, string(appargs))
+			Start(startapp, name, GetAppUid(), k, string(appargs))
 			idx++
 		}
 	}
@@ -71,7 +71,7 @@ func StartAppBlance(m *Master) {
 				return
 			}
 
-			context.CreateApp("", appid, GetAppUid(), k, string(appargs), "")
+			context.CreateApp("", appid, GetAppUid(), k, string(appargs), 0)
 
 			idx++
 		}

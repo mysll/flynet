@@ -35,7 +35,7 @@ func (p *peer) Connect() error {
 
 func (p *peer) Reg(server *Server) error {
 
-	out, err := share.CreateRegisterAppMsg(server.Type, server.Id, server.Host, server.Port, server.ClientHost, server.ClientPort)
+	out, err := share.CreateRegisterAppMsg(server.Type, server.AppId, server.Name, server.Host, server.Port, server.ClientHost, server.ClientPort)
 	if err != nil {
 		log.LogFatalf(err)
 	}

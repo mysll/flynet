@@ -208,10 +208,10 @@ func GetType(name string) int {
 	switch name {
 	case "Container":
 		return ITEM
-	case "Player":
-		return PLAYER
 	case "Item":
 		return ITEM
+	case "Player":
+		return PLAYER
 	case "BaseScene":
 		return SCENE
 	default:
@@ -223,10 +223,10 @@ func CreateSaveLoader(typ string) DBSaveLoader {
 	switch typ {
 	case "Container":
 		return &Container_Save{}
-	case "Player":
-		return &Player_Save{}
 	case "Item":
 		return &Item_Save{}
+	case "Player":
+		return &Player_Save{}
 	case "BaseScene":
 		return &BaseScene_Save{}
 	default:
@@ -247,12 +247,12 @@ func IsContainer(ent Entityer) bool {
 	return ent.ObjTypeName() == "Container"
 }
 
-func IsPlayer(ent Entityer) bool {
-	return ent.ObjTypeName() == "Player"
-}
-
 func IsItem(ent Entityer) bool {
 	return ent.ObjTypeName() == "Item"
+}
+
+func IsPlayer(ent Entityer) bool {
+	return ent.ObjTypeName() == "Player"
 }
 
 func IsBaseScene(ent Entityer) bool {
@@ -267,15 +267,15 @@ func init() {
 	})
 	ContainerInit()
 
-	register("Player", func() Entityer {
-		return CreatePlayer()
-	})
-	PlayerInit()
-
 	register("Item", func() Entityer {
 		return CreateItem()
 	})
 	ItemInit()
+
+	register("Player", func() Entityer {
+		return CreatePlayer()
+	})
+	PlayerInit()
 
 	register("BaseScene", func() Entityer {
 		return CreateBaseScene()

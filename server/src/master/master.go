@@ -31,7 +31,7 @@ type Master struct {
 	AppArgs     map[string][]byte
 	tcpListener net.Listener
 	waitGroup   *util.WaitGroupWrapper
-	app         map[string]*app
+	app         map[int32]*app
 	quit        chan int
 	agent       *Agent
 	agentlist   *AgentList
@@ -120,7 +120,7 @@ func (m *Master) Exit() {
 	m.waitGroup.Wait()
 }
 
-func (m *Master) CreateApp(reqid string, appid string, appuid int32, typ string, startargs string, callbackapp string) {
+func (m *Master) CreateApp(reqid string, appid string, appuid int32, typ string, startargs string, callbackapp int32) {
 	if appuid == 0 {
 		appuid = GetAppUid()
 	}
@@ -131,8 +131,8 @@ func (m *Master) CreateApp(reqid string, appid string, appuid int32, typ string,
 			if agent.load < Load {
 				//远程创建
 				err := agent.CreateApp(reqid, appid, appuid, typ, startargs, callbackapp)
-				if err != nil {
-					data, err := share.CreateAppBakMsg(reqid, appid, err.Error())
+				if err != nil && callbackapp != 0 {
+					data, err := share.CreateAppBakMsg(reqid, appuid, err.Error())
 					if err != nil {
 						log.LogFatalf(err)
 					}
@@ -151,15 +151,17 @@ func (m *Master) CreateApp(reqid string, appid string, appuid int32, typ string,
 		res = err.Error()
 	}
 
-	data, err := share.CreateAppBakMsg(reqid, appid, res)
-	if err != nil {
-		log.LogFatalf(err)
-	}
+	if callbackapp != 0 {
+		data, err := share.CreateAppBakMsg(reqid, appuid, res)
+		if err != nil {
+			log.LogFatalf(err)
+		}
 
-	m.SendToApp(callbackapp, data)
+		m.SendToApp(callbackapp, data)
+	}
 }
 
-func (m *Master) SendToApp(app string, data []byte) error {
+func (m *Master) SendToApp(app int32, data []byte) error {
 	if app, exist := m.app[app]; exist {
 		return app.Send(data)
 	}
@@ -171,6 +173,6 @@ func NewMaster() *Master {
 	m := &Master{}
 	m.AppArgs = make(map[string][]byte)
 	m.waitGroup = &util.WaitGroupWrapper{}
-	m.app = make(map[string]*app)
+	m.app = make(map[int32]*app)
 	return m
 }

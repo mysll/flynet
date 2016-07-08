@@ -9,16 +9,16 @@ import (
 
 //频道
 type Channel struct {
-	receivers  map[string]map[int64]rpc.Mailbox
+	receivers  map[int32]map[uint64]rpc.Mailbox
 	sessionbuf []int64
 }
 
 //频道内增加用户
 func (this *Channel) Add(mailbox rpc.Mailbox) {
-	if recvs, ok := this.receivers[mailbox.Address]; !ok {
-		recvs = make(map[int64]rpc.Mailbox, 256)
+	if recvs, ok := this.receivers[mailbox.App]; !ok {
+		recvs = make(map[uint64]rpc.Mailbox, 256)
 		recvs[mailbox.Uid] = mailbox
-		this.receivers[mailbox.Address] = recvs
+		this.receivers[mailbox.App] = recvs
 	} else {
 		recvs[mailbox.Uid] = mailbox
 	}
@@ -26,7 +26,7 @@ func (this *Channel) Add(mailbox rpc.Mailbox) {
 
 //频道内移除用户
 func (this *Channel) Remove(mailbox rpc.Mailbox) {
-	if recvs, ok := this.receivers[mailbox.Address]; ok {
+	if recvs, ok := this.receivers[mailbox.App]; ok {
 		delete(recvs, mailbox.Uid)
 	}
 }
@@ -44,7 +44,7 @@ func (this *Channel) Clear() {
 func (this *Channel) SendMsg(src rpc.Mailbox, method string, args proto.Message) {
 
 	for appid, recvs := range this.receivers {
-		app := GetApp(appid)
+		app := GetAppById(appid)
 		if app == nil {
 			log.LogError(ErrAppNotFound.Error())
 			continue
@@ -63,7 +63,7 @@ func (this *Channel) SendMsg(src rpc.Mailbox, method string, args proto.Message)
 //创建一个新的频道
 func NewChannel() *Channel {
 	channel := &Channel{}
-	channel.receivers = make(map[string]map[int64]rpc.Mailbox, 32)
+	channel.receivers = make(map[int32]map[uint64]rpc.Mailbox, 32)
 	channel.sessionbuf = make([]int64, 0, 256)
 	return channel
 }

@@ -86,7 +86,7 @@ func (ts *TableSync) RecModify(rec entity.Recorder, row, col int) {
 	out.Row = proto.Int32(int32(row))
 	out.Col = proto.Int32(int32(col))
 	value, _ := rec.Get(row, col)
-	ar := util.NewStoreArchive()
+	ar := util.NewStoreArchiver(nil)
 	ar.Write(value)
 
 	out.Gridinfo = ar.Data()

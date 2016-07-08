@@ -16,6 +16,10 @@ type Sync struct {
 	newobj map[ObjectID]ObjectID
 }
 
+func (t *Sync) RegisterCallback(s rpc.Servicer) {
+	s.RegisterCallback("SyncPlayer", t.SyncPlayer)
+}
+
 func (s *Sync) getAllChilds(obj entity.Entityer) {
 	s.childs[obj.GetObjId()] = obj
 	cs := obj.GetChilds()
@@ -62,7 +66,12 @@ func (s *Sync) sync(info *entity.EntityInfo) (obj entity.Entityer, err error) {
 	return
 }
 
-func (s *Sync) SyncPlayer(src rpc.Mailbox, infos map[string]interface{}) error {
+func (s *Sync) SyncPlayer(src rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	r := server.NewMessageReader(msg)
+	infos := make(map[string]interface{})
+	if server.Check(r.ReadObject(&infos)) {
+		return nil
+	}
 	mb := infos["mailbox"].(rpc.Mailbox)
 	info := infos["data"].(*entity.EntityInfo)
 	playerid := info.ObjId
@@ -83,8 +92,8 @@ func (s *Sync) SyncPlayer(src rpc.Mailbox, infos map[string]interface{}) error {
 		App.Destroy(k)
 	}
 
-	err := server.MailTo(&mb, &src, "BaseProxy.SyncPlayerBak", s.newobj)
-	return err
+	server.Check(server.MailTo(&mb, &src, "BaseProxy.SyncPlayerBak", s.newobj))
+	return nil
 }
 
 func NewSync() *Sync {
