@@ -5,7 +5,6 @@ import (
 	"libs/rpc"
 	"util"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/mysll/log4go"
 )
 
@@ -61,13 +60,8 @@ func NewHeadWriter(msg *rpc.Message) *HeadWriter {
 	return w
 }
 
-func ProtoParse(msg *rpc.Message, obj proto.Message) error {
-	r := NewMessageReader(msg)
-	data, err := r.ReadData()
-	if err != nil {
-		return err
-	}
-	return proto.Unmarshal(data, obj)
+func ProtoParse(msg *rpc.Message, obj interface{}) error {
+	return core.rpcProto.DecodeMessage(msg, obj)
 }
 
 func ParseArgs(msg *rpc.Message, args ...interface{}) error {

@@ -68,6 +68,7 @@ type Server struct {
 	s2chelper      *S2CHelper
 	c2shelper      *C2SHelper
 	Sockettype     string
+	rpcProto       ClientProtoer
 }
 
 type StartStoper interface {
@@ -362,6 +363,10 @@ func (svr *Server) MustReady() {
 	}
 }
 
+func (svr *Server) SetClientProto(ptr ClientProtoer) {
+	svr.rpcProto = ptr
+}
+
 func NewServer(app Apper, id int32) *Server {
 	s := &Server{}
 	core = s
@@ -381,6 +386,7 @@ func NewServer(app Apper, id int32) *Server {
 
 	s.s2chelper = NewS2CHelper()
 	s.c2shelper = &C2SHelper{}
+	s.rpcProto = &PBProto{}
 
 	RegisterRemote("S2CHelper", s.s2chelper)
 	RegisterHandler("C2SHelper", s.c2shelper)

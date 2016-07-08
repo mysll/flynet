@@ -1,17 +1,13 @@
 package server
 
 import (
-	"errors"
 	"fmt"
 	"libs/log"
 	"libs/rpc"
 	"net"
-	"pb/s2c"
 	"share"
 	"sync"
 	"time"
-
-	"github.com/golang/protobuf/proto"
 )
 
 //远程进程
@@ -44,18 +40,9 @@ func (app *RemoteApp) ClientCall(src *rpc.Mailbox, session int64, method string,
 	pb.Sender = app.Name
 	pb.To = session
 	pb.Method = method
-	r := &s2c.Rpc{}
-	r.Sender = proto.String(app.Name)
-	r.Servicemethod = proto.String(method)
-	if val, ok := args.(proto.Message); ok {
-		if r.Data, err = proto.Marshal(val); err != nil {
-			return err
-		}
-	} else {
-		return errors.New("args must be proto.Message")
-	}
 
-	if pb.Data, err = proto.Marshal(r); err != nil {
+	if pb.Data, err = core.rpcProto.CreateRpcMessage(app.Name, method, args); err != nil {
+		log.LogError(err)
 		return err
 	}
 
@@ -103,18 +90,8 @@ func (app *RemoteApp) ClientBroadcast(src *rpc.Mailbox, session []int64, method 
 	pb.Sender = app.Name
 	pb.To = session
 	pb.Method = method
-	r := &s2c.Rpc{}
-	r.Sender = proto.String(app.Name)
-	r.Servicemethod = proto.String(method)
-	if val, ok := args.(proto.Message); ok {
-		if r.Data, err = proto.Marshal(val); err != nil {
-			return err
-		}
-	} else {
-		return errors.New("args must be proto.Message")
-	}
-
-	if pb.Data, err = proto.Marshal(r); err != nil {
+	if pb.Data, err = core.rpcProto.CreateRpcMessage(app.Name, method, args); err != nil {
+		log.LogError(err)
 		return err
 	}
 

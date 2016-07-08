@@ -4,11 +4,8 @@ import (
 	"errors"
 	"libs/log"
 	"libs/rpc"
-	"pb/c2s"
 	"share"
 	"util"
-
-	"github.com/golang/protobuf/proto"
 )
 
 var (
@@ -28,14 +25,11 @@ func (t *C2SHelper) RegisterCallback(s rpc.Servicer) {
 
 //处理客户端的调用
 func (ch *C2SHelper) Call(sender rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	request := &c2s.Rpc{}
-
-	if err := proto.Unmarshal(msg.Body, request); err != nil {
+	node, sm, data, err := core.rpcProto.DecodeRpcMessage(msg)
+	if err != nil {
 		log.LogError(err)
 		return nil
 	}
-
-	node := request.GetNode()
 
 	var app *RemoteApp
 	if node == "." {
@@ -47,8 +41,8 @@ func (ch *C2SHelper) Call(sender rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 		}
 	}
 
-	log.LogMessage("client call: ", node, "/", request.GetServicemethod())
-	if err := app.Handle(sender, request.GetServicemethod(), request.GetData()); err != nil {
+	log.LogMessage("client call: ", node, "/", sm)
+	if err := app.Handle(sender, sm, data); err != nil {
 		log.LogError(err)
 	}
 	return nil
