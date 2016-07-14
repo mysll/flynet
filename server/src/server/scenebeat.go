@@ -3,7 +3,6 @@ package server
 import (
 	"container/list"
 	. "data/datatype"
-	"data/entity"
 	"libs/log"
 	"time"
 )
@@ -12,7 +11,7 @@ type objectTick struct {
 	serial   int64
 	Name     string
 	Oid      ObjectID
-	ent      entity.Entityer
+	ent      Entityer
 	Params   interface{}
 	Last     time.Time
 	Interval time.Duration
@@ -174,7 +173,7 @@ func (this *SceneBeat) Find(oid ObjectID, beat string) bool {
 	return false
 }
 
-func (this *SceneBeat) Add(obj entity.Entityer, beat string, t time.Duration, count int32, param interface{}) bool {
+func (this *SceneBeat) Add(obj Entityer, beat string, t time.Duration, count int32, param interface{}) bool {
 	oid := obj.GetObjId()
 	if this.find(oid, beat) != nil {
 		log.LogError("heartbeat already add", beat)
@@ -249,7 +248,7 @@ func (this *SceneBeat) RemoveObjectBeat(oid ObjectID) {
 	}
 }
 
-func (this *SceneBeat) Deatch(object entity.Entityer) bool {
+func (this *SceneBeat) Deatch(object Entityer) bool {
 	if object == nil {
 		return false
 	}

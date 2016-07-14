@@ -1,6 +1,7 @@
 package mysqldb
 
 import (
+	"data/datatype"
 	"data/entity"
 	"encoding/json"
 	"fmt"
@@ -54,7 +55,7 @@ func SaveItem(sqlconn SqlWrapper, insert bool, id uint64, data *share.SaveEntity
 		return err
 	}
 	//写入自身数据
-	if s, ok := data.Obj.(entity.DBSaveLoader); ok {
+	if s, ok := data.Obj.(datatype.DBSaveLoader); ok {
 		if insert {
 			err = s.Insert(sqlconn, id, ",`childinfo`", ",?", childjson)
 			if err != nil {

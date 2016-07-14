@@ -127,18 +127,18 @@ func (k *Kernel) DumpInfo(obj interface{}, fname string) {
 }
 
 //通过id获取entity
-func (k *Kernel) GetEntity(obj ObjectID) entity.Entityer {
+func (k *Kernel) GetEntity(obj ObjectID) Entityer {
 	return k.factory.Find(obj)
 }
 
 //通过类型创建对象
-func (k *Kernel) Create(typ string) (ent entity.Entityer, err error) {
+func (k *Kernel) Create(typ string) (ent Entityer, err error) {
 	ent, err = k.CreateContainer(typ, -1)
 	return
 }
 
 //创建角色
-func (k *Kernel) CreateRole(typ string, args interface{}) (ent entity.Entityer, err error) {
+func (k *Kernel) CreateRole(typ string, args interface{}) (ent Entityer, err error) {
 	ent, err = k.factory.Create(typ)
 	if err != nil {
 		return
@@ -163,7 +163,7 @@ func (k *Kernel) CreateRole(typ string, args interface{}) (ent entity.Entityer, 
 }
 
 //创建一个容器
-func (k *Kernel) CreateContainer(typ string, caps int) (ent entity.Entityer, err error) {
+func (k *Kernel) CreateContainer(typ string, caps int) (ent Entityer, err error) {
 	ent, err = k.factory.Create(typ)
 	if err != nil {
 		return
@@ -187,13 +187,13 @@ func (k *Kernel) CreateContainer(typ string, caps int) (ent entity.Entityer, err
 }
 
 //创建一个子对象
-func (k *Kernel) CreateChild(parent ObjectID, typ string, index int) (ent entity.Entityer, err error) {
+func (k *Kernel) CreateChild(parent ObjectID, typ string, index int) (ent Entityer, err error) {
 	ent, err = k.CreateChildContainer(parent, typ, -1, index)
 	return
 }
 
 //创建一个子容器
-func (k *Kernel) CreateChildContainer(parent ObjectID, typ string, caps int, index int) (ent entity.Entityer, err error) {
+func (k *Kernel) CreateChildContainer(parent ObjectID, typ string, caps int, index int) (ent Entityer, err error) {
 	p := k.factory.Find(parent)
 	if p == nil {
 		err = errors.New("parent not found")
@@ -239,7 +239,7 @@ func (k *Kernel) AddChild(parent ObjectID, child ObjectID, index int) (destindex
 	return k.addChild(p, c, index)
 }
 
-func (k *Kernel) addChild(parent entity.Entityer, child entity.Entityer, index int) (destindex int, err error) {
+func (k *Kernel) addChild(parent Entityer, child Entityer, index int) (destindex int, err error) {
 
 	calleeparent := GetCallee(parent.ObjTypeName())
 	calleeself := GetCallee(child.ObjTypeName())
@@ -309,7 +309,7 @@ func (k *Kernel) addChild(parent entity.Entityer, child entity.Entityer, index i
 }
 
 //交换子对象的位置
-func (k *Kernel) Exchange(src entity.Entityer, dest entity.Entityer) bool {
+func (k *Kernel) Exchange(src Entityer, dest Entityer) bool {
 	if src == nil || dest == nil ||
 		src.GetParent() == nil ||
 		dest.GetParent() == nil ||
@@ -337,7 +337,7 @@ func (k *Kernel) Exchange(src entity.Entityer, dest entity.Entityer) bool {
 }
 
 //移除一个子对象
-func (k *Kernel) RemoveChild(parent entity.Entityer, child entity.Entityer) error {
+func (k *Kernel) RemoveChild(parent Entityer, child Entityer) error {
 	if parent != nil && child != nil && !child.GetParent().GetObjId().Equal(parent.GetObjId()) {
 		return errors.New("parent not equal")
 	}
@@ -349,7 +349,7 @@ func (k *Kernel) RemoveChild(parent entity.Entityer, child entity.Entityer) erro
 	return entity.ErrChildObjectNotFound
 }
 
-func (k *Kernel) removeChild(parent entity.Entityer, child entity.Entityer, needcallback bool) error {
+func (k *Kernel) removeChild(parent Entityer, child Entityer, needcallback bool) error {
 	cself := GetCallee(child.ObjTypeName())
 
 	res := 0
@@ -399,7 +399,7 @@ func (k *Kernel) removeChild(parent entity.Entityer, child entity.Entityer, need
 	return nil
 }
 
-func (k *Kernel) loadArchive(data *entity.EntityInfo) (ent entity.Entityer, err error) {
+func (k *Kernel) loadArchive(data *EntityInfo) (ent Entityer, err error) {
 
 	ent, err = k.CreateContainer(data.Type, int(data.Caps))
 	if err != nil {
@@ -456,7 +456,7 @@ func (k *Kernel) loadArchive(data *entity.EntityInfo) (ent entity.Entityer, err 
 }
 
 //通过数据创建对象
-func (k *Kernel) CreateFromArchive(data *entity.EntityInfo, extra map[string]interface{}) (ent entity.Entityer, err error) {
+func (k *Kernel) CreateFromArchive(data *EntityInfo, extra map[string]interface{}) (ent Entityer, err error) {
 	ent, err = k.loadArchive(data)
 	if err != nil {
 		return
@@ -476,7 +476,7 @@ func (k *Kernel) CreateFromArchive(data *entity.EntityInfo, extra map[string]int
 	return
 }
 
-func (k *Kernel) loadObj(parent entity.Entityer, data *share.SaveEntity) (ent entity.Entityer, err error) {
+func (k *Kernel) loadObj(parent Entityer, data *share.SaveEntity) (ent Entityer, err error) {
 	ent, err = k.factory.Create(data.Typ)
 	if err != nil {
 		log.LogError("load object failed:", err)
@@ -553,7 +553,7 @@ func (k *Kernel) loadObj(parent entity.Entityer, data *share.SaveEntity) (ent en
 	return
 }
 
-func (k *Kernel) loadBase(object entity.Entityer, data *share.SaveEntity) error {
+func (k *Kernel) loadBase(object Entityer, data *share.SaveEntity) error {
 	if data == nil {
 		return errors.New("base data is nil")
 	}
@@ -568,7 +568,7 @@ func (k *Kernel) loadBase(object entity.Entityer, data *share.SaveEntity) error 
 }
 
 //通过存档创建
-func (k *Kernel) CreateFromDb(data *share.DbSave) (ent entity.Entityer, err error) {
+func (k *Kernel) CreateFromDb(data *share.DbSave) (ent Entityer, err error) {
 	if data == nil || data.Data == nil {
 		err = errors.New("data is nil")
 	}
@@ -588,7 +588,7 @@ func (k *Kernel) CreateFromDb(data *share.DbSave) (ent entity.Entityer, err erro
 }
 
 //通过配置文件加载
-func (k *Kernel) LoadFromConfig(object entity.Entityer, configid string) error {
+func (k *Kernel) LoadFromConfig(object Entityer, configid string) error {
 	err := helper.LoadFromConfig(configid, object)
 	res := 0
 	callee := GetCallee(object.ObjTypeName())
@@ -605,7 +605,7 @@ func (k *Kernel) LoadFromConfig(object entity.Entityer, configid string) error {
 }
 
 //通过配置文件创建对象
-func (k *Kernel) CreateFromConfig(configid string) (ent entity.Entityer, err error) {
+func (k *Kernel) CreateFromConfig(configid string) (ent Entityer, err error) {
 	typ, err := helper.GetEntityByConfig(configid)
 	if err != nil {
 		return nil, err
@@ -642,7 +642,7 @@ func (k *Kernel) Destroy(obj ObjectID) (err error) {
 	return
 }
 
-func (k *Kernel) destroyObj(object entity.Entityer, needcallback bool) {
+func (k *Kernel) destroyObj(object Entityer, needcallback bool) {
 	if !object.IsSave() {
 		return
 	}
@@ -701,11 +701,11 @@ type Transform struct {
 	Dir   float32
 }
 
-func (k *Kernel) SetLandpos(object entity.Entityer, trans Transform) {
+func (k *Kernel) SetLandpos(object Entityer, trans Transform) {
 	object.SetExtraData("landpos", trans)
 }
 
-func (k *Kernel) GetLandpos(object entity.Entityer) Transform {
+func (k *Kernel) GetLandpos(object Entityer) Transform {
 	if trans := object.GetExtraData("landpos"); trans != nil {
 		if tr, ok := trans.(Transform); ok {
 			return tr
@@ -714,11 +714,11 @@ func (k *Kernel) GetLandpos(object entity.Entityer) Transform {
 	return Transform{}
 }
 
-func (k *Kernel) SetRoleInfo(object entity.Entityer, info string) {
+func (k *Kernel) SetRoleInfo(object Entityer, info string) {
 	object.SetExtraData("roleinfo", info)
 }
 
-func (k *Kernel) PreSave(object entity.Entityer, ignore bool) {
+func (k *Kernel) PreSave(object Entityer, ignore bool) {
 	if object.GetDbId() == 0 && !ignore && object.IsSave() {
 		object.SetDbId(k.GetUid())
 	}
@@ -733,7 +733,7 @@ func (k *Kernel) PreSave(object entity.Entityer, ignore bool) {
 }
 
 //对象保存
-func (k *Kernel) Save(object entity.Entityer, typ int) (err error) {
+func (k *Kernel) Save(object Entityer, typ int) (err error) {
 	if object == nil {
 		err = ErrObjNotFound
 		return
@@ -765,7 +765,7 @@ func (k *Kernel) GetUid() uint64 {
 }
 
 //玩家断开
-func (k *Kernel) Disconnect(object entity.Entityer) {
+func (k *Kernel) Disconnect(object Entityer) {
 	if object == nil {
 		return
 	}
@@ -780,7 +780,7 @@ func (k *Kernel) Disconnect(object entity.Entityer) {
 }
 
 //玩家进入场景前
-func (k *Kernel) EntryScene(object entity.Entityer) {
+func (k *Kernel) EntryScene(object Entityer) {
 	if object == nil {
 		return
 	}
@@ -795,7 +795,7 @@ func (k *Kernel) EntryScene(object entity.Entityer) {
 }
 
 //玩家进入场景
-func (k *Kernel) EnterScene(object entity.Entityer) {
+func (k *Kernel) EnterScene(object Entityer) {
 	if object == nil {
 		return
 	}
@@ -810,7 +810,7 @@ func (k *Kernel) EnterScene(object entity.Entityer) {
 }
 
 //场景里放置一个对象
-func (k *Kernel) PlaceObj(scene entity.Entityer, object entity.Entityer, pos Vector3, orient float32) bool {
+func (k *Kernel) PlaceObj(scene Entityer, object Entityer, pos Vector3, orient float32) bool {
 	if scene == nil || object == nil {
 		return false
 	}
@@ -842,7 +842,7 @@ func (k *Kernel) Timeout(t time.Duration, cb TimerCB, param interface{}) (interv
 }
 
 //增加一个心跳
-func (k *Kernel) AddHeartbeat(object entity.Entityer, beat string, t time.Duration, count int32, args interface{}) bool {
+func (k *Kernel) AddHeartbeat(object Entityer, beat string, t time.Duration, count int32, args interface{}) bool {
 	return core.sceneBeat.Add(object, beat, t, count, args)
 }
 
@@ -862,7 +862,7 @@ func (k *Kernel) ResetBeatCount(obj ObjectID, beat string, count int32) bool {
 }
 
 //保存当前所有的心跳，并且从场景中分离出来
-func (k *Kernel) DeatchBeat(object entity.Entityer) bool {
+func (k *Kernel) DeatchBeat(object Entityer) bool {
 	return core.sceneBeat.Deatch(object)
 }
 
@@ -977,7 +977,7 @@ func (k *Kernel) UnEquip(self, equip ObjectID, idx int) bool {
 	return true
 }
 
-func (k *Kernel) OnPropChange(object entity.Entityer, prop string, value interface{}) {
+func (k *Kernel) OnPropChange(object Entityer, prop string, value interface{}) {
 	callee := GetCallee(object.ObjTypeName())
 	var res int
 	for _, cl := range callee {
@@ -988,7 +988,7 @@ func (k *Kernel) OnPropChange(object entity.Entityer, prop string, value interfa
 	}
 }
 
-func (k *Kernel) PlayerReady(player entity.Entityer, first bool) {
+func (k *Kernel) PlayerReady(player Entityer, first bool) {
 	if player.ObjType() != PLAYER {
 		return
 	}
@@ -1002,7 +1002,7 @@ func (k *Kernel) PlayerReady(player entity.Entityer, first bool) {
 	}
 }
 
-func (k *Kernel) SetPropertyEx(object entity.Entityer, prop string, val string, opt int) error {
+func (k *Kernel) SetPropertyEx(object Entityer, prop string, val string, opt int) error {
 	old, err := object.Get(prop)
 	if err != nil {
 		return err
@@ -1018,11 +1018,11 @@ func (k *Kernel) SetPropertyEx(object entity.Entityer, prop string, val string, 
 	return object.Set(prop, opval)
 }
 
-func (k *Kernel) clearProperty(object entity.Entityer, prop string, val string, opt int) error {
+func (k *Kernel) clearProperty(object Entityer, prop string, val string, opt int) error {
 	return nil
 }
 
-func (k *Kernel) CallScript(object entity.Entityer, id string, prop string, revert bool) error {
+func (k *Kernel) CallScript(object Entityer, id string, prop string, revert bool) error {
 	defer func() {
 		if err := recover(); err != nil {
 			log.LogError(err)
@@ -1045,7 +1045,7 @@ func (k *Kernel) CallScript(object entity.Entityer, id string, prop string, reve
 	return nil
 }
 
-func (k *Kernel) FindViewport(player entity.Entityer) *Viewport {
+func (k *Kernel) FindViewport(player Entityer) *Viewport {
 	if data := player.GetExtraData("viewportlinkid"); data != nil {
 		sid := data.(int32)
 		scheduler := k.GetScheduler(sid)
@@ -1059,7 +1059,7 @@ func (k *Kernel) FindViewport(player entity.Entityer) *Viewport {
 	return nil
 }
 
-func (k *Kernel) AddViewport(player entity.Entityer, mailbox rpc.Mailbox, viewid int32, container entity.Entityer) error {
+func (k *Kernel) AddViewport(player Entityer, mailbox rpc.Mailbox, viewid int32, container Entityer) error {
 	if player == nil || player.ObjType() != PLAYER || container == nil {
 		return fmt.Errorf("type is illegality")
 	}
@@ -1073,7 +1073,7 @@ func (k *Kernel) AddViewport(player entity.Entityer, mailbox rpc.Mailbox, viewid
 	return vp.AddViewport(viewid, container)
 }
 
-func (k *Kernel) DeleteViewport(player entity.Entityer, viewid int32) {
+func (k *Kernel) DeleteViewport(player Entityer, viewid int32) {
 	if player == nil {
 		return
 	}
@@ -1084,7 +1084,7 @@ func (k *Kernel) DeleteViewport(player entity.Entityer, viewid int32) {
 }
 
 //和client进行绑定
-func (k *Kernel) AttachPlayer(player entity.Entityer, mailbox rpc.Mailbox) error {
+func (k *Kernel) AttachPlayer(player Entityer, mailbox rpc.Mailbox) error {
 	if player.ObjType() != PLAYER {
 		return fmt.Errorf("object is not player")
 	}
@@ -1124,7 +1124,7 @@ func (k *Kernel) AttachPlayer(player entity.Entityer, mailbox rpc.Mailbox) error
 }
 
 //和client解绑
-func (k *Kernel) DetachPlayer(player entity.Entityer) {
+func (k *Kernel) DetachPlayer(player Entityer) {
 	if player.GetPropSyncer() != nil {
 		k.RemoveScheduler(player.GetPropSyncer().(*PropSync))
 	}

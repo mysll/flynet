@@ -1,8 +1,11 @@
 package base
 
-import "data/entity"
+import (
+	"data/datatype"
+	"data/entity"
+)
 
-func GetContainer(player *entity.Player, item entity.Entityer) entity.Entityer {
+func GetContainer(player *entity.Player, item datatype.Entityer) datatype.Entityer {
 	panic("container not def")
 	return nil
 }

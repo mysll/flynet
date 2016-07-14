@@ -1,6 +1,7 @@
 package base
 
 import (
+	"data/datatype"
 	"data/entity"
 	"errors"
 	"libs/log"
@@ -67,7 +68,7 @@ func (d *DbBridge) LookLetterBack(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Me
 	return nil
 }
 
-func (d *DbBridge) createRole(mailbox rpc.Mailbox, obj entity.Entityer, account string, name string, index int, save *share.DbSave) error {
+func (d *DbBridge) createRole(mailbox rpc.Mailbox, obj datatype.Entityer, account string, name string, index int, save *share.DbSave) error {
 	db := server.GetAppByType("database")
 	if db != nil {
 		trans := App.GetLandpos(obj)

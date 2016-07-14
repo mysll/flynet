@@ -1,7 +1,7 @@
 package server
 
 import (
-	"data/entity"
+	. "data/datatype"
 	"fmt"
 	"libs/rpc"
 	"pb/s2c"
@@ -11,17 +11,17 @@ import (
 
 type ViewportData struct {
 	Id        int32
-	Container entity.Entityer
+	Container Entityer
 }
 
 type Viewport struct {
 	SchedulerBase
 	Views   map[int32]*ViewportData
-	Owner   entity.Entityer
+	Owner   Entityer
 	mailbox rpc.Mailbox
 }
 
-func NewViewport(p entity.Entityer, mailbox rpc.Mailbox) *Viewport {
+func NewViewport(p Entityer, mailbox rpc.Mailbox) *Viewport {
 	vp := &Viewport{}
 	vp.Views = make(map[int32]*ViewportData)
 	vp.Owner = p
@@ -35,7 +35,7 @@ func (vp *Viewport) ClearAll() {
 	}
 }
 
-func (vp *Viewport) AddViewport(id int32, container entity.Entityer) error {
+func (vp *Viewport) AddViewport(id int32, container Entityer) error {
 	if _, exist := vp.Views[id]; exist {
 		return fmt.Errorf("viewport is already open")
 	}

@@ -17,7 +17,7 @@ type RoleCallee struct {
 	server.Callee
 }
 
-func (r *RoleCallee) OnCreateRole(self entity.Entityer, args interface{}) int {
+func (r *RoleCallee) OnCreateRole(self Entityer, args interface{}) int {
 	createinfo := args.(*c2s.Create)
 	player := self.(*entity.Player)
 	err := App.LoadFromConfig(self, fmt.Sprintf("%d", createinfo.GetRoleid()))

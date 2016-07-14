@@ -32,7 +32,7 @@ type BasePlayer struct {
 	Session     int64
 	Account     string
 	ChooseRole  string
-	Entity      entity.Entityer
+	Entity      Entityer
 	State       int
 	trans       server.Transform
 	RoleInfo    string

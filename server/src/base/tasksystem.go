@@ -167,7 +167,7 @@ func (ts *TaskSystem) GetEventInfo(id string) *EventConditon {
 	return nil
 }
 
-func (ts *TaskSystem) OnCommand(self entity.Entityer, sender entity.Entityer, msgid int, msg interface{}) int {
+func (ts *TaskSystem) OnCommand(self datatype.Entityer, sender datatype.Entityer, msgid int, msg interface{}) int {
 	if !entity.IsPlayer(self) {
 		return 1
 	}
@@ -180,7 +180,7 @@ func (ts *TaskSystem) OnCommand(self entity.Entityer, sender entity.Entityer, ms
 }
 
 //玩家属性变化
-func (ts *TaskSystem) OnPropertyChange(self entity.Entityer, prop string, old interface{}) int {
+func (ts *TaskSystem) OnPropertyChange(self datatype.Entityer, prop string, old interface{}) int {
 	if !entity.IsPlayer(self) {
 		return 1
 	}
@@ -214,7 +214,7 @@ func (ts *TaskSystem) OnPropertyChange(self entity.Entityer, prop string, old in
 }
 
 //容器里增加物品
-func (ts *TaskSystem) OnAfterAdd(self entity.Entityer, sender entity.Entityer, index int) int {
+func (ts *TaskSystem) OnAfterAdd(self datatype.Entityer, sender datatype.Entityer, index int) int {
 	if !entity.IsContainer(self) {
 		return 1
 	}

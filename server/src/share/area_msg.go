@@ -2,7 +2,7 @@ package share
 
 import (
 	"bytes"
-	"data/entity"
+	"data/datatype"
 	"encoding/gob"
 	"libs/log"
 )
@@ -17,10 +17,10 @@ type PlayerInfo struct {
 	Name         string
 	Scene        string
 	X, Y, Z, Dir float32
-	Entity       *entity.EntityInfo
+	Entity       *datatype.EntityInfo
 }
 
-func GetPlayerInfo(acc string, name string, scene string, x, y, z, dir float32, obj entity.Entityer) (*PlayerInfo, error) {
+func GetPlayerInfo(acc string, name string, scene string, x, y, z, dir float32, obj datatype.Entityer) (*PlayerInfo, error) {
 	info, err := GetItemInfo(obj)
 	if err != nil {
 		return nil, err
@@ -36,8 +36,8 @@ func GetPlayerInfo(acc string, name string, scene string, x, y, z, dir float32, 
 	return p, nil
 }
 
-func GetItemInfo(obj entity.Entityer) (*entity.EntityInfo, error) {
-	item := &entity.EntityInfo{}
+func GetItemInfo(obj datatype.Entityer) (*datatype.EntityInfo, error) {
+	item := &datatype.EntityInfo{}
 	buffer := new(bytes.Buffer)
 	enc := gob.NewEncoder(buffer)
 	err := enc.Encode(obj)
@@ -54,7 +54,7 @@ func GetItemInfo(obj entity.Entityer) (*entity.EntityInfo, error) {
 
 	ls := obj.GetChilds()
 	if len(ls) > 0 {
-		item.Childs = make([]*entity.EntityInfo, 0, len(ls))
+		item.Childs = make([]*datatype.EntityInfo, 0, len(ls))
 	}
 	for _, c := range ls {
 		if c != nil {

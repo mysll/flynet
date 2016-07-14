@@ -2,8 +2,7 @@ package server
 
 import (
 	"container/list"
-	"data/datatype"
-	"data/entity"
+	. "data/datatype"
 	"errors"
 	"libs/log"
 	"time"
@@ -13,13 +12,13 @@ import (
 type Factory struct {
 	index   int32
 	pool    *Pool
-	objects map[int32]entity.Entityer
+	objects map[int32]Entityer
 	deletes *list.List
 }
 
 //创建一个对象
-func (f *Factory) Create(typ string) (ent entity.Entityer, err error) {
-	id := datatype.ObjectID{}
+func (f *Factory) Create(typ string) (ent Entityer, err error) {
+	id := ObjectID{}
 	for i := 0; i < 100; i++ {
 		f.index++
 		if _, ok := f.objects[f.index]; ok {
@@ -45,7 +44,7 @@ func (f *Factory) Create(typ string) (ent entity.Entityer, err error) {
 }
 
 //通过id获取一个对象
-func (f *Factory) Find(id datatype.ObjectID) entity.Entityer {
+func (f *Factory) Find(id ObjectID) Entityer {
 	if e, ok := f.objects[id.Index]; ok {
 		if e.GetDeleted() || !e.GetObjId().Equal(id) {
 			return nil
@@ -57,7 +56,7 @@ func (f *Factory) Find(id datatype.ObjectID) entity.Entityer {
 }
 
 //销毁一个对象
-func (f *Factory) Destroy(id datatype.ObjectID) {
+func (f *Factory) Destroy(id ObjectID) {
 	if e, ok := f.objects[id.Index]; ok {
 		if e.GetDeleted() || !e.GetObjId().Equal(id) {
 			return
@@ -66,7 +65,7 @@ func (f *Factory) Destroy(id datatype.ObjectID) {
 	}
 }
 
-func (f *Factory) destroyObj(obj entity.Entityer) {
+func (f *Factory) destroyObj(obj Entityer) {
 	//查找是否有子对象，一并删除
 	chs := obj.GetChilds()
 	for _, c := range chs {
@@ -83,7 +82,7 @@ func (f *Factory) destroyObj(obj entity.Entityer) {
 	f.deletes.PushBack(obj.GetObjId().Index)
 }
 
-func (f *Factory) destroySelf(obj entity.Entityer) {
+func (f *Factory) destroySelf(obj Entityer) {
 	obj.SetDeleted(true)
 	f.deletes.PushBack(obj.GetObjId().Index)
 }
@@ -114,7 +113,7 @@ func (f *Factory) ClearDelete() {
 func NewFactory() *Factory {
 	f := &Factory{}
 	f.pool = NewEntityPool()
-	f.objects = make(map[int32]entity.Entityer)
+	f.objects = make(map[int32]Entityer)
 	f.deletes = list.New()
 	return f
 }

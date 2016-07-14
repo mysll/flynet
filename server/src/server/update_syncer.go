@@ -2,7 +2,6 @@ package server
 
 import (
 	. "data/datatype"
-	"data/entity"
 	"libs/log"
 	"libs/rpc"
 	"pb/s2c"
@@ -33,7 +32,7 @@ func (ps *PropSync) OnUpdate() {
 	ps.UpdateAll(player)
 }
 
-func (ps *PropSync) UpdateAll(player entity.Entityer) error {
+func (ps *PropSync) UpdateAll(player Entityer) error {
 	data, _ := player.SerialModify()
 	if data == nil {
 		return nil

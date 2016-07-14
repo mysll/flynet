@@ -1,7 +1,7 @@
 package server
 
 import (
-	"data/entity"
+	"data/datatype"
 	"libs/log"
 	"libs/rpc"
 	"pb/s2c"
@@ -20,7 +20,7 @@ func NewTableSync(mb rpc.Mailbox) *TableSync {
 	return ts
 }
 
-func (ts *TableSync) SyncTable(player entity.Entityer) {
+func (ts *TableSync) SyncTable(player datatype.Entityer) {
 
 	recs := player.GetRecNames()
 	for _, r := range recs {
@@ -45,7 +45,7 @@ func (ts *TableSync) SyncTable(player entity.Entityer) {
 	}
 }
 
-func (ts *TableSync) RecAppend(rec entity.Recorder, row int) {
+func (ts *TableSync) RecAppend(rec datatype.Recorder, row int) {
 	out := &s2c.RecordAddRow{}
 	out.Record = proto.String(rec.GetName())
 	out.Row = proto.Int32(int32(row))
@@ -61,7 +61,7 @@ func (ts *TableSync) RecAppend(rec entity.Recorder, row int) {
 	}
 }
 
-func (ts *TableSync) RecDelete(rec entity.Recorder, row int) {
+func (ts *TableSync) RecDelete(rec datatype.Recorder, row int) {
 	out := &s2c.RecordDelRow{}
 	out.Record = proto.String(rec.GetName())
 	out.Row = proto.Int32(int32(row))
@@ -71,7 +71,7 @@ func (ts *TableSync) RecDelete(rec entity.Recorder, row int) {
 	}
 }
 
-func (ts *TableSync) RecClear(rec entity.Recorder) {
+func (ts *TableSync) RecClear(rec datatype.Recorder) {
 	out := &s2c.RecordClear{}
 	out.Record = proto.String(rec.GetName())
 	err := MailTo(nil, &ts.mailbox, "Entity.RecordClear", out)
@@ -80,7 +80,7 @@ func (ts *TableSync) RecClear(rec entity.Recorder) {
 	}
 }
 
-func (ts *TableSync) RecModify(rec entity.Recorder, row, col int) {
+func (ts *TableSync) RecModify(rec datatype.Recorder, row, col int) {
 	out := &s2c.RecordGrid{}
 	out.Record = proto.String(rec.GetName())
 	out.Row = proto.Int32(int32(row))
@@ -96,7 +96,7 @@ func (ts *TableSync) RecModify(rec entity.Recorder, row, col int) {
 	}
 }
 
-func (ts *TableSync) RecSetRow(rec entity.Recorder, row int) {
+func (ts *TableSync) RecSetRow(rec datatype.Recorder, row int) {
 	out := &s2c.RecordSetRow{}
 	out.Record = proto.String(rec.GetName())
 	out.Row = proto.Int32(int32(row))

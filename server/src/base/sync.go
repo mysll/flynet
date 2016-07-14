@@ -3,7 +3,6 @@ package base
 import (
 	"bytes"
 	. "data/datatype"
-	"data/entity"
 	"encoding/gob"
 	"errors"
 	"libs/log"
@@ -12,7 +11,7 @@ import (
 )
 
 type Sync struct {
-	childs map[ObjectID]entity.Entityer
+	childs map[ObjectID]Entityer
 	newobj map[ObjectID]ObjectID
 }
 
@@ -20,7 +19,7 @@ func (t *Sync) RegisterCallback(s rpc.Servicer) {
 	s.RegisterCallback("SyncPlayer", t.SyncPlayer)
 }
 
-func (s *Sync) getAllChilds(obj entity.Entityer) {
+func (s *Sync) getAllChilds(obj Entityer) {
 	s.childs[obj.GetObjId()] = obj
 	cs := obj.GetChilds()
 	for _, c := range cs {
@@ -29,7 +28,7 @@ func (s *Sync) getAllChilds(obj entity.Entityer) {
 		}
 	}
 }
-func (s *Sync) sync(info *entity.EntityInfo) (obj entity.Entityer, err error) {
+func (s *Sync) sync(info *EntityInfo) (obj Entityer, err error) {
 	if info.ObjId.IsNil() {
 		obj, err = App.CreateContainer(info.Type, int(info.Caps))
 		if err == nil {
@@ -55,7 +54,7 @@ func (s *Sync) sync(info *entity.EntityInfo) (obj entity.Entityer, err error) {
 
 	obj.ClearChilds()
 	for _, c := range info.Childs {
-		var cobj entity.Entityer
+		var cobj Entityer
 		cobj, err = s.sync(c)
 		if err != nil {
 			return
@@ -73,7 +72,7 @@ func (s *Sync) SyncPlayer(src rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 		return nil
 	}
 	mb := infos["mailbox"].(rpc.Mailbox)
-	info := infos["data"].(*entity.EntityInfo)
+	info := infos["data"].(*EntityInfo)
 	playerid := info.ObjId
 	player := App.GetEntity(playerid)
 	if player == nil || player.ObjType() != PLAYER {
@@ -98,7 +97,7 @@ func (s *Sync) SyncPlayer(src rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 
 func NewSync() *Sync {
 	s := &Sync{}
-	s.childs = make(map[ObjectID]entity.Entityer, 1024)
+	s.childs = make(map[ObjectID]Entityer, 1024)
 	s.newobj = make(map[ObjectID]ObjectID, 1024)
 	return s
 }
