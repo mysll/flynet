@@ -853,7 +853,6 @@ func (obj *BaseScene) SetName(v string) {
 
 	if !obj.InBase { //只有base能够修改自身的数据
 		log.LogError("can't change base data")
-		return
 	}
 
 	obj.Name = v

@@ -48,14 +48,14 @@ func Create(name string) Entityer {
 //获取类型
 func GetType(name string) int {
 	switch name {
-	case "BaseScene":
-		return SCENE
 	case "Container":
+		return ITEM
+	case "Item":
 		return ITEM
 	case "Player":
 		return PLAYER
-	case "Item":
-		return ITEM
+	case "BaseScene":
+		return SCENE
 	default:
 		return NONE
 	}
@@ -63,14 +63,14 @@ func GetType(name string) int {
 
 func CreateSaveLoader(typ string) DBSaveLoader {
 	switch typ {
-	case "BaseScene":
-		return &BaseScene_Save{}
 	case "Container":
 		return &Container_Save{}
-	case "Player":
-		return &Player_Save{}
 	case "Item":
 		return &Item_Save{}
+	case "Player":
+		return &Player_Save{}
+	case "BaseScene":
+		return &BaseScene_Save{}
 	default:
 		return nil
 	}
@@ -85,44 +85,44 @@ func Hash(str string) int32 {
 	return int32(hash & 0x7FFFFFFF)
 }
 
-func IsBaseScene(ent Entityer) bool {
-	return ent.ObjTypeName() == "BaseScene"
-}
-
 func IsContainer(ent Entityer) bool {
 	return ent.ObjTypeName() == "Container"
-}
-
-func IsPlayer(ent Entityer) bool {
-	return ent.ObjTypeName() == "Player"
 }
 
 func IsItem(ent Entityer) bool {
 	return ent.ObjTypeName() == "Item"
 }
 
+func IsPlayer(ent Entityer) bool {
+	return ent.ObjTypeName() == "Player"
+}
+
+func IsBaseScene(ent Entityer) bool {
+	return ent.ObjTypeName() == "BaseScene"
+}
+
 //初始化函数
 func init() {
-
-	register("BaseScene", func() Entityer {
-		return CreateBaseScene()
-	})
-	BaseSceneInit()
 
 	register("Container", func() Entityer {
 		return CreateContainer()
 	})
 	ContainerInit()
 
+	register("Item", func() Entityer {
+		return CreateItem()
+	})
+	ItemInit()
+
 	register("Player", func() Entityer {
 		return CreatePlayer()
 	})
 	PlayerInit()
 
-	register("Item", func() Entityer {
-		return CreateItem()
+	register("BaseScene", func() Entityer {
+		return CreateBaseScene()
 	})
-	ItemInit()
+	BaseSceneInit()
 
 	gob.Register(&EntityInfo{})
 }

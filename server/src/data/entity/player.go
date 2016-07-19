@@ -1455,7 +1455,6 @@ func (obj *Player) SetDataVer(v int32) {
 
 	if !obj.InBase { //只有base能够修改自身的数据
 		log.LogError("can't change base data")
-		return
 	}
 
 	obj.DataVer = v
@@ -1484,7 +1483,6 @@ func (obj *Player) SetName(v string) {
 
 	if !obj.InBase { //只有base能够修改自身的数据
 		log.LogError("can't change base data")
-		return
 	}
 
 	obj.Name = v
@@ -1512,7 +1510,6 @@ func (obj *Player) SetSex(v int8) {
 
 	if !obj.InBase { //只有base能够修改自身的数据
 		log.LogError("can't change base data")
-		return
 	}
 
 	obj.Sex = v
@@ -1542,7 +1539,6 @@ func (obj *Player) SetLevel(v int16) {
 
 	if !obj.InBase { //只有base能够修改自身的数据
 		log.LogError("can't change base data")
-		return
 	}
 
 	obj.Level = v
@@ -1572,7 +1568,6 @@ func (obj *Player) SetModel(v int32) {
 
 	if !obj.InBase { //只有base能够修改自身的数据
 		log.LogError("can't change base data")
-		return
 	}
 
 	obj.Model = v
@@ -1602,7 +1597,6 @@ func (obj *Player) SetExp(v int32) {
 
 	if !obj.InBase { //只有base能够修改自身的数据
 		log.LogError("can't change base data")
-		return
 	}
 
 	obj.Exp = v
@@ -1632,7 +1626,6 @@ func (obj *Player) SetVip(v int8) {
 
 	if !obj.InBase { //只有base能够修改自身的数据
 		log.LogError("can't change base data")
-		return
 	}
 
 	obj.Vip = v
@@ -1662,7 +1655,6 @@ func (obj *Player) SetMaxExp(v int32) {
 
 	if !obj.InBase { //只有base能够修改自身的数据
 		log.LogError("can't change base data")
-		return
 	}
 
 	obj.MaxExp = v
@@ -1692,7 +1684,6 @@ func (obj *Player) SetHP(v int32) {
 
 	if obj.InBase && obj.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the data will be overwritten by scenedata")
-		return
 	}
 
 	obj.HP = v
@@ -1722,7 +1713,6 @@ func (obj *Player) SetMP(v int32) {
 
 	if obj.InBase && obj.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the data will be overwritten by scenedata")
-		return
 	}
 
 	obj.MP = v
@@ -1752,7 +1742,6 @@ func (obj *Player) SetMaxHP(v int32) {
 
 	if !obj.InBase { //只有base能够修改自身的数据
 		log.LogError("can't change base data")
-		return
 	}
 
 	obj.MaxHP = v
@@ -1782,7 +1771,6 @@ func (obj *Player) SetMaxMP(v int32) {
 
 	if !obj.InBase { //只有base能够修改自身的数据
 		log.LogError("can't change base data")
-		return
 	}
 
 	obj.MaxMP = v
@@ -1812,7 +1800,6 @@ func (obj *Player) SetLastUpdateTime(v int64) {
 
 	if !obj.InBase { //只有base能够修改自身的数据
 		log.LogError("can't change base data")
-		return
 	}
 
 	obj.LastUpdateTime = v
@@ -1983,7 +1970,6 @@ func (rec *PlayerMailBox) SerialRow(row int) ([]byte, error) {
 func (rec *PlayerMailBox) Set(row, col int, val interface{}) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the MailBox will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -2134,7 +2120,6 @@ func (rec *PlayerMailBox) FindNextSource_uid(v uint64, itr int) int {
 func (rec *PlayerMailBox) SetSource_uid(row int, v uint64) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the Source_uid will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -2188,7 +2173,6 @@ func (rec *PlayerMailBox) FindNextSource_name(v string, itr int) int {
 func (rec *PlayerMailBox) SetSource_name(row int, v string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the Source_name will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -2242,7 +2226,6 @@ func (rec *PlayerMailBox) FindNextSendTime(v int64, itr int) int {
 func (rec *PlayerMailBox) SetSendTime(row int, v int64) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the SendTime will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -2296,7 +2279,6 @@ func (rec *PlayerMailBox) FindNextTitle(v string, itr int) int {
 func (rec *PlayerMailBox) SetTitle(row int, v string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the Title will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -2350,7 +2332,6 @@ func (rec *PlayerMailBox) FindNextContent(v string, itr int) int {
 func (rec *PlayerMailBox) SetContent(row int, v string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the Content will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -2404,7 +2385,6 @@ func (rec *PlayerMailBox) FindNextAppendix(v string, itr int) int {
 func (rec *PlayerMailBox) SetAppendix(row int, v string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the Appendix will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -2458,7 +2438,6 @@ func (rec *PlayerMailBox) FindNextIsRead(v int8, itr int) int {
 func (rec *PlayerMailBox) SetIsRead(row int, v int8) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the IsRead will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -2512,7 +2491,6 @@ func (rec *PlayerMailBox) FindNextSerial_no(v uint64, itr int) int {
 func (rec *PlayerMailBox) SetSerial_no(row int, v uint64) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the Serial_no will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -2566,7 +2544,6 @@ func (rec *PlayerMailBox) FindNextMsgType(v int32, itr int) int {
 func (rec *PlayerMailBox) SetMsgType(row int, v int32) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the MsgType will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -2596,7 +2573,6 @@ func (rec *PlayerMailBox) GetMsgType(row int) (val int32, err error) {
 func (rec *PlayerMailBox) SetRow(row int, args ...interface{}) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the MailBox will be overwritten by scenedata")
-		return nil
 	}
 
 	if _, ok := args[0].(uint64); !ok {
@@ -2633,7 +2609,6 @@ func (rec *PlayerMailBox) SetRow(row int, args ...interface{}) error {
 func (rec *PlayerMailBox) SetRowValue(row int, source_uid uint64, source_name string, sendtime int64, title string, content string, appendix string, isread int8, serial_no uint64, msgtype int32) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the MailBox will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -2661,7 +2636,6 @@ func (rec *PlayerMailBox) SetRowValue(row int, source_uid uint64, source_name st
 func (rec *PlayerMailBox) Add(row int, args ...interface{}) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the MailBox will be overwritten by scenedata")
-		return -1
 	}
 
 	if len(args) != rec.Cols {
@@ -2702,7 +2676,6 @@ func (rec *PlayerMailBox) Add(row int, args ...interface{}) int {
 func (rec *PlayerMailBox) AddRow(row int) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the MailBox will be overwritten by scenedata")
-		return -1
 	}
 	add := -1
 
@@ -2720,7 +2693,6 @@ func (rec *PlayerMailBox) AddRow(row int) int {
 func (rec *PlayerMailBox) AddRowValue(row int, source_uid uint64, source_name string, sendtime int64, title string, content string, appendix string, isread int8, serial_no uint64, msgtype int32) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the MailBox will be overwritten by scenedata")
-		return -1
 	}
 
 	add := -1
@@ -2814,7 +2786,6 @@ func (rec *PlayerMailBox) Scan(row int, source_uid *uint64, source_name *string,
 func (rec *PlayerMailBox) Del(row int) {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the MailBox will be overwritten by scenedata")
-		return
 	}
 	if row < 0 || row >= len(rec.Rows) {
 		return
@@ -2833,7 +2804,6 @@ func (rec *PlayerMailBox) Del(row int) {
 func (rec *PlayerMailBox) Clear() {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the MailBox will be overwritten by scenedata")
-		return
 	}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
@@ -2998,7 +2968,6 @@ func (rec *PlayerTaskAccepted) SerialRow(row int) ([]byte, error) {
 func (rec *PlayerTaskAccepted) Set(row, col int, val interface{}) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskAccepted will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -3086,7 +3055,6 @@ func (rec *PlayerTaskAccepted) FindNextID(v string, itr int) int {
 func (rec *PlayerTaskAccepted) SetID(row int, v string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the ID will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -3140,7 +3108,6 @@ func (rec *PlayerTaskAccepted) FindNextFlag(v int8, itr int) int {
 func (rec *PlayerTaskAccepted) SetFlag(row int, v int8) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the Flag will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -3170,7 +3137,6 @@ func (rec *PlayerTaskAccepted) GetFlag(row int) (val int8, err error) {
 func (rec *PlayerTaskAccepted) SetRow(row int, args ...interface{}) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskAccepted will be overwritten by scenedata")
-		return nil
 	}
 
 	if _, ok := args[0].(string); !ok {
@@ -3186,7 +3152,6 @@ func (rec *PlayerTaskAccepted) SetRow(row int, args ...interface{}) error {
 func (rec *PlayerTaskAccepted) SetRowValue(row int, id string, flag int8) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskAccepted will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -3207,7 +3172,6 @@ func (rec *PlayerTaskAccepted) SetRowValue(row int, id string, flag int8) error 
 func (rec *PlayerTaskAccepted) Add(row int, args ...interface{}) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskAccepted will be overwritten by scenedata")
-		return -1
 	}
 
 	if len(args) != rec.Cols {
@@ -3227,7 +3191,6 @@ func (rec *PlayerTaskAccepted) Add(row int, args ...interface{}) int {
 func (rec *PlayerTaskAccepted) AddRow(row int) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskAccepted will be overwritten by scenedata")
-		return -1
 	}
 	add := -1
 
@@ -3245,7 +3208,6 @@ func (rec *PlayerTaskAccepted) AddRow(row int) int {
 func (rec *PlayerTaskAccepted) AddRowValue(row int, id string, flag int8) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskAccepted will be overwritten by scenedata")
-		return -1
 	}
 
 	add := -1
@@ -3325,7 +3287,6 @@ func (rec *PlayerTaskAccepted) Scan(row int, id *string, flag *int8) bool {
 func (rec *PlayerTaskAccepted) Del(row int) {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskAccepted will be overwritten by scenedata")
-		return
 	}
 	if row < 0 || row >= len(rec.Rows) {
 		return
@@ -3344,7 +3305,6 @@ func (rec *PlayerTaskAccepted) Del(row int) {
 func (rec *PlayerTaskAccepted) Clear() {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskAccepted will be overwritten by scenedata")
-		return
 	}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
@@ -3517,7 +3477,6 @@ func (rec *PlayerTaskRecord) SerialRow(row int) ([]byte, error) {
 func (rec *PlayerTaskRecord) Set(row, col int, val interface{}) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskRecord will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -3641,7 +3600,6 @@ func (rec *PlayerTaskRecord) FindNextID(v string, itr int) int {
 func (rec *PlayerTaskRecord) SetID(row int, v string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the ID will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -3695,7 +3653,6 @@ func (rec *PlayerTaskRecord) FindNextTyp(v int32, itr int) int {
 func (rec *PlayerTaskRecord) SetTyp(row int, v int32) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the Typ will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -3749,7 +3706,6 @@ func (rec *PlayerTaskRecord) FindNextKey(v string, itr int) int {
 func (rec *PlayerTaskRecord) SetKey(row int, v string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the Key will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -3803,7 +3759,6 @@ func (rec *PlayerTaskRecord) FindNextCurrentAmount(v int32, itr int) int {
 func (rec *PlayerTaskRecord) SetCurrentAmount(row int, v int32) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the CurrentAmount will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -3857,7 +3812,6 @@ func (rec *PlayerTaskRecord) FindNextTotalAmount(v int32, itr int) int {
 func (rec *PlayerTaskRecord) SetTotalAmount(row int, v int32) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TotalAmount will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -3911,7 +3865,6 @@ func (rec *PlayerTaskRecord) FindNextFlag(v int8, itr int) int {
 func (rec *PlayerTaskRecord) SetFlag(row int, v int8) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the Flag will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -3941,7 +3894,6 @@ func (rec *PlayerTaskRecord) GetFlag(row int) (val int8, err error) {
 func (rec *PlayerTaskRecord) SetRow(row int, args ...interface{}) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskRecord will be overwritten by scenedata")
-		return nil
 	}
 
 	if _, ok := args[0].(string); !ok {
@@ -3969,7 +3921,6 @@ func (rec *PlayerTaskRecord) SetRow(row int, args ...interface{}) error {
 func (rec *PlayerTaskRecord) SetRowValue(row int, id string, typ int32, key string, currentamount int32, totalamount int32, flag int8) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskRecord will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -3994,7 +3945,6 @@ func (rec *PlayerTaskRecord) SetRowValue(row int, id string, typ int32, key stri
 func (rec *PlayerTaskRecord) Add(row int, args ...interface{}) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskRecord will be overwritten by scenedata")
-		return -1
 	}
 
 	if len(args) != rec.Cols {
@@ -4026,7 +3976,6 @@ func (rec *PlayerTaskRecord) Add(row int, args ...interface{}) int {
 func (rec *PlayerTaskRecord) AddRow(row int) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskRecord will be overwritten by scenedata")
-		return -1
 	}
 	add := -1
 
@@ -4044,7 +3993,6 @@ func (rec *PlayerTaskRecord) AddRow(row int) int {
 func (rec *PlayerTaskRecord) AddRowValue(row int, id string, typ int32, key string, currentamount int32, totalamount int32, flag int8) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskRecord will be overwritten by scenedata")
-		return -1
 	}
 
 	add := -1
@@ -4132,7 +4080,6 @@ func (rec *PlayerTaskRecord) Scan(row int, id *string, typ *int32, key *string, 
 func (rec *PlayerTaskRecord) Del(row int) {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskRecord will be overwritten by scenedata")
-		return
 	}
 	if row < 0 || row >= len(rec.Rows) {
 		return
@@ -4151,7 +4098,6 @@ func (rec *PlayerTaskRecord) Del(row int) {
 func (rec *PlayerTaskRecord) Clear() {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskRecord will be overwritten by scenedata")
-		return
 	}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
@@ -4314,7 +4260,6 @@ func (rec *PlayerTaskCanAccept) SerialRow(row int) ([]byte, error) {
 func (rec *PlayerTaskCanAccept) Set(row, col int, val interface{}) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskCanAccept will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -4393,7 +4338,6 @@ func (rec *PlayerTaskCanAccept) FindNextID(v string, itr int) int {
 func (rec *PlayerTaskCanAccept) SetID(row int, v string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the ID will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -4423,7 +4367,6 @@ func (rec *PlayerTaskCanAccept) GetID(row int) (val string, err error) {
 func (rec *PlayerTaskCanAccept) SetRow(row int, args ...interface{}) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskCanAccept will be overwritten by scenedata")
-		return nil
 	}
 
 	if _, ok := args[0].(string); !ok {
@@ -4436,7 +4379,6 @@ func (rec *PlayerTaskCanAccept) SetRow(row int, args ...interface{}) error {
 func (rec *PlayerTaskCanAccept) SetRowValue(row int, id string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskCanAccept will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -4456,7 +4398,6 @@ func (rec *PlayerTaskCanAccept) SetRowValue(row int, id string) error {
 func (rec *PlayerTaskCanAccept) Add(row int, args ...interface{}) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskCanAccept will be overwritten by scenedata")
-		return -1
 	}
 
 	if len(args) != rec.Cols {
@@ -4473,7 +4414,6 @@ func (rec *PlayerTaskCanAccept) Add(row int, args ...interface{}) int {
 func (rec *PlayerTaskCanAccept) AddRow(row int) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskCanAccept will be overwritten by scenedata")
-		return -1
 	}
 	add := -1
 
@@ -4491,7 +4431,6 @@ func (rec *PlayerTaskCanAccept) AddRow(row int) int {
 func (rec *PlayerTaskCanAccept) AddRowValue(row int, id string) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskCanAccept will be overwritten by scenedata")
-		return -1
 	}
 
 	add := -1
@@ -4569,7 +4508,6 @@ func (rec *PlayerTaskCanAccept) Scan(row int, id *string) bool {
 func (rec *PlayerTaskCanAccept) Del(row int) {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskCanAccept will be overwritten by scenedata")
-		return
 	}
 	if row < 0 || row >= len(rec.Rows) {
 		return
@@ -4588,7 +4526,6 @@ func (rec *PlayerTaskCanAccept) Del(row int) {
 func (rec *PlayerTaskCanAccept) Clear() {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskCanAccept will be overwritten by scenedata")
-		return
 	}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
@@ -4755,7 +4692,6 @@ func (rec *PlayerTaskTimeLimit) SerialRow(row int) ([]byte, error) {
 func (rec *PlayerTaskTimeLimit) Set(row, col int, val interface{}) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskTimeLimit will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -4852,7 +4788,6 @@ func (rec *PlayerTaskTimeLimit) FindNextID(v string, itr int) int {
 func (rec *PlayerTaskTimeLimit) SetID(row int, v string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the ID will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -4906,7 +4841,6 @@ func (rec *PlayerTaskTimeLimit) FindNextStartTime(v int64, itr int) int {
 func (rec *PlayerTaskTimeLimit) SetStartTime(row int, v int64) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the StartTime will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -4960,7 +4894,6 @@ func (rec *PlayerTaskTimeLimit) FindNextEndTime(v int64, itr int) int {
 func (rec *PlayerTaskTimeLimit) SetEndTime(row int, v int64) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the EndTime will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -4990,7 +4923,6 @@ func (rec *PlayerTaskTimeLimit) GetEndTime(row int) (val int64, err error) {
 func (rec *PlayerTaskTimeLimit) SetRow(row int, args ...interface{}) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskTimeLimit will be overwritten by scenedata")
-		return nil
 	}
 
 	if _, ok := args[0].(string); !ok {
@@ -5009,7 +4941,6 @@ func (rec *PlayerTaskTimeLimit) SetRow(row int, args ...interface{}) error {
 func (rec *PlayerTaskTimeLimit) SetRowValue(row int, id string, starttime int64, endtime int64) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskTimeLimit will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -5031,7 +4962,6 @@ func (rec *PlayerTaskTimeLimit) SetRowValue(row int, id string, starttime int64,
 func (rec *PlayerTaskTimeLimit) Add(row int, args ...interface{}) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskTimeLimit will be overwritten by scenedata")
-		return -1
 	}
 
 	if len(args) != rec.Cols {
@@ -5054,7 +4984,6 @@ func (rec *PlayerTaskTimeLimit) Add(row int, args ...interface{}) int {
 func (rec *PlayerTaskTimeLimit) AddRow(row int) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskTimeLimit will be overwritten by scenedata")
-		return -1
 	}
 	add := -1
 
@@ -5072,7 +5001,6 @@ func (rec *PlayerTaskTimeLimit) AddRow(row int) int {
 func (rec *PlayerTaskTimeLimit) AddRowValue(row int, id string, starttime int64, endtime int64) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskTimeLimit will be overwritten by scenedata")
-		return -1
 	}
 
 	add := -1
@@ -5154,7 +5082,6 @@ func (rec *PlayerTaskTimeLimit) Scan(row int, id *string, starttime *int64, endt
 func (rec *PlayerTaskTimeLimit) Del(row int) {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskTimeLimit will be overwritten by scenedata")
-		return
 	}
 	if row < 0 || row >= len(rec.Rows) {
 		return
@@ -5173,7 +5100,6 @@ func (rec *PlayerTaskTimeLimit) Del(row int) {
 func (rec *PlayerTaskTimeLimit) Clear() {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskTimeLimit will be overwritten by scenedata")
-		return
 	}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
@@ -5340,7 +5266,6 @@ func (rec *PlayerTaskGlobalRecord) SerialRow(row int) ([]byte, error) {
 func (rec *PlayerTaskGlobalRecord) Set(row, col int, val interface{}) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskGlobalRecord will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -5437,7 +5362,6 @@ func (rec *PlayerTaskGlobalRecord) FindNextTyp(v int32, itr int) int {
 func (rec *PlayerTaskGlobalRecord) SetTyp(row int, v int32) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the Typ will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -5491,7 +5415,6 @@ func (rec *PlayerTaskGlobalRecord) FindNextKey(v string, itr int) int {
 func (rec *PlayerTaskGlobalRecord) SetKey(row int, v string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the Key will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -5545,7 +5468,6 @@ func (rec *PlayerTaskGlobalRecord) FindNextCurrentAmount(v int32, itr int) int {
 func (rec *PlayerTaskGlobalRecord) SetCurrentAmount(row int, v int32) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the CurrentAmount will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -5575,7 +5497,6 @@ func (rec *PlayerTaskGlobalRecord) GetCurrentAmount(row int) (val int32, err err
 func (rec *PlayerTaskGlobalRecord) SetRow(row int, args ...interface{}) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskGlobalRecord will be overwritten by scenedata")
-		return nil
 	}
 
 	if _, ok := args[0].(int32); !ok {
@@ -5594,7 +5515,6 @@ func (rec *PlayerTaskGlobalRecord) SetRow(row int, args ...interface{}) error {
 func (rec *PlayerTaskGlobalRecord) SetRowValue(row int, typ int32, key string, currentamount int32) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskGlobalRecord will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -5616,7 +5536,6 @@ func (rec *PlayerTaskGlobalRecord) SetRowValue(row int, typ int32, key string, c
 func (rec *PlayerTaskGlobalRecord) Add(row int, args ...interface{}) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskGlobalRecord will be overwritten by scenedata")
-		return -1
 	}
 
 	if len(args) != rec.Cols {
@@ -5639,7 +5558,6 @@ func (rec *PlayerTaskGlobalRecord) Add(row int, args ...interface{}) int {
 func (rec *PlayerTaskGlobalRecord) AddRow(row int) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskGlobalRecord will be overwritten by scenedata")
-		return -1
 	}
 	add := -1
 
@@ -5657,7 +5575,6 @@ func (rec *PlayerTaskGlobalRecord) AddRow(row int) int {
 func (rec *PlayerTaskGlobalRecord) AddRowValue(row int, typ int32, key string, currentamount int32) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskGlobalRecord will be overwritten by scenedata")
-		return -1
 	}
 
 	add := -1
@@ -5739,7 +5656,6 @@ func (rec *PlayerTaskGlobalRecord) Scan(row int, typ *int32, key *string, curren
 func (rec *PlayerTaskGlobalRecord) Del(row int) {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskGlobalRecord will be overwritten by scenedata")
-		return
 	}
 	if row < 0 || row >= len(rec.Rows) {
 		return
@@ -5758,7 +5674,6 @@ func (rec *PlayerTaskGlobalRecord) Del(row int) {
 func (rec *PlayerTaskGlobalRecord) Clear() {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskGlobalRecord will be overwritten by scenedata")
-		return
 	}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
@@ -5925,7 +5840,6 @@ func (rec *PlayerTaskPropRecord) SerialRow(row int) ([]byte, error) {
 func (rec *PlayerTaskPropRecord) Set(row, col int, val interface{}) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskPropRecord will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -6022,7 +5936,6 @@ func (rec *PlayerTaskPropRecord) FindNextID(v string, itr int) int {
 func (rec *PlayerTaskPropRecord) SetID(row int, v string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the ID will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -6076,7 +5989,6 @@ func (rec *PlayerTaskPropRecord) FindNextProperty(v string, itr int) int {
 func (rec *PlayerTaskPropRecord) SetProperty(row int, v string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the Property will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -6130,7 +6042,6 @@ func (rec *PlayerTaskPropRecord) FindNextNeedValue(v string, itr int) int {
 func (rec *PlayerTaskPropRecord) SetNeedValue(row int, v string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the NeedValue will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -6160,7 +6071,6 @@ func (rec *PlayerTaskPropRecord) GetNeedValue(row int) (val string, err error) {
 func (rec *PlayerTaskPropRecord) SetRow(row int, args ...interface{}) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskPropRecord will be overwritten by scenedata")
-		return nil
 	}
 
 	if _, ok := args[0].(string); !ok {
@@ -6179,7 +6089,6 @@ func (rec *PlayerTaskPropRecord) SetRow(row int, args ...interface{}) error {
 func (rec *PlayerTaskPropRecord) SetRowValue(row int, id string, property string, needvalue string) error {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskPropRecord will be overwritten by scenedata")
-		return nil
 	}
 
 	if row < 0 || row >= len(rec.Rows) {
@@ -6201,7 +6110,6 @@ func (rec *PlayerTaskPropRecord) SetRowValue(row int, id string, property string
 func (rec *PlayerTaskPropRecord) Add(row int, args ...interface{}) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskPropRecord will be overwritten by scenedata")
-		return -1
 	}
 
 	if len(args) != rec.Cols {
@@ -6224,7 +6132,6 @@ func (rec *PlayerTaskPropRecord) Add(row int, args ...interface{}) int {
 func (rec *PlayerTaskPropRecord) AddRow(row int) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskPropRecord will be overwritten by scenedata")
-		return -1
 	}
 	add := -1
 
@@ -6242,7 +6149,6 @@ func (rec *PlayerTaskPropRecord) AddRow(row int) int {
 func (rec *PlayerTaskPropRecord) AddRowValue(row int, id string, property string, needvalue string) int {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskPropRecord will be overwritten by scenedata")
-		return -1
 	}
 
 	add := -1
@@ -6324,7 +6230,6 @@ func (rec *PlayerTaskPropRecord) Scan(row int, id *string, property *string, nee
 func (rec *PlayerTaskPropRecord) Del(row int) {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskPropRecord will be overwritten by scenedata")
-		return
 	}
 	if row < 0 || row >= len(rec.Rows) {
 		return
@@ -6343,7 +6248,6 @@ func (rec *PlayerTaskPropRecord) Del(row int) {
 func (rec *PlayerTaskPropRecord) Clear() {
 	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the TaskPropRecord will be overwritten by scenedata")
-		return
 	}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
