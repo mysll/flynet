@@ -8,15 +8,15 @@ import (
 )
 
 type Property struct {
-	Name     string `xml:"name,attr"`
-	Tag      string `xml:"tag,attr"`
-	Type     string `xml:"type,attr"`
-	Len      int    `xml:"len,attr"`
-	Save     string `xml:"save,attr"`
-	Public   string `xml:"public,attr"`
-	Comment  string `xml:"comment,attr"`
-	Cell     string `xml:"cell,attr"`
-	Realtime string `xml:"realtime,attr"`
+	Name      string `xml:"name,attr"`
+	Tag       string `xml:"tag,attr"`
+	Type      string `xml:"type,attr"`
+	Len       int    `xml:"len,attr"`
+	Save      string `xml:"save,attr"`
+	Public    string `xml:"public,attr"`
+	Comment   string `xml:"comment,attr"`
+	SceneData string `xml:"scenedata,attr"`
+	Realtime  string `xml:"realtime,attr"`
 }
 
 type Column struct {
@@ -28,15 +28,15 @@ type Column struct {
 }
 
 type Record struct {
-	Name    string   `xml:"name,attr"`
-	Cols    int      `xml:"cols,attr"`
-	Maxrows int      `xml:"maxrows,attr"`
-	Save    string   `xml:"save,attr"`
-	Visible string   `xml:"visible,attr"`
-	Comment string   `xml:"comment,attr"`
-	Columns []Column `xml:"column"`
-	Cell    string   `xml:"cell,attr"`
-	Type    string   `xml:"type,attr"`
+	Name      string   `xml:"name,attr"`
+	Cols      int      `xml:"cols,attr"`
+	Maxrows   int      `xml:"maxrows,attr"`
+	Save      string   `xml:"save,attr"`
+	Visible   string   `xml:"visible,attr"`
+	Comment   string   `xml:"comment,attr"`
+	Columns   []Column `xml:"column"`
+	SceneData string   `xml:"scenedata,attr"`
+	Type      string   `xml:"type,attr"`
 }
 
 type Object struct {

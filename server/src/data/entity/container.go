@@ -152,6 +152,8 @@ type Container_t struct {
 }
 
 type Container struct {
+	InScene      bool //是否在场景中
+	InBase       bool //是否在base中
 	Mdirty       map[string]interface{}
 	Mmodify      map[string]interface{}
 	ExtraData    map[string]interface{}
@@ -165,6 +167,22 @@ type Container struct {
 	Container_t
 	Container_Save
 	Container_Propertys
+}
+
+func (obj *Container) SetInBase(v bool) {
+	obj.InBase = v
+}
+
+func (obj *Container) IsInBase() bool {
+	return obj.InBase
+}
+
+func (obj *Container) SetInScene(v bool) {
+	obj.InScene = v
+}
+
+func (obj *Container) IsInScene() bool {
+	return obj.InScene
 }
 
 func (obj *Container) SetLoading(loading bool) {
@@ -860,7 +878,14 @@ func (obj *Container) SetName(v string) {
 	if obj.Name == v {
 		return
 	}
+
 	old := obj.Name
+
+	if !obj.InBase { //只有base能够修改自身的数据
+		log.LogError("can't change base data")
+		return
+	}
+
 	obj.Name = v
 	if obj.prophooker != nil && obj.IsCritical(0) && !obj.GetPropFlag(0) {
 		obj.SetPropFlag(0, true)
@@ -880,7 +905,14 @@ func (obj *Container) SetContainerType(v int32) {
 	if obj.ContainerType == v {
 		return
 	}
+
 	old := obj.ContainerType
+
+	if !obj.InBase { //只有base能够修改自身的数据
+		log.LogError("can't change base data")
+		return
+	}
+
 	obj.ContainerType = v
 	if obj.prophooker != nil && obj.IsCritical(1) && !obj.GetPropFlag(1) {
 		obj.SetPropFlag(1, true)
@@ -919,6 +951,8 @@ func (obj *Container) ContainerInit() {
 	obj.quiting = false
 	obj.Save = true
 	obj.ObjectType = ITEM
+	obj.InBase = false
+	obj.InScene = false
 }
 
 //重置
@@ -1105,12 +1139,42 @@ func (obj *Container) SerialModify() ([]byte, error) {
 	return ar.Data(), nil
 }
 
+func (obj *Container) IsSceneData(prop string) bool {
+	idx, err := obj.GetPropertyIndex(prop)
+	if err != nil {
+		return false
+	}
+
+	return IsContainerSceneData(idx)
+}
+
+//通过scenedata同步
+func (obj *Container) SyncFromSceneData(val interface{}) error {
+	var sd *ContainerSceneData
+	var ok bool
+	if sd, ok = val.(*ContainerSceneData); !ok {
+		return fmt.Errorf("type not ContainerSceneData", sd)
+	}
+
+	return nil
+}
+
+func (obj *Container) GetSceneData() interface{} {
+	sd := &ContainerSceneData{}
+
+	//属性
+
+	//表格
+	return sd
+}
+
 //创建函数
 func CreateContainer() *Container {
 	obj := &Container{}
 
 	obj.ObjectType = ITEM
 	obj.initRec()
+
 	obj.propcritical = make([]uint64, int(math.Ceil(float64(2)/64)))
 	obj.propflag = make([]uint64, int(math.Ceil(float64(2)/64)))
 	obj.ContainerInit()
@@ -1122,7 +1186,21 @@ func CreateContainer() *Container {
 	return obj
 }
 
+type ContainerSceneData struct {
+}
+
+func IsContainerSceneData(idx int) bool {
+	switch idx {
+	case 0: //名称
+		return false
+	case 1: //类型
+		return false
+	}
+	return false
+}
+
 func ContainerInit() {
 	gob.Register(&Container_Save{})
 	gob.Register(&Container{})
+	gob.Register(&ContainerSceneData{})
 }

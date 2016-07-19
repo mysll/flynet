@@ -154,6 +154,8 @@ type Item_t struct {
 }
 
 type Item struct {
+	InScene      bool //是否在场景中
+	InBase       bool //是否在base中
 	Mdirty       map[string]interface{}
 	Mmodify      map[string]interface{}
 	ExtraData    map[string]interface{}
@@ -167,6 +169,22 @@ type Item struct {
 	Item_t
 	Item_Save
 	Item_Propertys
+}
+
+func (obj *Item) SetInBase(v bool) {
+	obj.InBase = v
+}
+
+func (obj *Item) IsInBase() bool {
+	return obj.InBase
+}
+
+func (obj *Item) SetInScene(v bool) {
+	obj.InScene = v
+}
+
+func (obj *Item) IsInScene() bool {
+	return obj.InScene
 }
 
 func (obj *Item) SetLoading(loading bool) {
@@ -917,7 +935,14 @@ func (obj *Item) SetID(v string) {
 	if obj.ID == v {
 		return
 	}
+
 	old := obj.ID
+
+	if !obj.InBase { //只有base能够修改自身的数据
+		log.LogError("can't change base data")
+		return
+	}
+
 	obj.ID = v
 	if obj.prophooker != nil && obj.IsCritical(0) && !obj.GetPropFlag(0) {
 		obj.SetPropFlag(0, true)
@@ -937,7 +962,14 @@ func (obj *Item) SetTime(v int32) {
 	if obj.Time == v {
 		return
 	}
+
 	old := obj.Time
+
+	if !obj.InBase { //只有base能够修改自身的数据
+		log.LogError("can't change base data")
+		return
+	}
+
 	obj.Time = v
 	if obj.prophooker != nil && obj.IsCritical(1) && !obj.GetPropFlag(1) {
 		obj.SetPropFlag(1, true)
@@ -960,7 +992,14 @@ func (obj *Item) SetAmount(v int16) {
 	if obj.Amount == v {
 		return
 	}
+
 	old := obj.Amount
+
+	if !obj.InBase { //只有base能够修改自身的数据
+		log.LogError("can't change base data")
+		return
+	}
+
 	obj.Amount = v
 	if obj.prophooker != nil && obj.IsCritical(2) && !obj.GetPropFlag(2) {
 		obj.SetPropFlag(2, true)
@@ -983,7 +1022,14 @@ func (obj *Item) SetName(v string) {
 	if obj.Name == v {
 		return
 	}
+
 	old := obj.Name
+
+	if !obj.InBase { //只有base能够修改自身的数据
+		log.LogError("can't change base data")
+		return
+	}
+
 	obj.Name = v
 	if obj.prophooker != nil && obj.IsCritical(3) && !obj.GetPropFlag(3) {
 		obj.SetPropFlag(3, true)
@@ -1019,6 +1065,8 @@ func (obj *Item) ItemInit() {
 	obj.quiting = false
 	obj.Save = true
 	obj.ObjectType = ITEM
+	obj.InBase = false
+	obj.InScene = false
 }
 
 //重置
@@ -1211,12 +1259,42 @@ func (obj *Item) SerialModify() ([]byte, error) {
 	return ar.Data(), nil
 }
 
+func (obj *Item) IsSceneData(prop string) bool {
+	idx, err := obj.GetPropertyIndex(prop)
+	if err != nil {
+		return false
+	}
+
+	return IsItemSceneData(idx)
+}
+
+//通过scenedata同步
+func (obj *Item) SyncFromSceneData(val interface{}) error {
+	var sd *ItemSceneData
+	var ok bool
+	if sd, ok = val.(*ItemSceneData); !ok {
+		return fmt.Errorf("type not ItemSceneData", sd)
+	}
+
+	return nil
+}
+
+func (obj *Item) GetSceneData() interface{} {
+	sd := &ItemSceneData{}
+
+	//属性
+
+	//表格
+	return sd
+}
+
 //创建函数
 func CreateItem() *Item {
 	obj := &Item{}
 
 	obj.ObjectType = ITEM
 	obj.initRec()
+
 	obj.propcritical = make([]uint64, int(math.Ceil(float64(4)/64)))
 	obj.propflag = make([]uint64, int(math.Ceil(float64(4)/64)))
 	obj.ItemInit()
@@ -1228,7 +1306,25 @@ func CreateItem() *Item {
 	return obj
 }
 
+type ItemSceneData struct {
+}
+
+func IsItemSceneData(idx int) bool {
+	switch idx {
+	case 0: //编号
+		return false
+	case 1: //时效
+		return false
+	case 2: //物品叠加数量
+		return false
+	case 3: //名称
+		return false
+	}
+	return false
+}
+
 func ItemInit() {
 	gob.Register(&Item_Save{})
 	gob.Register(&Item{})
+	gob.Register(&ItemSceneData{})
 }

@@ -151,6 +151,8 @@ type BaseScene_t struct {
 }
 
 type BaseScene struct {
+	InScene      bool //是否在场景中
+	InBase       bool //是否在base中
 	Mdirty       map[string]interface{}
 	Mmodify      map[string]interface{}
 	ExtraData    map[string]interface{}
@@ -164,6 +166,22 @@ type BaseScene struct {
 	BaseScene_t
 	BaseScene_Save
 	BaseScene_Propertys
+}
+
+func (obj *BaseScene) SetInBase(v bool) {
+	obj.InBase = v
+}
+
+func (obj *BaseScene) IsInBase() bool {
+	return obj.InBase
+}
+
+func (obj *BaseScene) SetInScene(v bool) {
+	obj.InScene = v
+}
+
+func (obj *BaseScene) IsInScene() bool {
+	return obj.InScene
 }
 
 func (obj *BaseScene) SetLoading(loading bool) {
@@ -830,7 +848,14 @@ func (obj *BaseScene) SetName(v string) {
 	if obj.Name == v {
 		return
 	}
+
 	old := obj.Name
+
+	if !obj.InBase { //只有base能够修改自身的数据
+		log.LogError("can't change base data")
+		return
+	}
+
 	obj.Name = v
 	if obj.prophooker != nil && obj.IsCritical(0) && !obj.GetPropFlag(0) {
 		obj.SetPropFlag(0, true)
@@ -867,6 +892,8 @@ func (obj *BaseScene) BaseSceneInit() {
 	obj.quiting = false
 	obj.Save = true
 	obj.ObjectType = SCENE
+	obj.InBase = false
+	obj.InScene = false
 }
 
 //重置
@@ -1053,12 +1080,42 @@ func (obj *BaseScene) SerialModify() ([]byte, error) {
 	return ar.Data(), nil
 }
 
+func (obj *BaseScene) IsSceneData(prop string) bool {
+	idx, err := obj.GetPropertyIndex(prop)
+	if err != nil {
+		return false
+	}
+
+	return IsBaseSceneSceneData(idx)
+}
+
+//通过scenedata同步
+func (obj *BaseScene) SyncFromSceneData(val interface{}) error {
+	var sd *BaseSceneSceneData
+	var ok bool
+	if sd, ok = val.(*BaseSceneSceneData); !ok {
+		return fmt.Errorf("type not BaseSceneSceneData", sd)
+	}
+
+	return nil
+}
+
+func (obj *BaseScene) GetSceneData() interface{} {
+	sd := &BaseSceneSceneData{}
+
+	//属性
+
+	//表格
+	return sd
+}
+
 //创建函数
 func CreateBaseScene() *BaseScene {
 	obj := &BaseScene{}
 
 	obj.ObjectType = SCENE
 	obj.initRec()
+
 	obj.propcritical = make([]uint64, int(math.Ceil(float64(1)/64)))
 	obj.propflag = make([]uint64, int(math.Ceil(float64(1)/64)))
 	obj.BaseSceneInit()
@@ -1070,7 +1127,19 @@ func CreateBaseScene() *BaseScene {
 	return obj
 }
 
+type BaseSceneSceneData struct {
+}
+
+func IsBaseSceneSceneData(idx int) bool {
+	switch idx {
+	case 0: //名称
+		return false
+	}
+	return false
+}
+
 func BaseSceneInit() {
 	gob.Register(&BaseScene_Save{})
 	gob.Register(&BaseScene{})
+	gob.Register(&BaseSceneSceneData{})
 }
