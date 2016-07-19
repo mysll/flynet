@@ -28,6 +28,10 @@ type BaseApp struct {
 	taskLogic  *TaskLogic
 }
 
+func (b *BaseApp) IsBase() bool {
+	return true
+}
+
 func (b *BaseApp) OnPrepare() bool {
 	rand.Seed(time.Now().UTC().UnixNano() + int64(hash.DJBHash(App.Name)))
 	log.LogMessage(b.Name, " prepared")

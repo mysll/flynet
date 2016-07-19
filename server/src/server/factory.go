@@ -14,6 +14,7 @@ type Factory struct {
 	pool    *Pool
 	objects map[int32]Entityer
 	deletes *list.List
+	inBase  bool
 }
 
 //创建一个对象
@@ -39,6 +40,7 @@ func (f *Factory) Create(typ string) (ent Entityer, err error) {
 	}
 	ent.SetObjId(id)
 	ent.SetDeleted(false)
+	ent.SetInBase(f.inBase)
 	f.objects[id.Index] = ent
 	return
 }

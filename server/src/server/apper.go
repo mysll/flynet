@@ -1,6 +1,7 @@
 package server
 
 type Apper interface {
+	IsBase() bool
 	//自主控制socket
 	RawSock() bool
 	//系统准备回调，底层已经初始化完成
@@ -34,6 +35,10 @@ type Apper interface {
 	OnClientConnected(id int64)
 	//客户端断开连接
 	OnClientLost(id int64)
+}
+
+func (svr *Server) IsBase() bool {
+	return false
 }
 
 //自主控制socket

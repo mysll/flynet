@@ -108,6 +108,11 @@ func NewKernel(factory *Factory) *Kernel {
 	return k
 }
 
+//当前是否是Base
+func (k *Kernel) CurrentInBase(base bool) {
+	k.factory.inBase = base
+}
+
 //转储某个对象信息，保存进文件
 func (k *Kernel) DumpInfo(obj interface{}, fname string) {
 	data, err := json.Marshal(obj)

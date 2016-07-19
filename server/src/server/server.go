@@ -80,7 +80,7 @@ func (svr *Server) GetTickCount() int32 {
 	return int32(time.Now().Sub(svr.startTime) % math.MaxInt32)
 }
 
-func (svr *Server) Start(master string, localip string, outerip string, typ string, args *simplejson.Json) bool {
+func (svr *Server) Start(master string, localip string, outerip string, typ string, argstr string) bool {
 	svr.startTime = time.Now()
 	defer func() {
 		if e := recover(); e != nil {
@@ -88,6 +88,10 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 		}
 	}()
 
+	args, err := simplejson.NewJson([]byte(argstr))
+	if err != nil {
+		panic(err)
+	}
 	svr.Type = typ
 	svr.StartArgs = args
 	if name, ok := args.CheckGet("name"); ok {
@@ -251,10 +255,9 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 	svr.setSerial(serial)
 	log.LogMessage("start serial:", fmt.Sprintf("%X", serial))
 	if !svr.apper.OnPrepare() {
-
 		return false
 	}
-
+	svr.CurrentInBase(svr.apper.IsBase())
 	if svr.AssetPath != "" {
 		helper.LoadAllConfig(svr.AssetPath)
 	}

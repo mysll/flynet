@@ -4,8 +4,6 @@ import (
 	"flag"
 	"server"
 	. "status"
-
-	"github.com/bitly/go-simplejson"
 )
 
 var (
@@ -24,13 +22,8 @@ func main() {
 		panic("args error")
 	}
 
-	json, err := simplejson.NewJson([]byte(*startargs))
-	if err != nil {
-		panic(err)
-	}
-
 	App.Server = server.NewServer(App, int32(*appid))
-	if App.Start(*master, *localip, *outerip, *typ, json) {
+	if App.Start(*master, *localip, *outerip, *typ, *startargs) {
 		App.Wait()
 	}
 
