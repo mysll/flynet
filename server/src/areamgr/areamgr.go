@@ -1,9 +1,10 @@
 package areamgr
 
 import (
-	"libs/log"
+	_ "pb"
 	"server"
-	"share"
+	"server/libs/log"
+	"server/share"
 )
 
 var (

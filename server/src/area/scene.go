@@ -1,9 +1,9 @@
 package area
 
 import (
-	"data/entity"
-	"libs/log"
+	"logicdata/entity"
 	"server"
+	"server/libs/log"
 )
 
 type Scene struct {

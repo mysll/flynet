@@ -1,15 +1,15 @@
 package base
 
 import (
-	"data/datatype"
-	"data/entity"
 	"errors"
-	"libs/log"
-	"libs/rpc"
+	"logicdata/entity"
 	"pb/s2c"
 	"server"
-	"share"
-	"util"
+	"server/data/datatype"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/share"
+	"server/util"
 
 	"github.com/golang/protobuf/proto"
 )

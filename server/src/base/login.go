@@ -1,11 +1,11 @@
 package base
 
 import (
-	"libs/log"
-	"libs/rpc"
 	"math/rand"
 	"pb/s2c"
 	"server"
+	"server/libs/log"
+	"server/libs/rpc"
 	"time"
 
 	"github.com/golang/protobuf/proto"

@@ -1,8 +1,8 @@
 package master
 
 import (
-	"libs/log"
-	"share"
+	"server/libs/log"
+	"server/share"
 	"sync"
 )
 

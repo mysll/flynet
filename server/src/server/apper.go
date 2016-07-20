@@ -1,6 +1,7 @@
 package server
 
 type Apper interface {
+	//当前是否是base服务
 	IsBase() bool
 	//自主控制socket
 	RawSock() bool

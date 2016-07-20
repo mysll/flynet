@@ -2,12 +2,12 @@ package base
 
 import (
 	"bytes"
-	. "data/datatype"
 	"encoding/gob"
 	"errors"
-	"libs/log"
-	"libs/rpc"
 	"server"
+	. "server/data/datatype"
+	"server/libs/log"
+	"server/libs/rpc"
 )
 
 type Sync struct {

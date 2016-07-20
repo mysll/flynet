@@ -1,12 +1,12 @@
 package area
 
 import (
-	. "data/datatype"
-	"data/entity"
-	"libs/log"
-	"libs/rpc"
+	"logicdata/entity"
 	"server"
-	"share"
+	. "server/data/datatype"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/share"
 )
 
 type BaseProxy struct {

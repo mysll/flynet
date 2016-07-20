@@ -1,11 +1,11 @@
 package master
 
 import (
-	"libs/log"
 	"net"
-	"share"
+	"server/libs/log"
+	"server/share"
+	"server/util"
 	"time"
-	"util"
 )
 
 const (

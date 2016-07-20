@@ -1,10 +1,10 @@
 package base
 
 import (
-	"data/datatype"
-	"data/entity"
+	"logicdata/entity"
 	"server"
-	"share"
+	"server/data/datatype"
+	"server/share"
 )
 
 type Player struct {

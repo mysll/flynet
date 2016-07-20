@@ -1,11 +1,12 @@
 package mongodb
 
 import (
-	"data/entity"
+	"logicdata/entity"
+	"server/share"
+	"strings"
+
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"share"
-	"strings"
 )
 
 func SaveToDb(db *mgo.Database, id uint64, savedata *share.DbSave) error {

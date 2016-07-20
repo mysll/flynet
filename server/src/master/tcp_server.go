@@ -1,10 +1,10 @@
 package master
 
 import (
-	"libs/log"
 	"net"
-	"share"
-	"util"
+	"server/libs/log"
+	"server/share"
+	"server/util"
 )
 
 type tcp_server struct {

@@ -1,9 +1,9 @@
 package base
 
 import (
-	"data/datatype"
-	"data/helper"
-	"libs/log"
+	"server/data/datatype"
+	"server/data/helper"
+	"server/libs/log"
 )
 
 type KeyVal struct {

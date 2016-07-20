@@ -2,7 +2,7 @@ package master
 
 import (
 	"errors"
-	"libs/log"
+	"server/libs/log"
 	"sync/atomic"
 
 	"github.com/bitly/go-simplejson"

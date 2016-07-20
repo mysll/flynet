@@ -3,11 +3,11 @@ package server
 import (
 	"errors"
 	"io"
-	"libs/log"
-	"libs/rpc"
 	"net"
-	"share"
-	"util"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/share"
+	"server/util"
 
 	"golang.org/x/net/websocket"
 )

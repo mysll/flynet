@@ -4,9 +4,9 @@ package master
 
 import (
 	"fmt"
-	"libs/log"
 	"os"
 	"os/exec"
+	"server/libs/log"
 	"strconv"
 	"sync/atomic"
 )

@@ -1,15 +1,15 @@
 package mongodb
 
 import (
-	"libs/log"
+	"server/libs/log"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	//. "libs/parser"
+	//. "logicdata/parser"
 	//"os"
 	"server"
 	//"strings"
-	"util"
+	"server/util"
 )
 
 var (

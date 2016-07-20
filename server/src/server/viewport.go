@@ -1,13 +1,25 @@
 package server
 
 import (
-	. "data/datatype"
 	"fmt"
-	"libs/rpc"
-	"pb/s2c"
-
-	"github.com/golang/protobuf/proto"
+	. "server/data/datatype"
+	"server/libs/log"
+	"server/libs/rpc"
 )
+
+var (
+	vt ViewportCodec
+)
+
+type ViewportCodec interface {
+	GetCodecInfo() string
+	ViewportCreate(id int32, container Entityer) interface{}
+	ViewportDelete(id int32) interface{}
+	ViewportNotifyAdd(id int32, index int32, object Entityer) interface{}
+	ViewportNotifyRemove(id int32, index int32) interface{}
+	ViewportNotifyExchange(srcid int32, src int32, destid int32, dest int32) interface{}
+	OnUpdate(id int32, child Entityer) interface{}
+}
 
 type ViewportData struct {
 	Id        int32
@@ -22,6 +34,10 @@ type Viewport struct {
 }
 
 func NewViewport(p Entityer, mailbox rpc.Mailbox) *Viewport {
+	if vt == nil {
+		panic("viewport transport not set")
+	}
+	log.LogMessage("viewport proto:", vt.GetCodecInfo())
 	vp := &Viewport{}
 	vp.Views = make(map[int32]*ViewportData)
 	vp.Owner = p
@@ -68,10 +84,10 @@ func (vp *Viewport) ViewportCreate(id int32) {
 	if vd == nil {
 		return
 	}
-	msg := &s2c.CreateView{}
-	msg.Entity = proto.String(vd.Container.ObjTypeName())
-	msg.ViewId = proto.Int32(id)
-	msg.Capacity = proto.Int32(vd.Container.GetCapacity())
+	msg := vt.ViewportCreate(id, vd.Container)
+	if msg == nil {
+		return
+	}
 	MailTo(nil, &vp.mailbox, "Viewport.Create", msg)
 	childs := vd.Container.GetCapacity()
 	for index := int32(0); index < childs; index++ {
@@ -85,8 +101,10 @@ func (vp *Viewport) ViewportDelete(id int32) {
 	if vd == nil {
 		return
 	}
-	msg := &s2c.DeleteView{}
-	msg.ViewId = proto.Int32(id)
+	msg := vt.ViewportDelete(id)
+	if msg == nil {
+		return
+	}
 	MailTo(nil, &vp.mailbox, "Viewport.Delete", msg)
 }
 
@@ -101,11 +119,10 @@ func (vp *Viewport) ViewportNotifyAdd(id int32, index int32) {
 	if child == nil {
 		return
 	}
-	msg := &s2c.ViewAdd{}
-	msg.ViewId = proto.Int32(id)
-	msg.Entity = proto.String(child.ObjTypeName())
-	msg.Index = proto.Int32(index)
-	msg.Props, _ = child.Serial()
+	msg := vt.ViewportNotifyAdd(id, index, child)
+	if msg == nil {
+		return
+	}
 	MailTo(nil, &vp.mailbox, "Viewport.Add", msg)
 }
 
@@ -115,9 +132,10 @@ func (vp *Viewport) ViewportNotifyRemove(id int32, index int32) {
 	if vd == nil {
 		return
 	}
-	msg := &s2c.ViewRemove{}
-	msg.ViewId = proto.Int32(id)
-	msg.Index = proto.Int32(index)
+	msg := vt.ViewportNotifyRemove(id, index)
+	if msg == nil {
+		return
+	}
 	MailTo(nil, &vp.mailbox, "Viewport.Remove", msg)
 }
 
@@ -133,11 +151,10 @@ func (vp *Viewport) ViewportNotifyExchange(srcid int32, src int32, destid int32,
 		return
 	}
 
-	msg := &s2c.ViewExchange{}
-	msg.ViewId1 = proto.Int32(srcid)
-	msg.Index1 = proto.Int32(src)
-	msg.ViewId2 = proto.Int32(destid)
-	msg.Index2 = proto.Int32(dest)
+	msg := vt.ViewportNotifyExchange(srcid, src, destid, dest)
+	if msg == nil {
+		return
+	}
 	MailTo(nil, &vp.mailbox, "Viewport.Exchange", msg)
 }
 
@@ -153,12 +170,16 @@ func (vp *Viewport) OnUpdate() {
 				continue
 			}
 
-			msg := &s2c.ViewobjProperty{}
-			msg.ViewId = proto.Int32(vd.Id)
-			msg.Index = proto.Int32(int32(child.GetIndex()))
-			msg.Props = data
+			msg := vt.OnUpdate(vd.Id, child)
+			if msg == nil {
+				continue
+			}
 			MailTo(nil, &vp.mailbox, "Viewport.ObjUpdate", msg)
 			child.ClearModify()
 		}
 	}
+}
+
+func RegisterViewportCodec(t ViewportCodec) {
+	vt = t
 }

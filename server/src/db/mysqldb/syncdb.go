@@ -2,8 +2,8 @@ package mysqldb
 
 import (
 	"fmt"
-	l "libs/log"
-	. "libs/parser"
+	. "logicdata/parser"
+	l "server/libs/log"
 	"strings"
 )
 

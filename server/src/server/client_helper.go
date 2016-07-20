@@ -2,10 +2,10 @@ package server
 
 import (
 	"errors"
-	"libs/log"
-	"libs/rpc"
-	"share"
-	"util"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/share"
+	"server/util"
 )
 
 var (

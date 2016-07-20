@@ -2,12 +2,12 @@ package mongodb
 
 import (
 	"errors"
-	"libs/log"
-	"libs/rpc"
 	"pb/c2s"
 	"pb/s2c"
 	"server"
-	"share"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/share"
 	"sync/atomic"
 	"time"
 

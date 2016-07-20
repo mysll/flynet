@@ -3,12 +3,9 @@ package server
 import (
 	"errors"
 	"fmt"
-	"libs/log"
-	"libs/rpc"
-	"pb/s2c"
+	"server/libs/log"
+	"server/libs/rpc"
 	"sync"
-
-	"github.com/golang/protobuf/proto"
 )
 
 var (
@@ -32,8 +29,7 @@ func Log(log_name string, log_source, log_type int32, log_content, log_comment s
 
 //发送一个错误提示
 func Error(src *rpc.Mailbox, dest *rpc.Mailbox, method string, errno int32) error {
-	errmsg := &s2c.Error{}
-	errmsg.ErrorNo = proto.Int32(errno)
+	errmsg := core.rpcProto.ErrorMsg(errno)
 	return MailTo(src, dest, method, errmsg)
 }
 
@@ -63,8 +59,6 @@ func MailTo(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args ...interfac
 	} else {
 		return ErrUnreachable
 	}
-
-	return nil
 }
 
 func MailToAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rpc.ReplyCB, args ...interface{}) error {

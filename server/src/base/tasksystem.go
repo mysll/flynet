@@ -1,12 +1,12 @@
 package base
 
 import (
-	"data/datatype"
-	"data/entity"
-	"data/helper"
 	"fmt"
-	"libs/log"
+	"logicdata/entity"
 	"server"
+	"server/data/datatype"
+	"server/data/helper"
+	"server/libs/log"
 	"strings"
 	"time"
 )

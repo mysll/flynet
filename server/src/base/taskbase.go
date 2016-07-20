@@ -1,9 +1,9 @@
 package base
 
 import (
-	"data/datatype"
-	"data/entity"
-	"libs/log"
+	"logicdata/entity"
+	"server/data/datatype"
+	"server/libs/log"
 	"strings"
 )
 

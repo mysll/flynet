@@ -1,9 +1,9 @@
 package server
 
 import (
-	"libs/log"
-	"libs/rpc"
-	"util"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/util"
 
 	"github.com/mysll/log4go"
 )

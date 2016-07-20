@@ -1,8 +1,8 @@
 package master
 
 import (
-	"libs/log"
 	"net/http"
+	"server/libs/log"
 	"strconv"
 
 	"github.com/gorilla/mux"

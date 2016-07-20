@@ -1,11 +1,11 @@
 package login
 
 import (
-	"libs/rpc"
 	"pb/c2s"
 	"pb/s2c"
 	"server"
-	"share"
+	"server/libs/rpc"
+	"server/share"
 
 	proto "github.com/golang/protobuf/proto"
 )

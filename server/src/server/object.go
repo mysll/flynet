@@ -1,7 +1,7 @@
 package server
 
 import (
-	. "data/datatype"
+	. "server/data/datatype"
 )
 
 type Objecter interface {

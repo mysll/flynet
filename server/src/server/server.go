@@ -1,20 +1,20 @@
 package server
 
 import (
-	"data/helper"
 	"fmt"
-	"libs/common/event"
-	"libs/log"
-	"libs/rpc"
 	"math"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
+	"server/data/helper"
+	"server/libs/common/event"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/util"
 	"syscall"
 	"time"
-	"util"
 
 	"github.com/bitly/go-simplejson"
 )
@@ -68,7 +68,7 @@ type Server struct {
 	s2chelper      *S2CHelper
 	c2shelper      *C2SHelper
 	Sockettype     string
-	rpcProto       ClientProtoer
+	rpcProto       ProtoCodec
 }
 
 type StartStoper interface {
@@ -267,6 +267,11 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 	svr.rpcServer = createRpc(svr.rpcCh)
 	svr.WaitGroup.Wrap(func() { rpc.CreateService(svr.rpcServer, svr.rpcListener) })
 
+	svr.rpcProto = codec
+	if svr.rpcProto == nil {
+		panic("proto not set")
+	}
+	log.LogMessage("client proto:", svr.rpcProto.GetCodecInfo())
 	svr.Ready()
 
 	return true
@@ -366,10 +371,6 @@ func (svr *Server) MustReady() {
 	}
 }
 
-func (svr *Server) SetClientProto(ptr ClientProtoer) {
-	svr.rpcProto = ptr
-}
-
 func NewServer(app Apper, id int32) *Server {
 	s := &Server{}
 	core = s
@@ -389,7 +390,6 @@ func NewServer(app Apper, id int32) *Server {
 
 	s.s2chelper = NewS2CHelper()
 	s.c2shelper = &C2SHelper{}
-	s.rpcProto = &PBProto{}
 
 	RegisterRemote("S2CHelper", s.s2chelper)
 	RegisterHandler("C2SHelper", s.c2shelper)

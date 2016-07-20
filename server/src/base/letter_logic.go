@@ -1,13 +1,13 @@
 package base
 
 import (
-	"data/entity"
 	"encoding/json"
-	"libs/log"
-	"libs/rpc"
+	"logicdata/entity"
 	"pb/c2s"
 	"server"
-	"share"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/share"
 	"time"
 )
 

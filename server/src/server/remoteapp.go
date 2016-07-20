@@ -2,10 +2,10 @@ package server
 
 import (
 	"fmt"
-	"libs/log"
-	"libs/rpc"
 	"net"
-	"share"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/share"
 	"sync"
 	"time"
 )

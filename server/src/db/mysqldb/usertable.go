@@ -1,7 +1,7 @@
 package mysqldb
 
 import (
-	. "libs/parser"
+	. "logicdata/parser"
 )
 
 var (

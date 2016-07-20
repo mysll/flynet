@@ -1,8 +1,8 @@
 package base
 
 import (
-	"data/entity"
-	"libs/log"
+	"logicdata/entity"
+	"server/libs/log"
 )
 
 type TaskBaseRule struct {

@@ -2,13 +2,13 @@ package main
 
 import (
 	"bufio"
-	"data/datatype"
 	"flag"
 	"fmt"
-	"libs/log"
-	"libs/parser"
+	"logicdata/parser"
 	"os"
 	"os/exec"
+	"server/data/datatype"
+	"server/libs/log"
 	"strings"
 	"text/template"
 )

@@ -3,8 +3,8 @@ package server
 import (
 	"fmt"
 	"io"
-	"libs/log"
-	"libs/rpc"
+	"server/libs/log"
+	"server/libs/rpc"
 	"sync"
 	"time"
 )

@@ -6,10 +6,11 @@ import (
 	"database/sql/driver"
 	"encoding/binary"
 	"fmt"
+	. "logicdata/parser"
+	"server/libs/log"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mysll/go-uuid/uuid"
-	"libs/log"
-	. "libs/parser"
 )
 
 type MySql struct {

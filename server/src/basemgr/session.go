@@ -1,9 +1,9 @@
 package basemgr
 
 import (
-	"libs/log"
-	"libs/rpc"
 	"server"
+	"server/libs/log"
+	"server/libs/rpc"
 	"sort"
 	"sync"
 )

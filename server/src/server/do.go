@@ -1,10 +1,10 @@
 package server
 
 import (
-	"libs/common/event"
-	"libs/log"
-	"libs/rpc"
 	"runtime"
+	"server/libs/common/event"
+	"server/libs/log"
+	"server/libs/rpc"
 	"time"
 )
 
@@ -125,7 +125,7 @@ func Run(s *Server) {
 		EventProcess(s.Emitter)
 		RpcProcess(s.rpcCh)
 		RpcResponseProcess()
-		
+
 		if now.Sub(s.Time.LastBeatTime) >= BeatTime {
 			//处理心跳
 			s.timer.Pump()

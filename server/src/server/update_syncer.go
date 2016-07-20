@@ -1,14 +1,18 @@
 package server
 
 import (
-	. "data/datatype"
-	"libs/log"
-	"libs/rpc"
-	"pb/s2c"
-	"util"
-
-	"github.com/golang/protobuf/proto"
+	. "server/data/datatype"
+	"server/libs/log"
+	"server/libs/rpc"
 )
+
+var pt PropCodec
+
+type PropCodec interface {
+	GetCodecInfo() string
+	UpdateAll(object Entityer, self bool) interface{}
+	Update(index int16, value interface{}, self bool, objid ObjectID) interface{}
+}
 
 type PropSync struct {
 	SchedulerBase
@@ -17,6 +21,11 @@ type PropSync struct {
 }
 
 func NewPropSync(mb rpc.Mailbox, objid ObjectID) *PropSync {
+	if pt == nil {
+		panic("prop transport not set")
+	}
+
+	log.LogMessage("prop sync proto:", pt.GetCodecInfo())
 	ts := &PropSync{}
 	ts.mailbox = mb
 	ts.objid = objid
@@ -38,11 +47,10 @@ func (ps *PropSync) UpdateAll(player Entityer) error {
 		return nil
 	}
 
-	update := &s2c.UpdateProperty{}
-	update.Self = proto.Bool(true)
-	update.Index = proto.Int32(0)
-	update.Serial = proto.Int32(0)
-	update.Propinfo = data
+	update := pt.UpdateAll(player, true)
+	if update == nil {
+		return nil
+	}
 	err := MailTo(nil, &ps.mailbox, "Entity.Update", update)
 	if err != nil {
 		log.LogError(err)
@@ -53,16 +61,16 @@ func (ps *PropSync) UpdateAll(player Entityer) error {
 }
 
 func (ps *PropSync) Update(index int16, value interface{}) {
-	update := &s2c.UpdateProperty{}
-	update.Self = proto.Bool(true)
-	update.Index = proto.Int32(0)
-	update.Serial = proto.Int32(0)
-	ar := util.NewStoreArchiver(nil)
-	ar.Write(index)
-	ar.Write(value)
-	update.Propinfo = ar.Data()
+	update := pt.Update(index, value, true, ps.objid)
+	if update == nil {
+		return
+	}
 	err := MailTo(nil, &ps.mailbox, "Entity.Update", update)
 	if err != nil {
 		log.LogError(err)
 	}
+}
+
+func RegisterPropCodec(t PropCodec) {
+	pt = t
 }

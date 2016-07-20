@@ -1,14 +1,14 @@
 package area
 
 import (
-	. "data/datatype"
-	"data/entity"
-	"data/inter"
-	"libs/log"
-	"libs/rpc"
+	"logicdata/entity"
 	"server"
-	"share"
-	"util"
+	. "server/data/datatype"
+	"server/data/inter"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/share"
+	"server/util"
 )
 
 const (

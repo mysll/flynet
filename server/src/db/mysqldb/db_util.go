@@ -1,11 +1,11 @@
 package mysqldb
 
 import (
-	"data/datatype"
-	"data/entity"
 	"encoding/json"
 	"fmt"
-	"share"
+	"logicdata/entity"
+	"server/data/datatype"
+	"server/share"
 	"time"
 )
 

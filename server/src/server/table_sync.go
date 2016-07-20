@@ -1,20 +1,33 @@
 package server
 
 import (
-	"data/datatype"
-	"libs/log"
-	"libs/rpc"
-	"pb/s2c"
-	"util"
-
-	"github.com/golang/protobuf/proto"
+	"server/data/datatype"
+	"server/libs/log"
+	"server/libs/rpc"
 )
+
+var tt TableCodec
+
+type TableCodec interface {
+	GetCodecInfo() string
+	SyncTable(rec datatype.Recorder) interface{}
+	RecAppend(rec datatype.Recorder, row int) interface{}
+	RecDelete(rec datatype.Recorder, row int) interface{}
+	RecClear(rec datatype.Recorder) interface{}
+	RecModify(rec datatype.Recorder, row, col int) interface{}
+	RecSetRow(rec datatype.Recorder, row int) interface{}
+}
 
 type TableSync struct {
 	mailbox rpc.Mailbox
 }
 
 func NewTableSync(mb rpc.Mailbox) *TableSync {
+	if tt == nil {
+		panic("table transporter not set")
+	}
+
+	log.LogMessage("table sync proto:", tt.GetCodecInfo())
 	ts := &TableSync{}
 	ts.mailbox = mb
 	return ts
@@ -29,16 +42,11 @@ func (ts *TableSync) SyncTable(player datatype.Entityer) {
 			continue
 		}
 
-		data, err := rec.Serial()
-		if err != nil {
+		out := tt.SyncTable(rec)
+		if out == nil {
 			continue
 		}
-		out := &s2c.CreateRecord{}
-		out.Record = proto.String(r)
-		out.Rows = proto.Int32(int32(rec.GetRows()))
-		out.Cols = proto.Int32(int32(rec.GetCols()))
-		out.Recinfo = data
-		err = MailTo(nil, &ts.mailbox, "Entity.RecordInfo", out)
+		err := MailTo(nil, &ts.mailbox, "Entity.RecordInfo", out)
 		if err != nil {
 			log.LogError(err)
 		}
@@ -46,25 +54,21 @@ func (ts *TableSync) SyncTable(player datatype.Entityer) {
 }
 
 func (ts *TableSync) RecAppend(rec datatype.Recorder, row int) {
-	out := &s2c.RecordAddRow{}
-	out.Record = proto.String(rec.GetName())
-	out.Row = proto.Int32(int32(row))
-	data, err := rec.SerialRow(row)
-	if err != nil {
-		log.LogError(err)
+	out := tt.RecAppend(rec, row)
+	if out == nil {
 		return
 	}
-	out.Rowinfo = data
-	err = MailTo(nil, &ts.mailbox, "Entity.RecordRowAdd", out)
+	err := MailTo(nil, &ts.mailbox, "Entity.RecordRowAdd", out)
 	if err != nil {
 		log.LogError(err)
 	}
 }
 
 func (ts *TableSync) RecDelete(rec datatype.Recorder, row int) {
-	out := &s2c.RecordDelRow{}
-	out.Record = proto.String(rec.GetName())
-	out.Row = proto.Int32(int32(row))
+	out := tt.RecDelete(rec, row)
+	if out == nil {
+		return
+	}
 	err := MailTo(nil, &ts.mailbox, "Entity.RecordRowDel", out)
 	if err != nil {
 		log.LogError(err)
@@ -72,8 +76,10 @@ func (ts *TableSync) RecDelete(rec datatype.Recorder, row int) {
 }
 
 func (ts *TableSync) RecClear(rec datatype.Recorder) {
-	out := &s2c.RecordClear{}
-	out.Record = proto.String(rec.GetName())
+	out := tt.RecClear(rec)
+	if out == nil {
+		return
+	}
 	err := MailTo(nil, &ts.mailbox, "Entity.RecordClear", out)
 	if err != nil {
 		log.LogError(err)
@@ -81,15 +87,10 @@ func (ts *TableSync) RecClear(rec datatype.Recorder) {
 }
 
 func (ts *TableSync) RecModify(rec datatype.Recorder, row, col int) {
-	out := &s2c.RecordGrid{}
-	out.Record = proto.String(rec.GetName())
-	out.Row = proto.Int32(int32(row))
-	out.Col = proto.Int32(int32(col))
-	value, _ := rec.Get(row, col)
-	ar := util.NewStoreArchiver(nil)
-	ar.Write(value)
-
-	out.Gridinfo = ar.Data()
+	out := tt.RecModify(rec, row, col)
+	if out == nil {
+		return
+	}
 	err := MailTo(nil, &ts.mailbox, "Entity.RecordGrid", out)
 	if err != nil {
 		log.LogError(err)
@@ -97,17 +98,16 @@ func (ts *TableSync) RecModify(rec datatype.Recorder, row, col int) {
 }
 
 func (ts *TableSync) RecSetRow(rec datatype.Recorder, row int) {
-	out := &s2c.RecordSetRow{}
-	out.Record = proto.String(rec.GetName())
-	out.Row = proto.Int32(int32(row))
-	data, err := rec.SerialRow(row)
-	if err != nil {
-		log.LogError(err)
+	out := tt.RecSetRow(rec, row)
+	if out == nil {
 		return
 	}
-	out.Rowinfo = data
-	err = MailTo(nil, &ts.mailbox, "Entity.RecordRowSet", out)
+	err := MailTo(nil, &ts.mailbox, "Entity.RecordRowSet", out)
 	if err != nil {
 		log.LogError(err)
 	}
+}
+
+func RegisterTableCodec(t TableCodec) {
+	tt = t
 }

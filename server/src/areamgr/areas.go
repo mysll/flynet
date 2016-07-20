@@ -3,10 +3,10 @@ package areamgr
 import (
 	"container/list"
 	"fmt"
-	"libs/log"
-	"libs/rpc"
 	"server"
-	"share"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/share"
 	"sync"
 )
 

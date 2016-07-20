@@ -2,22 +2,17 @@ package server
 
 import (
 	"bytes"
-	. "data/datatype"
-	"data/entity"
-	"data/helper"
-	"data/inter"
 	"encoding/gob"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"libs/log"
-	"libs/rpc"
 	"os"
-	"pb/s2c"
-	"share"
+	. "server/data/datatype"
+	"server/data/helper"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/share"
 	"time"
-
-	"github.com/golang/protobuf/proto"
 )
 
 const (
@@ -351,7 +346,7 @@ func (k *Kernel) RemoveChild(parent Entityer, child Entityer) error {
 		return k.removeChild(parent, child, true)
 	}
 
-	return entity.ErrChildObjectNotFound
+	return ErrChildObjectNotFound
 }
 
 func (k *Kernel) removeChild(parent Entityer, child Entityer, needcallback bool) error {
@@ -362,10 +357,10 @@ func (k *Kernel) removeChild(parent Entityer, child Entityer, needcallback bool)
 	index := child.GetIndex()
 	if c := parent.GetChild(index); c != nil {
 		if !c.GetObjId().Equal(child.GetObjId()) {
-			return entity.ErrChildObjectNotFound
+			return ErrChildObjectNotFound
 		}
 	} else {
-		return entity.ErrChildObjectNotFound
+		return ErrChildObjectNotFound
 	}
 	cparent := GetCallee(parent.ObjTypeName())
 	if needcallback {
@@ -814,13 +809,18 @@ func (k *Kernel) EnterScene(object Entityer) {
 	}
 }
 
+type Motioner interface {
+	SetPos(pos Vector3)
+	SetOrient(dir float32)
+}
+
 //场景里放置一个对象
 func (k *Kernel) PlaceObj(scene Entityer, object Entityer, pos Vector3, orient float32) bool {
 	if scene == nil || object == nil {
 		return false
 	}
 
-	if mover, ok := object.(inter.Mover); ok {
+	if mover, ok := object.(Motioner); ok {
 		mover.SetPos(pos)
 		mover.SetOrient(orient)
 	}
@@ -1094,16 +1094,8 @@ func (k *Kernel) AttachPlayer(player Entityer, mailbox rpc.Mailbox) error {
 		return fmt.Errorf("object is not player")
 	}
 
-	data, _ := player.Serial()
-	create := &s2c.CreateObject{}
-	create.Entity = proto.String(player.ObjTypeName())
-	create.Self = proto.Bool(true)
-	create.Index = proto.Int32(0)
-	create.Serial = proto.Int32(0)
-	create.Typ = proto.Int32(0)
-	create.Propinfo = data
-	create.Mailbox = proto.String(mailbox.String())
-	err := MailTo(nil, &mailbox, "Entity.Create", create)
+	create := core.rpcProto.CreateObjectMessage(player, true, mailbox)
+	err := MailTo(nil, &mailbox, "Create", create)
 	if err != nil {
 		log.LogError(err)
 		return err

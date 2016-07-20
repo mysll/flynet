@@ -1,12 +1,12 @@
 package base
 
 import (
-	. "data/datatype"
-	"data/entity"
 	"fmt"
-	"libs/log"
+	"logicdata/entity"
 	"pb/c2s"
 	"server"
+	. "server/data/datatype"
+	"server/libs/log"
 )
 
 const (

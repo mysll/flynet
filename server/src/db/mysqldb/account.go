@@ -2,11 +2,11 @@ package mysqldb
 
 import (
 	"database/sql"
-	"libs/log"
-	"libs/rpc"
 	"pb/s2c"
 	"server"
-	"share"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/share"
 	"time"
 
 	"github.com/go-sql-driver/mysql"

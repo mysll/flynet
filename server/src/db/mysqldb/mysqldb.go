@@ -2,8 +2,8 @@ package mysqldb
 
 import (
 	"errors"
-	"libs/log"
 	"server"
+	"server/libs/log"
 )
 
 var (

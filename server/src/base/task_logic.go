@@ -1,11 +1,11 @@
 package base
 
 import (
-	"data/entity"
-	"libs/log"
-	"libs/rpc"
+	"logicdata/entity"
 	"pb/c2s"
 	"server"
+	"server/libs/log"
+	"server/libs/rpc"
 )
 
 type TaskLogic struct {

@@ -1,12 +1,13 @@
 package base
 
 import (
-	"libs/log"
 	"math/rand"
+	_ "pb"
 	"server"
+	"server/libs/log"
+	"server/util"
 	"sync"
 	"time"
-	"util/hash"
 )
 
 var (
@@ -33,7 +34,7 @@ func (b *BaseApp) IsBase() bool {
 }
 
 func (b *BaseApp) OnPrepare() bool {
-	rand.Seed(time.Now().UTC().UnixNano() + int64(hash.DJBHash(App.Name)))
+	rand.Seed(time.Now().UTC().UnixNano() + int64(util.DJBHash(App.Name)))
 	log.LogMessage(b.Name, " prepared")
 	return true
 }

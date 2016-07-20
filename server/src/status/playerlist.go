@@ -1,9 +1,9 @@
 package status
 
 import (
-	"libs/log"
-	"libs/rpc"
 	"server"
+	"server/libs/log"
+	"server/libs/rpc"
 )
 
 const (

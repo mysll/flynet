@@ -1,15 +1,15 @@
 package area
 
 import (
-	. "data/datatype"
-	"data/entity"
-	"data/inter"
 	"errors"
-	"libs/aoi"
-	"libs/aoi/toweraoi"
-	"libs/log"
-	"libs/rpc"
 	"server"
+	. "server/data/datatype"
+	"logicdata/entity"
+	"server/data/inter"
+	"server/libs/aoi"
+	"server/libs/aoi/toweraoi"
+	"server/libs/log"
+	"server/libs/rpc"
 )
 
 type cell struct {

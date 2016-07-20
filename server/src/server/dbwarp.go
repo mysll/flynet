@@ -1,8 +1,8 @@
 package server
 
 import (
-	"libs/rpc"
-	"share"
+	"server/libs/rpc"
+	"server/share"
 )
 
 //数据库操作封装

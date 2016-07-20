@@ -2,9 +2,9 @@ package server
 
 import (
 	"bufio"
-	"libs/log"
-	"libs/rpc"
 	"os"
+	"server/libs/log"
+	"server/libs/rpc"
 	"text/template"
 )
 

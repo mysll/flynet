@@ -2,13 +2,13 @@ package area
 
 import (
 	"bytes"
-	. "data/datatype"
-	"data/entity"
 	"encoding/gob"
-	"libs/log"
-	"libs/rpc"
+	"logicdata/entity"
 	"server"
-	"share"
+	. "server/data/datatype"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/share"
 	"time"
 )
 

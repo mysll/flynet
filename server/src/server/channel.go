@@ -1,10 +1,8 @@
 package server
 
 import (
-	"libs/log"
-	"libs/rpc"
-
-	"github.com/golang/protobuf/proto"
+	"server/libs/log"
+	"server/libs/rpc"
 )
 
 //频道
@@ -41,7 +39,7 @@ func (this *Channel) Clear() {
 }
 
 //向频道内广播消息
-func (this *Channel) SendMsg(src rpc.Mailbox, method string, args proto.Message) {
+func (this *Channel) SendMsg(src rpc.Mailbox, method string, args interface{}) {
 
 	for appid, recvs := range this.receivers {
 		app := GetAppById(appid)

@@ -2,11 +2,11 @@ package master
 
 import (
 	"fmt"
-	"libs/log"
 	"net"
-	"share"
+	"server/libs/log"
+	"server/share"
+	"server/util"
 	"time"
-	"util"
 )
 
 type App struct {

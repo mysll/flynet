@@ -1,1 +1,1 @@
-%~dp0..\..\bin\tools\data.exe -p %~dp0..\..\assets\def -t %~dp0data\tpl -o %~dp0data\entity -c
+%~dp0..\..\bin\tools\data.exe -p %~dp0..\..\assets\def -t %~dp0logicdata\tpl -o %~dp0logicdata\entity -c

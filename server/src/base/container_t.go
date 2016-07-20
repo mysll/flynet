@@ -1,8 +1,8 @@
 package base
 
 import (
-	"data/datatype"
-	"data/entity"
+	"logicdata/entity"
+	"server/data/datatype"
 )
 
 func GetContainer(player *entity.Player, item datatype.Entityer) datatype.Entityer {

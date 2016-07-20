@@ -2,11 +2,11 @@ package base
 
 import (
 	"container/list"
-	"libs/log"
-	"libs/rpc"
 	"pb/s2c"
 	"server"
-	"share"
+	"server/libs/log"
+	"server/libs/rpc"
+	"server/share"
 
 	"github.com/golang/protobuf/proto"
 )

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"errors"
-	. "libs/parser"
+	. "logicdata/parser"
 )
 
 type DBConn struct {

@@ -1,9 +1,9 @@
 package server
 
 import (
-	"libs/log"
-	"share"
-	"util"
+	"server/libs/log"
+	"server/share"
+	"server/util"
 )
 
 type master_peer struct {

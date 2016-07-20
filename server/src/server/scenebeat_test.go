@@ -1,8 +1,8 @@
 package server
 
 import (
-	. "data/datatype"
 	"fmt"
+	. "server/data/datatype"
 	"testing"
 	"time"
 )

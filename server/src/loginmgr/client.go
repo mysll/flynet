@@ -2,14 +2,14 @@ package loginmgr
 
 import (
 	"errors"
-	"libs/log"
 	"net"
 	"pb/s2c"
 	"server"
-	"share"
+	"server/libs/log"
+	"server/share"
+	"server/util"
 	"sort"
 	"time"
-	"util"
 
 	"golang.org/x/net/websocket"
 

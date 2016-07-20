@@ -2,13 +2,14 @@ package master
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"html/template"
 	"io/ioutil"
-	"libs/log"
 	"net/http"
 	"os"
 	"path"
+	"server/libs/log"
+
+	"github.com/gorilla/mux"
 )
 
 var (
