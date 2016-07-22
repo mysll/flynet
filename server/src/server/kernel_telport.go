@@ -13,7 +13,7 @@ type TeleportHelper struct {
 
 func (t *TeleportHelper) RegisterCallback(s rpc.Servicer) {
 	s.RegisterCallback("AddPlayer", t.AddPlayer)
-	s.RegisterCallback("RemovePlayer", t.RemovePlayer)
+	s.RegisterCallback("SyncBaseFromSceneData", t.SyncBaseFromSceneData)
 }
 
 //当前服务器增加entity
@@ -21,7 +21,14 @@ func (t *TeleportHelper) AddPlayer(sender rpc.Mailbox, msg *rpc.Message) *rpc.Me
 
 	var playerinfo *datatype.EntityInfo
 	var args []interface{}
-	if !Check(ParseArgs(msg, &playerinfo, &args)) || playerinfo == nil {
+	if !Check(ParseArgs(msg, &args)) || len(args) < 1 {
+		log.LogError("args parse error")
+		reply, _ := CreateMessage(sender, false)
+		return reply
+	}
+
+	var ok bool
+	if playerinfo, ok = args[0].(*datatype.EntityInfo); !ok {
 		log.LogError("args parse error")
 		reply, _ := CreateMessage(sender, false)
 		return reply
@@ -34,7 +41,7 @@ func (t *TeleportHelper) AddPlayer(sender rpc.Mailbox, msg *rpc.Message) *rpc.Me
 		return reply
 	}
 
-	if !core.apper.OnTeleportByBase(args, pl) {
+	if !core.apper.OnTeleportFromBase(args[1:], pl) {
 		core.Destroy(pl.GetObjId())
 		reply, _ := CreateMessage(sender, false)
 		return reply
@@ -55,13 +62,26 @@ func (t *TeleportHelper) AddPlayerBack(msg *rpc.Message) {
 	core.apper.OnSceneTeleported(mailbox, result)
 }
 
-//当前服务器删除entity
-func (t *TeleportHelper) RemovePlayer(sender rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	return nil
+func (t *TeleportHelper) SyncBaseFromSceneData(sender rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+	var args []interface{}
+	if !Check(ParseArgs(msg, &args)) || len(args) < 1 {
+		reply, _ := CreateMessage(sender, false)
+		return reply
+	}
+
+	result := core.apper.OnTeleportFromScene(args[0], args[1:])
+	reply, _ := CreateMessage(sender, result)
+	return reply
 }
 
-//回调函数
-func (t *TeleportHelper) RemovePlayerBack(msg *rpc.Message) {
+func (t *TeleportHelper) SyncBaseFromSceneDataBack(msg *rpc.Message) {
+	var mailbox rpc.Mailbox
+	var result bool
+	if msg != nil {
+		ParseArgs(msg, &mailbox, &result)
+	}
+
+	core.apper.OnBaseTeleported(mailbox, result)
 }
 
 //传送到场景
@@ -73,13 +93,17 @@ func (t *TeleportHelper) teleport(app *RemoteApp, player datatype.Entityer, mail
 	infos := make([]interface{}, 0, len(args)+1)
 	infos = append(infos, playerinfo)
 	infos = append(infos, args)
-	app.CallBack(&mailbox, "Teleport.AddPlayer", t.AddPlayerBack, infos...)
+	app.CallBack(&mailbox, "Teleport.AddPlayer", t.AddPlayerBack, infos)
 	return nil
 }
 
 //传送回base
 func (t *TeleportHelper) teleportToBase(app *RemoteApp, object datatype.Entityer, mailbox rpc.Mailbox, args ...interface{}) error {
-	return nil
+	sd := object.GetSceneData()
+	infos := make([]interface{}, 0, len(args)+1)
+	infos = append(infos, sd)
+	infos = append(infos, args)
+	return app.CallBack(&mailbox, "Teleport.SyncBaseFromSceneData", t.SyncBaseFromSceneDataBack, infos)
 }
 
 //从base传送到场景
@@ -115,7 +139,6 @@ func (k *Kernel) TeleportToBaseByName(basename string, object datatype.Entityer,
 	}
 	app := GetAppByName(basename)
 	if app == nil {
-
 		return ErrAppNotFound
 	}
 
