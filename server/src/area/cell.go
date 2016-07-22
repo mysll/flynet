@@ -1,13 +1,13 @@
 package area
 
 import (
+	"area/aoi"
+	"area/aoi/toweraoi"
 	"errors"
+	"logicdata/entity"
 	"server"
 	. "server/data/datatype"
-	"logicdata/entity"
 	"server/data/inter"
-	"server/libs/aoi"
-	"server/libs/aoi/toweraoi"
 	"server/libs/log"
 	"server/libs/rpc"
 )

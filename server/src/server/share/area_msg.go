@@ -21,7 +21,7 @@ type PlayerInfo struct {
 }
 
 func GetPlayerInfo(acc string, name string, scene string, x, y, z, dir float32, obj datatype.Entityer) (*PlayerInfo, error) {
-	info, err := GetItemInfo(obj)
+	info, err := GetItemInfo(obj, true)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func GetPlayerInfo(acc string, name string, scene string, x, y, z, dir float32, 
 	return p, nil
 }
 
-func GetItemInfo(obj datatype.Entityer) (*datatype.EntityInfo, error) {
+func GetItemInfo(obj datatype.Entityer, syncchild bool) (*datatype.EntityInfo, error) {
 	item := &datatype.EntityInfo{}
 	buffer := new(bytes.Buffer)
 	enc := gob.NewEncoder(buffer)
@@ -52,17 +52,19 @@ func GetItemInfo(obj datatype.Entityer) (*datatype.EntityInfo, error) {
 	item.Index = obj.GetIndex()
 	item.Data = buffer.Bytes()
 
-	ls := obj.GetChilds()
-	if len(ls) > 0 {
-		item.Childs = make([]*datatype.EntityInfo, 0, len(ls))
-	}
-	for _, c := range ls {
-		if c != nil {
-			child, err := GetItemInfo(c)
-			if err != nil {
-				return nil, err
+	if syncchild {
+		ls := obj.GetChilds()
+		if len(ls) > 0 {
+			item.Childs = make([]*datatype.EntityInfo, 0, len(ls))
+		}
+		for _, c := range ls {
+			if c != nil {
+				child, err := GetItemInfo(c, syncchild)
+				if err != nil {
+					return nil, err
+				}
+				item.Childs = append(item.Childs, child)
 			}
-			item.Childs = append(item.Childs, child)
 		}
 	}
 

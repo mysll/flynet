@@ -2,9 +2,9 @@ package area
 
 import (
 	"logicdata/entity"
+	"logicdata/inter"
 	"server"
 	. "server/data/datatype"
-	"server/data/inter"
 	"server/libs/log"
 	"server/libs/rpc"
 	"server/share"

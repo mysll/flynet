@@ -93,6 +93,16 @@ func GetAppCount() int {
 	return len(RemoteApps)
 }
 
+//获取appid
+func GetAppIdByName(name string) int32 {
+	applock.RLock()
+	defer applock.RUnlock()
+	if appid, exist := RemoteAppName[name]; exist {
+		return appid
+	}
+	return -1
+}
+
 //通过name获取远程进程
 func GetAppByName(name string) *RemoteApp {
 	applock.RLock()

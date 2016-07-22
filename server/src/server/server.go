@@ -67,6 +67,7 @@ type Server struct {
 	startTime      time.Time
 	s2chelper      *S2CHelper
 	c2shelper      *C2SHelper
+	teleport       *TeleportHelper
 	Sockettype     string
 	rpcProto       ProtoCodec
 }
@@ -390,8 +391,11 @@ func NewServer(app Apper, id int32) *Server {
 
 	s.s2chelper = NewS2CHelper()
 	s.c2shelper = &C2SHelper{}
+	s.teleport = &TeleportHelper{}
 
 	RegisterRemote("S2CHelper", s.s2chelper)
+	RegisterRemote("Teleport", s.teleport)
+
 	RegisterHandler("C2SHelper", s.c2shelper)
 	return s
 }

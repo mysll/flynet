@@ -3,15 +3,12 @@ package base
 import (
 	"errors"
 	"logicdata/entity"
-	"pb/s2c"
 	"server"
 	"server/data/datatype"
 	"server/libs/log"
 	"server/libs/rpc"
 	"server/share"
 	"server/util"
-
-	"github.com/golang/protobuf/proto"
 )
 
 type DbBridge struct {
@@ -91,9 +88,7 @@ func (d *DbBridge) CreateRoleBack(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Me
 		return nil
 	}
 	if errstr != "ok" {
-		err := &s2c.Error{}
-		err.ErrorNo = proto.Int32(share.ERROR_CREATE_ROLE_ERROR)
-		server.Check(server.MailTo(nil, &mailbox, "Role.Error", err))
+		server.Check(server.Error(nil, &mailbox, "Role.Error", share.ERROR_CREATE_ROLE_ERROR))
 		return nil
 	}
 
@@ -187,10 +182,8 @@ func (d *DbBridge) SelectUserBak(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 	}
 
 	if save.Data == nil {
-		err := &s2c.Error{}
-		err.ErrorNo = proto.Int32(share.ERROR_SELECT_ROLE_ERROR)
 		db.Call(&mailbox, "Account.ClearPlayerStatus", info)
-		server.Check(server.MailTo(nil, &mailbox, "Login.Error", err))
+		server.Check(server.Error(nil, &mailbox, "Login.Error", share.ERROR_SELECT_ROLE_ERROR))
 		return nil
 	}
 

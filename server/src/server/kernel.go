@@ -461,8 +461,10 @@ func (k *Kernel) CreateFromArchive(data *EntityInfo, extra map[string]interface{
 	if err != nil {
 		return
 	}
-	for k, v := range extra {
-		ent.SetExtraData(k, v)
+	if extra != nil {
+		for k, v := range extra {
+			ent.SetExtraData(k, v)
+		}
 	}
 
 	callee := GetCallee(ent.ObjTypeName())

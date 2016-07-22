@@ -1,5 +1,10 @@
 package server
 
+import (
+	"server/data/datatype"
+	"server/libs/rpc"
+)
+
 type Apper interface {
 	//当前是否是base服务
 	IsBase() bool
@@ -36,6 +41,11 @@ type Apper interface {
 	OnClientConnected(id int64)
 	//客户端断开连接
 	OnClientLost(id int64)
+
+	//从base从传送来的角色
+	OnTeleportByBase(args []interface{}, player datatype.Entityer) bool
+	//传送到场景完成回调
+	OnSceneTeleported(mailbox rpc.Mailbox, result bool)
 }
 
 func (svr *Server) IsBase() bool {
@@ -116,5 +126,15 @@ func (svr *Server) OnClientConnected(id int64) {
 
 //客户端断开连接
 func (svr *Server) OnClientLost(id int64) {
+
+}
+
+//从base从传送来的角色
+func (svr *Server) OnTeleportByBase(args []interface{}, player datatype.Entityer) bool {
+	return false
+}
+
+//传送到场景完成回调
+func (svr *Server) OnSceneTeleported(mailbox rpc.Mailbox, result bool) {
 
 }
