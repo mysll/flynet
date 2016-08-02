@@ -213,6 +213,7 @@ func (c *Client) EnterGame(conn io.ReadWriteCloser) {
 		return
 	}
 
+	time.Sleep(time.Second * 60)
 }
 
 func main() {
