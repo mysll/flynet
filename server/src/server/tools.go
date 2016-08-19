@@ -60,7 +60,7 @@ func NewHeadWriter(msg *rpc.Message) *HeadWriter {
 	return w
 }
 
-func ProtoParse(msg *rpc.Message, obj interface{}) error {
+func ParseProto(msg *rpc.Message, obj interface{}) error {
 	return core.rpcProto.DecodeMessage(msg, obj)
 }
 

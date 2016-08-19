@@ -1,7 +1,6 @@
 package area
 
 import (
-	"logicdata/entity"
 	"server"
 	. "server/data/datatype"
 	"server/libs/log"
@@ -14,7 +13,7 @@ type BaseProxy struct {
 
 func (b *BaseProxy) AddPlayer(mailbox rpc.Mailbox, player share.PlayerInfo) error {
 
-	base := server.GetAppByName(mailbox.App)
+	base := server.GetAppById(mailbox.App)
 	if base == nil {
 		return server.ErrAppNotFound
 	}
@@ -87,7 +86,7 @@ func (b *BaseProxy) SyncPlayerBak(mailbox rpc.Mailbox, info map[ObjectID]ObjectI
 	return err
 }
 
-func (b *BaseProxy) entryScene(scene entity.Entityer, player entity.Entityer) {
+func (b *BaseProxy) entryScene(scene Entityer, player Entityer) {
 
 }
 

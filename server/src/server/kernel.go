@@ -12,94 +12,22 @@ import (
 	"server/libs/log"
 	"server/libs/rpc"
 	"server/share"
-	"time"
 )
 
-const (
-	PRIORITY_LOWEST  = 100
-	PRIORITY_LOW     = 200
-	PRIORITY_NORMAL  = 300
-	PRIORITY_HIGH    = 400
-	PRIORITY_HIGHEST = 500
-)
-
-type CalleeInfo struct {
-	callee   []Objecter
-	priority []int
+type Kernel struct {
+	factory   *Factory
+	uidSerial uint64
 }
 
 var (
 	ErrObjNotFound      = errors.New("object not found")
 	ErrCalleeAlreadyReg = errors.New("callee already registed")
 	ErrContainerCantAdd = errors.New("container can't add")
-	callees             = make(map[string]*CalleeInfo)
 )
-
-func (c *CalleeInfo) Add(callee Objecter, priority int) {
-
-	index := -1
-	for k, v := range c.priority {
-		if v < priority {
-			index = k
-			break
-		}
-	}
-
-	if index == len(c.priority) || index == -1 {
-		c.callee = append(c.callee, callee)
-		c.priority = append(c.priority, priority)
-		return
-	}
-
-	c.callee = append(c.callee, callee)
-	copy(c.callee[index+1:], c.callee[index:])
-	c.callee[index] = callee
-	c.priority = append(c.priority, priority)
-	copy(c.priority[index+1:], c.priority[index:])
-	c.priority[index] = priority
-}
-
-//注册回调
-func RegisterCallee(typ string, c Objecter) error {
-	return RegisterCalleePriority(typ, c, PRIORITY_NORMAL)
-}
-
-func RegisterCalleePriority(typ string, c Objecter, priority int) error {
-	if _, dup := callees[typ]; !dup {
-		callee := &CalleeInfo{}
-		callee.callee = make([]Objecter, 0, 32)
-		callee.priority = make([]int, 0, 32)
-		callees[typ] = callee
-	}
-	callees[typ].Add(c, priority)
-	return nil
-}
-
-//获取回调
-func GetCallee(typ string) []Objecter {
-	if _, dup := callees[typ]; !dup {
-		callees[typ] = &CalleeInfo{}
-	}
-	return callees[typ].callee
-}
-
-type Scheduler interface {
-	SetSchedulerID(id int32)
-	GetSchedulerID() int32
-	OnUpdate()
-}
-
-type Kernel struct {
-	factory     *Factory
-	uidSerial   uint64
-	scheduler   map[int32]Scheduler
-	schedulerid int32
-}
 
 func NewKernel(factory *Factory) *Kernel {
 	k := &Kernel{}
 	k.factory = factory
-	k.scheduler = make(map[int32]Scheduler, 1024)
 	return k
 }
 
@@ -834,45 +762,6 @@ func (k *Kernel) PlaceObj(scene Entityer, object Entityer, pos Vector3, orient f
 	return true
 }
 
-func (k *Kernel) CancelTimer(intervalid TimerID) {
-	core.timer.Cancel(intervalid)
-}
-
-//增加一个定时器
-func (k *Kernel) AddTimer(t time.Duration, count int32, cb TimerCB, param interface{}) (intervalid TimerID) {
-	return core.timer.AddTimer(t, count, cb, param)
-}
-
-//增加一个超时
-func (k *Kernel) Timeout(t time.Duration, cb TimerCB, param interface{}) (intervalid TimerID) {
-	return core.timer.Timeout(t, cb, param)
-}
-
-//增加一个心跳
-func (k *Kernel) AddHeartbeat(object Entityer, beat string, t time.Duration, count int32, args interface{}) bool {
-	return core.sceneBeat.Add(object, beat, t, count, args)
-}
-
-//移除某个心跳
-func (k *Kernel) RemoveHeartbeat(obj ObjectID, beat string) bool {
-	return core.sceneBeat.Remove(obj, beat)
-}
-
-//移除某个对象所有心跳
-func (k *Kernel) RemoveObjectHeartbeat(obj ObjectID) {
-	core.sceneBeat.RemoveObjectBeat(obj)
-}
-
-//重置心跳的次数
-func (k *Kernel) ResetBeatCount(obj ObjectID, beat string, count int32) bool {
-	return core.sceneBeat.ResetCount(obj, beat, count)
-}
-
-//保存当前所有的心跳，并且从场景中分离出来
-func (k *Kernel) DeatchBeat(object Entityer) bool {
-	return core.sceneBeat.Deatch(object)
-}
-
 //sender给target发送消息
 func (k *Kernel) Command(src, dest ObjectID, msgid int, msg interface{}) bool {
 	sender := k.factory.Find(src)
@@ -1132,59 +1021,5 @@ func (k *Kernel) DetachPlayer(player Entityer) {
 	for _, r := range recs {
 		rec := player.GetRec(r)
 		rec.SetSyncer(nil)
-	}
-}
-
-type SchedulerBase struct {
-	id int32
-}
-
-func (sb *SchedulerBase) SetSchedulerID(id int32) {
-	sb.id = id
-}
-
-func (sb *SchedulerBase) GetSchedulerID() int32 {
-	return sb.id
-}
-
-func (k *Kernel) AddScheduler(s Scheduler) {
-	if s == nil {
-		return
-	}
-	k.schedulerid++
-	s.SetSchedulerID(k.schedulerid)
-	k.scheduler[k.schedulerid] = s
-	log.LogDebug("add scheduler:", k.schedulerid)
-}
-
-func (k *Kernel) GetScheduler(id int32) Scheduler {
-	if s, exist := k.scheduler[id]; exist {
-		return s
-	}
-	return nil
-}
-
-func (k *Kernel) RemoveScheduler(s Scheduler) {
-	if s == nil {
-		return
-	}
-	if _, exist := k.scheduler[s.GetSchedulerID()]; exist {
-		delete(k.scheduler, s.GetSchedulerID())
-		log.LogDebug("remove scheduler:", s.GetSchedulerID(), " total:", len(k.scheduler))
-		s.SetSchedulerID(-1)
-	}
-}
-
-func (k *Kernel) RemoveSchedulerById(id int32) {
-	if _, exist := k.scheduler[id]; exist {
-		delete(k.scheduler, id)
-		log.LogDebug("remove scheduler:", id, " total:", len(k.scheduler))
-	}
-}
-
-func (k *Kernel) OnUpdate() {
-	//更新调度器
-	for _, s := range k.scheduler {
-		s.OnUpdate()
 	}
 }

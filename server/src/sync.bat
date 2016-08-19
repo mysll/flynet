@@ -1,1 +1,1 @@
-%~dp0..\..\bin\tools\dbsync.exe -db mmotest -ds root:@tcp(192.168.1.10:3306)/?charset=utf8 -c %~dp0..\..\assets\def -d
+%~dp0..\..\bin\tools\dbsync.exe -db mmotest -ds root:@tcp(172.30.9.10:3306)/?charset=utf8 -c %~dp0..\..\assets\def -d

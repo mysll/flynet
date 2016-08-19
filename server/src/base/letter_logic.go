@@ -65,7 +65,7 @@ func (l *LetterSystem) DeleteAllLetter(mailbox rpc.Mailbox, msg *rpc.Message) *r
 //删除信件
 func (l *LetterSystem) DeleteLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	args := &c2s.Reqoperatemail{}
-	if server.Check(server.ProtoParse(msg, args)) {
+	if server.Check(server.ParseProto(msg, args)) {
 		return nil
 	}
 	p := App.Players.GetPlayer(mailbox.Id)
@@ -93,7 +93,7 @@ func (l *LetterSystem) DeleteLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.
 //接收附件
 func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	args := &c2s.Reqoperatemail{}
-	if server.Check(server.ProtoParse(msg, args)) {
+	if server.Check(server.ParseProto(msg, args)) {
 		return nil
 	}
 	p := App.Players.GetPlayer(mailbox.Id)
@@ -188,7 +188,7 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.
 //读信件
 func (l *LetterSystem) ReadLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	args := &c2s.Reqoperatemail{}
-	if server.Check(server.ProtoParse(msg, args)) {
+	if server.Check(server.ParseProto(msg, args)) {
 		return nil
 	}
 	p := App.Players.GetPlayer(mailbox.Id)

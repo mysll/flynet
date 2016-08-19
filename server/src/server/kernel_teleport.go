@@ -21,8 +21,8 @@ func (t *TeleportHelper) TeleportPlayerByBase(sender rpc.Mailbox, msg *rpc.Messa
 
 	var playerinfo *datatype.EntityInfo
 	var args []interface{}
-	if !Check(ParseArgs(msg, &args)) || len(args) < 1 {
-		log.LogError("args parse error")
+	if err := ParseArgs(msg, &args); err != nil || len(args) < 1 {
+		log.LogError(err)
 		reply, _ := CreateMessage(sender, false)
 		return reply
 	}
@@ -41,7 +41,11 @@ func (t *TeleportHelper) TeleportPlayerByBase(sender rpc.Mailbox, msg *rpc.Messa
 		return reply
 	}
 
-	if !core.apper.OnTeleportFromBase(args[1:], pl) {
+	var params []interface{}
+	if len(args) > 1 {
+		params = args[1].([]interface{})
+	}
+	if !core.apper.OnTeleportFromBase(params, pl) {
 		core.Destroy(pl.GetObjId())
 		reply, _ := CreateMessage(sender, false)
 		return reply
@@ -64,12 +68,17 @@ func (t *TeleportHelper) OnTeleportPlayerByBase(msg *rpc.Message) {
 
 func (t *TeleportHelper) SyncBaseWithSceneData(sender rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	var args []interface{}
-	if !Check(ParseArgs(msg, &args)) || len(args) < 1 {
+	if err := ParseArgs(msg, &args); err != nil || len(args) < 1 {
+		log.LogError(err)
 		reply, _ := CreateMessage(sender, false)
 		return reply
 	}
+	var params []interface{}
+	if len(args) > 1 {
+		params = args[1].([]interface{})
+	}
 
-	result := core.apper.OnTeleportFromScene(args[0], args[1:])
+	result := core.apper.OnTeleportFromScene(args[0], params)
 	reply, _ := CreateMessage(sender, result)
 	return reply
 }

@@ -57,7 +57,7 @@ type Client struct {
 
 func (c *Client) Start() {
 	log.LogMessage("client start:", c.id)
-	conn, err := net.Dial("tcp", "192.168.1.102:5391")
+	conn, err := net.Dial("tcp", "172.30.9.101:5391")
 	if err != nil {
 		log.LogError(err)
 		return

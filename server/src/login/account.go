@@ -19,7 +19,7 @@ func (t *Account) RegisterCallback(s rpc.Servicer) {
 
 func (a *Account) Login(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	logindata := &c2s.Loginuser{}
-	if server.Check(server.ProtoParse(msg, logindata)) {
+	if server.Check(server.ParseProto(msg, logindata)) {
 		return nil
 	}
 	if logindata.GetPassword() == "123" {

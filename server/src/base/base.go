@@ -5,6 +5,7 @@ import (
 	_ "pb"
 	"server"
 	"server/libs/log"
+	"server/libs/rpc"
 	"server/util"
 	"sync"
 	"time"
@@ -86,6 +87,10 @@ func (b *BaseApp) OnFlush() {
 
 func (b *BaseApp) OnReady(appid string) {
 	App.AreaBridge.checkPending(appid)
+}
+
+func (b *BaseApp) OnSceneTeleported(mailbox rpc.Mailbox, result bool) {
+	log.LogDebug("teleport to scene, result:", result)
 }
 
 func GetAllHandler() map[string]interface{} {

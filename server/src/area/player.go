@@ -3,7 +3,6 @@ package area
 import (
 	"bytes"
 	"encoding/gob"
-	"logicdata/entity"
 	"server"
 	. "server/data/datatype"
 	"server/libs/log"
@@ -16,17 +15,17 @@ type Player struct {
 	server.Callee
 }
 
-func (p *Player) OnEnterScene(self entity.Entityer) int {
+func (p *Player) OnEnterScene(self Entityer) int {
 	mb := self.GetExtraData("base").(rpc.Mailbox)
 	pl := App.players.GetPlayer(mb)
 	if pl != nil {
-		pl.AddHeartbeat("timeToStore", time.Minute*5, -1, p.Store, mb)
+		App.AddHeartbeat(self, "Store", time.Minute*5, -1, mb)
 	}
 	return 1
 }
 
-func StorePlayer(obj entity.Entityer) (*entity.EntityInfo, error) {
-	item := &entity.EntityInfo{}
+func StorePlayer(obj Entityer) (*EntityInfo, error) {
+	item := &EntityInfo{}
 	buffer := new(bytes.Buffer)
 	enc := gob.NewEncoder(buffer)
 	err := enc.Encode(obj)
@@ -45,7 +44,7 @@ func StorePlayer(obj entity.Entityer) (*entity.EntityInfo, error) {
 
 	ls := obj.GetChilds()
 	if len(ls) > 0 {
-		item.Childs = make([]*entity.EntityInfo, 0, len(ls))
+		item.Childs = make([]*EntityInfo, 0, len(ls))
 	}
 	for _, c := range ls {
 		if c != nil {
@@ -62,7 +61,7 @@ func StorePlayer(obj entity.Entityer) (*entity.EntityInfo, error) {
 	return item, nil
 }
 
-func (p *Player) OnStore(self entity.Entityer, typ int) int {
+func (p *Player) OnStore(self Entityer, typ int) int {
 	info, err := StorePlayer(self)
 	if err != nil {
 		log.LogError("save player failed")
@@ -72,22 +71,23 @@ func (p *Player) OnStore(self entity.Entityer, typ int) int {
 	return 0
 }
 
-func (p *Player) Store(t time.Duration, count int32, args interface{}) {
+func (p *Player) OnTimer(self Entityer, count int32, args interface{}) int {
 	mb := args.(rpc.Mailbox)
 	pl := App.players.GetPlayer(mb)
 	if pl != nil {
 		App.Save(pl.Entity, share.SAVETYPE_TIMER)
 	}
+	return 1
 }
 
-func (p *Player) OnLoad(self entity.Entityer, typ int) int {
+func (p *Player) OnLoad(self Entityer, typ int) int {
 	if typ == share.LOAD_ARCHIVE {
 	}
 
 	return 1
 }
 
-func (p *Player) OnDestroy(self entity.Entityer, sender entity.Entityer) int {
+func (p *Player) OnDestroy(self Entityer, sender Entityer) int {
 	log.LogInfo("player destroy,", self.GetObjId())
 	return 1
 }

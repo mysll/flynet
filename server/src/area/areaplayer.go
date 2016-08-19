@@ -1,7 +1,6 @@
 package area
 
 import (
-	"logicdata/entity"
 	"logicdata/inter"
 	"server"
 	. "server/data/datatype"
@@ -18,12 +17,11 @@ const (
 )
 
 type AreaPlayer struct {
-	*server.Heartbeat
 	Mailbox rpc.Mailbox
 	Base    rpc.Mailbox
 	Account string
 	Name    string
-	Entity  entity.Entityer
+	Entity  Entityer
 	State   int
 	Deleted bool
 	Trans   server.Transform
@@ -54,7 +52,8 @@ func (a *AreaPlayer) LevelScene() {
 }
 
 type PlayerList struct {
-	players  map[int64]*AreaPlayer
+	server.Dispatch
+	players  map[uint64]*AreaPlayer
 	namelist map[string]rpc.Mailbox
 }
 
@@ -62,7 +61,7 @@ func (p *PlayerList) Count() int {
 	return len(p.players)
 }
 
-func (p *PlayerList) AddPlayer(mailbox rpc.Mailbox, data *entity.EntityInfo) *AreaPlayer {
+func (p *PlayerList) AddPlayer(mailbox rpc.Mailbox, data *EntityInfo) *AreaPlayer {
 	if _, dup := p.players[mailbox.Uid]; dup {
 		log.LogError("player already added,", mailbox)
 		return nil
@@ -71,7 +70,7 @@ func (p *PlayerList) AddPlayer(mailbox rpc.Mailbox, data *entity.EntityInfo) *Ar
 	ent, err := App.CreateFromArchive(data,
 		map[string]interface{}{
 			"mailbox": mailbox,
-			"base":    rpc.Mailbox{Address: mailbox.App},
+			"base":    rpc.Mailbox{App: mailbox.App},
 			"sync":    true})
 	if err != nil {
 		log.LogError(err)
@@ -92,9 +91,8 @@ func (p *PlayerList) AddPlayer(mailbox rpc.Mailbox, data *entity.EntityInfo) *Ar
 	}
 
 	pl := &AreaPlayer{}
-	pl.Heartbeat = server.NewHeartbeat()
 	pl.Mailbox = mailbox
-	pl.Base = rpc.Mailbox{Address: mailbox.App}
+	pl.Base = rpc.Mailbox{App: mailbox.App}
 	pl.Name = name
 	pl.Entity = ent
 	pl.Deleted = false
@@ -163,17 +161,9 @@ func (p *PlayerList) ClearDeleted() {
 	}
 }
 
-func (p *PlayerList) Pump() {
-	for _, pl := range p.players {
-		if !pl.Deleted {
-			pl.Pump()
-		}
-	}
-}
-
 func NewPlayerList() *PlayerList {
 	pl := &PlayerList{}
-	pl.players = make(map[int64]*AreaPlayer, 512)
+	pl.players = make(map[uint64]*AreaPlayer, 512)
 	pl.namelist = make(map[string]rpc.Mailbox, 512)
 	return pl
 }

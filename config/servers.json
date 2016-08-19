@@ -1,8 +1,8 @@
 {
 	"master": {
-		"host": "192.168.1.102",
-		"localip": "192.168.1.102",
-		"outerip": "192.168.1.102",
+		"host": "172.30.9.101",
+		"localip": "172.30.9.101",
+		"outerip": "172.30.9.101",
 		"port": 5100,
 		"consoleport": 8700,
 		"consoleroot": "../console",
@@ -20,7 +20,7 @@
 		"name": "loginmgr",
 		"host": "127.0.0.1",
 		"port": 0,
-		"clienthost": "192.168.1.102",
+		"clienthost": "172.30.9.101",
 		"clientport": 5391,
 		"fronted": true,
 		"sockettype": "native"
@@ -29,7 +29,7 @@
 		"name": "base_1",
 		"host": "127.0.0.1",
 		"port": 0,
-		"clienthost": "192.168.1.102",
+		"clienthost": "172.30.9.101",
 		"clientport": 0,
 		"fronted": true,
 		"sockettype": "native",
@@ -43,6 +43,11 @@
 		"host": "127.0.0.1",
 		"port": 0
 	}],
+	"area": [{
+		"name": "area_1",
+		"host": "127.0.0.1",
+		"port": 0
+	}],
 	"status": [{
 		"name": "status",
 		"host": "127.0.0.1",
@@ -53,7 +58,7 @@
 		"host": "127.0.0.1",
 		"port": 0,
 		"type": "mysql",
-		"datasource": "root:@tcp(192.168.1.10:3306)/mmotest?charset=utf8",
+		"datasource": "root:@tcp(172.30.9.10:3306)/mmotest?charset=utf8",
 		"role": "Player",
 		"db": "mmotest",
 		"entity": "../assets/def",

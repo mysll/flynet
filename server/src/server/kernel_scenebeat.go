@@ -287,3 +287,30 @@ func NewSceneBeat() *SceneBeat {
 	beat.serial = 0
 	return beat
 }
+
+var sceneBeat = NewSceneBeat()
+
+//增加一个心跳
+func (k *Kernel) AddHeartbeat(object Entityer, beat string, t time.Duration, count int32, args interface{}) bool {
+	return sceneBeat.Add(object, beat, t, count, args)
+}
+
+//移除某个心跳
+func (k *Kernel) RemoveHeartbeat(obj ObjectID, beat string) bool {
+	return sceneBeat.Remove(obj, beat)
+}
+
+//移除某个对象所有心跳
+func (k *Kernel) RemoveObjectHeartbeat(obj ObjectID) {
+	sceneBeat.RemoveObjectBeat(obj)
+}
+
+//重置心跳的次数
+func (k *Kernel) ResetBeatCount(obj ObjectID, beat string, count int32) bool {
+	return sceneBeat.ResetCount(obj, beat, count)
+}
+
+//保存当前所有的心跳，并且从场景中分离出来
+func (k *Kernel) DeatchBeat(object Entityer) bool {
+	return sceneBeat.Deatch(object)
+}

@@ -4,27 +4,26 @@ import (
 	"area/aoi"
 	"area/aoi/toweraoi"
 	"errors"
-	"logicdata/entity"
+	"logicdata/inter"
 	"server"
 	. "server/data/datatype"
-	"server/data/inter"
 	"server/libs/log"
 	"server/libs/rpc"
 )
 
 type cell struct {
-	*server.Heartbeat
+	server.Dispatch
 	aoi       *aoi.AOI
 	id        int
-	Objects   map[int]map[int32]entity.Entityer
-	scene     entity.Entityer
+	Objects   map[int]map[int32]Entityer
+	scene     Entityer
 	playernum int
 	livetime  int
 	width     float32
 	height    float32
 }
 
-func (this *cell) enterScene(obj entity.Entityer) {
+func (this *cell) enterScene(obj Entityer) {
 	if watcher, ok := obj.(inter.Watcher); ok {
 		if mover, ok2 := obj.(inter.Mover); ok2 {
 			this.aoi.AddWatcher(obj.GetObjId(), obj.ObjType(), mover.GetPos(), watcher.GetRange())
@@ -53,7 +52,7 @@ func (this *cell) enterScene(obj entity.Entityer) {
 	}
 }
 
-func (this *cell) levelScene(obj entity.Entityer) {
+func (this *cell) levelScene(obj Entityer) {
 	if watcher, ok := obj.(inter.Watcher); ok {
 		if mover, ok2 := obj.(inter.Mover); ok2 {
 			this.aoi.RemoveWatcher(obj.GetObjId(), obj.ObjType(), mover.GetPos(), watcher.GetRange())
@@ -69,10 +68,10 @@ func (this *cell) levelScene(obj entity.Entityer) {
 	}
 }
 
-func (this *cell) AddObject(obj entity.Entityer) error {
+func (this *cell) AddObject(obj Entityer) error {
 	id := obj.GetObjId()
 	if _, ok := this.Objects[obj.ObjType()]; !ok {
-		this.Objects[obj.ObjType()] = make(map[int32]entity.Entityer, 256)
+		this.Objects[obj.ObjType()] = make(map[int32]Entityer, 256)
 	}
 
 	if _, dup := this.Objects[obj.ObjType()][id.Index]; dup {
@@ -95,7 +94,7 @@ func (this *cell) AddObject(obj entity.Entityer) error {
 	return nil
 }
 
-func (this *cell) RemoveObject(obj entity.Entityer) {
+func (this *cell) RemoveObject(obj Entityer) {
 
 	id := obj.GetObjId()
 	if _, ok := this.Objects[obj.ObjType()]; !ok {
@@ -291,8 +290,7 @@ func CreateCell(id int, width float32, height float32) *cell {
 	c.id = id
 	c.scene = scene
 	scene.SetExtraData("cell", c)
-	c.Heartbeat = server.NewHeartbeat()
-	c.Objects = make(map[int]map[int32]entity.Entityer, 16)
+	c.Objects = make(map[int]map[int32]Entityer, 16)
 	c.livetime = 60
 	return c
 }

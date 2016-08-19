@@ -215,3 +215,19 @@ func NewTimer() *Timer {
 	beat.serial = 0
 	return beat
 }
+
+var timer = NewTimer()
+
+func (k *Kernel) CancelTimer(intervalid TimerID) {
+	timer.Cancel(intervalid)
+}
+
+//增加一个定时器
+func (k *Kernel) AddTimer(t time.Duration, count int32, cb TimerCB, param interface{}) (intervalid TimerID) {
+	return timer.AddTimer(t, count, cb, param)
+}
+
+//增加一个超时
+func (k *Kernel) Timeout(t time.Duration, cb TimerCB, param interface{}) (intervalid TimerID) {
+	return timer.Timeout(t, cb, param)
+}

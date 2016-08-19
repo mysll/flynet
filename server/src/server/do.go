@@ -29,16 +29,19 @@ func RpcProcess(ch chan *rpc.RpcCall) {
 				log.LogDebug(call.GetSrc(), " rpc call:", call.GetMethod())
 				start_time = time.Now()
 				err := call.Call()
+				if err != nil {
+					log.LogError(err)
+				}
 				delay = time.Now().Sub(start_time)
 				if delay > warninglvl {
 					log.LogWarning("rpc call ", call.GetMethod(), " delay:", delay.Nanoseconds()/1000000, "ms")
 				}
-				call.Done()
+				err = call.Done()
+				if err != nil {
+					log.LogError(err)
+				}
 				call.Free()
 				busy = true
-				if err != nil {
-					log.LogError("rpc error:", err)
-				}
 			}
 
 		default:
@@ -128,27 +131,54 @@ func Run(s *Server) {
 
 		if now.Sub(s.Time.LastBeatTime) >= BeatTime {
 			//处理心跳
-			s.timer.Pump()
+			timer.Pump()
 			s.apper.OnBeatRun()
 			//场景心跳
-			s.sceneBeat.Pump()
+			sceneBeat.Pump()
+
+			if dispatcherList.Len() > 0 {
+				for e := dispatcherList.Front(); e != nil; e = e.Next() {
+					e.Value.(Dispatcher).OnBeatRun()
+				}
+			}
 			s.Time.LastBeatTime = now
 		}
 
 		if now.Sub(s.Time.LastUpdateTime) >= Updatetime {
 			//准备更新回调
 			s.apper.OnBeginUpdate()
+			if dispatcherList.Len() > 0 {
+				for e := dispatcherList.Front(); e != nil; e = e.Next() {
+					e.Value.(Dispatcher).OnBeginUpdate()
+				}
+			}
 			//更新回调
 			s.apper.OnUpdate()
 			//更新kernel调度器
 			s.OnUpdate()
+			if dispatcherList.Len() > 0 {
+				for e := dispatcherList.Front(); e != nil; e = e.Next() {
+					e.Value.(Dispatcher).OnUpdate()
+				}
+			}
+
 			//更新完成后回调
 			s.apper.OnLastUpdate()
+			if dispatcherList.Len() > 0 {
+				for e := dispatcherList.Front(); e != nil; e = e.Next() {
+					e.Value.(Dispatcher).OnLastUpdate()
+				}
+			}
 			s.Time.LastUpdateTime = now
 		}
 
 		if now.Sub(s.Time.LastFreshTime) >= Freshtime {
 			s.apper.OnFlush()
+			if dispatcherList.Len() > 0 {
+				for e := dispatcherList.Front(); e != nil; e = e.Next() {
+					e.Value.(Dispatcher).OnFlush()
+				}
+			}
 			s.Time.LastFreshTime = now
 			s.clientList.Check()
 		}
@@ -156,6 +186,11 @@ func Run(s *Server) {
 		//删除对象
 		s.ObjectFactory.ClearDelete()
 		s.apper.OnFrame()
+		if dispatcherList.Len() > 0 {
+			for e := dispatcherList.Front(); e != nil; e = e.Next() {
+				e.Value.(Dispatcher).OnFrame()
+			}
+		}
 		s.s2chelper.flush() //发送缓存数据
 		runtime.Gosched()
 		if !busy {

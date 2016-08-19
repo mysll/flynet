@@ -19,10 +19,6 @@ import (
 	"github.com/bitly/go-simplejson"
 )
 
-var (
-	core *Server
-)
-
 const (
 	SENDBUFLEN = 16 * 1024
 	RPCBUFFER  = 1024
@@ -30,7 +26,6 @@ const (
 
 type Server struct {
 	*Kernel
-	timer          *Timer
 	StartArgs      *simplejson.Json
 	Type           string
 	Host           string
@@ -63,7 +58,6 @@ type Server struct {
 	apper          Apper
 	quit           bool
 	clientList     *ClientList
-	sceneBeat      *SceneBeat
 	startTime      time.Time
 	s2chelper      *S2CHelper
 	c2shelper      *C2SHelper
@@ -370,32 +364,4 @@ func (svr *Server) MustReady() {
 		svr.MustAppReady = true
 		svr.apper.OnMustAppReady()
 	}
-}
-
-func NewServer(app Apper, id int32) *Server {
-	s := &Server{}
-	core = s
-	s.AppId = id
-	s.timer = NewTimer()
-	s.WaitGroup = &util.WaitGroupWrapper{}
-	s.exitChannel = make(chan struct{})
-	s.shutdown = make(chan struct{})
-	s.Eventer = NewEvent()
-	s.clientList = NewClientList()
-	s.apper = app
-	s.Emitter = event.NewEventList()
-	s.ObjectFactory = NewFactory()
-	s.Kernel = NewKernel(s.ObjectFactory)
-	s.channel = make(map[string]*Channel, 32)
-	s.sceneBeat = NewSceneBeat()
-
-	s.s2chelper = NewS2CHelper()
-	s.c2shelper = &C2SHelper{}
-	s.teleport = &TeleportHelper{}
-
-	RegisterRemote("S2CHelper", s.s2chelper)
-	RegisterRemote("Teleport", s.teleport)
-
-	RegisterHandler("C2SHelper", s.c2shelper)
-	return s
 }

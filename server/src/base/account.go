@@ -23,7 +23,7 @@ func (t *Account) RegisterCallback(s rpc.Servicer) {
 
 func (a *Account) SelectUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	args := &c2s.Selectuser{}
-	if server.Check(server.ProtoParse(msg, args)) {
+	if server.Check(server.ParseProto(msg, args)) {
 		return nil
 	}
 	player := App.Players.GetPlayer(mailbox.Id)
@@ -47,7 +47,7 @@ func (a *Account) SelectUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message
 
 func (a *Account) CreatePlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	args := &c2s.Create{}
-	if server.Check(server.ProtoParse(msg, args)) {
+	if server.Check(server.ParseProto(msg, args)) {
 		return nil
 	}
 
@@ -74,7 +74,7 @@ func (a *Account) CreatePlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messa
 
 func (a *Account) Login(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	args := &c2s.Enterbase{}
-	if server.Check(server.ProtoParse(msg, args)) {
+	if server.Check(server.ParseProto(msg, args)) {
 		return nil
 	}
 	if App.Login.checkClient(args.GetUser(), args.GetKey()) {

@@ -161,6 +161,7 @@ func (p *BasePlayer) LoadPlayer(data share.LoadUserBak) error {
 
 	//同步玩家
 	App.AttachPlayer(p.Entity, p.Mailbox)
+
 	return err
 }
 

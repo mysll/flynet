@@ -1,8 +1,10 @@
 package area
 
 import (
+	_ "logicdata/entity"
 	_ "pb"
 	"server"
+	"server/data/datatype"
 	"server/libs/log"
 )
 
@@ -18,39 +20,8 @@ type AreaApp struct {
 }
 
 func (a *AreaApp) OnPrepare() bool {
-	log.LogMessage(a.Id, " prepared")
+	log.LogMessage(a.AppId, " prepared")
 	return true
-}
-
-func (a *AreaApp) OnBeatRun() {
-	for _, cell := range a.cells {
-		cell.Pump()
-	}
-	a.players.Pump()
-}
-
-func (a *AreaApp) OnBeginUpdate() {
-	for _, cell := range a.cells {
-		cell.OnBeginUpdate()
-	}
-}
-
-func (a *AreaApp) OnUpdate() {
-	for _, cell := range a.cells {
-		cell.OnUpdate()
-	}
-}
-
-func (a *AreaApp) OnLastUpdate() {
-	for _, cell := range a.cells {
-		cell.OnLastUpdate()
-	}
-}
-
-func (a *AreaApp) OnFlush() {
-	for _, cell := range a.cells {
-		cell.OnFlush()
-	}
 }
 
 func (a *AreaApp) OnFrame() {
@@ -63,14 +34,21 @@ func (a *AreaApp) GetCell(id int) *cell {
 	}
 	cell := CreateCell(id, 1000, 1000)
 	a.cells[id] = cell
+	a.AddDispatch(cell)
 	return cell
 }
 
 func (a *AreaApp) RemoveCell(id int) {
 	if cell, ok := a.cells[id]; ok {
+		a.RemoveDispatch(cell)
 		cell.Delete()
 		delete(a.cells, id)
 	}
+}
+
+func (a *AreaApp) OnTeleportFromBase(args []interface{}, player datatype.Entityer) bool {
+	log.LogMessage(args)
+	return true
 }
 
 func GetAllHandler() map[string]interface{} {
@@ -85,6 +63,4 @@ func init() {
 	}
 	server.RegisterCallee("Player", &Player{})
 	server.RegisterCallee("BaseScene", &Scene{})
-
-	server.RegisterRemote("BaseProxy", App.baseProxy)
 }

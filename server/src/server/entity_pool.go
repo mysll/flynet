@@ -4,6 +4,8 @@ import (
 	"container/list"
 	"fmt"
 	"server/data/datatype"
+	"server/libs/log"
+	"strings"
 )
 
 const (
@@ -62,12 +64,15 @@ func (p *Pool) FreeObj(e datatype.Entityer) {
 }
 
 //输出调试信息
-func (p *Pool) DebugInfo() {
-	fmt.Println("pool info:")
+func (p *Pool) DebugInfo(intervalid TimerID, count int32, args interface{}) {
+	info := make([]string, 0, 16)
+	info = append(info, "object pool memory status:")
+	info = append(info, "###########################################")
 	for k, v := range p.pool {
-		fmt.Println("pool:", k, ",", v.Len())
+		info = append(info, fmt.Sprintf("pool:%s, cached:%d", k, v.Len()))
 	}
-	fmt.Println("pool info end")
+	info = append(info, "###########################################")
+	log.LogMessage(strings.Join(info, "\n"))
 }
 
 //新建一个对象池

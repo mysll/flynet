@@ -103,7 +103,7 @@ type Client struct {
 // discarded.
 type ClientCodec interface {
 	// WriteRequest must be safe for concurrent use by multiple goroutines.
-	WriteRequest(sync.Mutex, uint64, *Call) error
+	WriteRequest(*sync.Mutex, uint64, *Call) error
 	ReadMessage() (*Message, error)
 	GetAddress() string
 	Close() error
@@ -146,7 +146,7 @@ func (client *Client) send(call *Call) error {
 	}
 
 	// Encode and send the request.
-	err := client.codec.WriteRequest(client.sending, seq, call)
+	err := client.codec.WriteRequest(&client.sending, seq, call)
 	if err != nil {
 		call.Error = err
 		if !call.noreply {
@@ -161,6 +161,8 @@ func (client *Client) send(call *Call) error {
 
 	if call.noreply {
 		call.done()
+	} else {
+		log.LogMessage("request async call:", call.ServiceMethod, ", seq:", seq)
 	}
 
 	return err
@@ -187,6 +189,7 @@ func (client *Client) input() {
 		default:
 			call.Reply = message
 			client.queue <- call
+			log.LogMessage("response replyed, seq:", seq)
 		}
 	}
 	// Terminate pending calls.
@@ -266,7 +269,7 @@ func (c *byteClientCodec) GetAddress() string {
 	return c.rwc.(net.Conn).RemoteAddr().String()
 }
 
-func (c *byteClientCodec) WriteRequest(sending sync.Mutex, seq uint64, call *Call) (err error) {
+func (c *byteClientCodec) WriteRequest(sending *sync.Mutex, seq uint64, call *Call) (err error) {
 	sending.Lock()
 	defer sending.Unlock()
 	msg := call.Args

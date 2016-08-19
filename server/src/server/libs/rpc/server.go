@@ -295,6 +295,7 @@ func (session *Session) send() {
 	for {
 		select {
 		case resp := <-session.sendQueue:
+
 			if resp.Seq == 0 {
 				resp.Free()
 				log.LogFatalf("resp.seq is zero")
@@ -306,7 +307,7 @@ func (session *Session) send() {
 				log.LogError(err)
 				return
 			}
-
+			log.LogDebug("response call, seq:", resp.Seq)
 			resp.Free()
 		default:
 			if session.quit {
@@ -327,7 +328,7 @@ func (server *Server) sendResponse(call *RpcCall) error {
 	session := server.sessions[call.session]
 	server.mutex.RUnlock()
 	if session == nil {
-		return fmt.Errorf("session not found", call.session)
+		return fmt.Errorf("session not found %d", call.session)
 	}
 
 	resp := NewResponse()
