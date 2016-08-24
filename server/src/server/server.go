@@ -44,7 +44,7 @@ type Server struct {
 	Eventer        *EventListener
 	WaitGroup      *util.WaitGroupWrapper
 	IsReady        bool
-	Time           Time
+	Time           TimeInfo
 	AssetPath      string
 	Closing        bool
 	channel        map[string]*Channel

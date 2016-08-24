@@ -136,17 +136,27 @@ type ClientList struct {
 //关闭所有连接
 func (cl *ClientList) CloseAll() {
 	cl.l.Lock()
-	defer cl.l.Unlock()
 	for _, node := range cl.clients {
 		node.Close()
 	}
+	cl.l.Unlock()
 }
 
 //增加一个客户端连接
 func (cl *ClientList) Add(c io.ReadWriteCloser, addr string) int64 {
 	cl.l.Lock()
-	defer cl.l.Unlock()
-	cl.serial++
+	//寻找一个唯一ID
+	for {
+		cl.serial++
+		if cl.serial > 0x7FFFFFFFFFFF {
+			cl.serial = 1
+		}
+		if _, dup := cl.clients[cl.serial]; dup {
+			continue
+		}
+		break
+	}
+
 	cn := NewClientNode()
 	cn.Session = cl.serial
 	cn.Connected = true
@@ -155,46 +165,47 @@ func (cl *ClientList) Add(c io.ReadWriteCloser, addr string) int64 {
 	cn.DelayDestroy = -1
 	cn.lastping = time.Now()
 	cl.clients[cl.serial] = cn
-	return cl.serial
+	cl.l.Unlock()
+	return cn.Session
 }
 
 //交换两个socket,用于顶号处理
 func (cl *ClientList) Switch(src, dest int64) bool {
 	cl.l.Lock()
-	defer cl.l.Unlock()
 	var srcnode *ClientNode
 	var destnode *ClientNode
 	var ok bool
 	if srcnode, ok = cl.clients[src]; !ok {
+		cl.l.Unlock()
 		return false
 	}
 
 	if destnode, ok = cl.clients[dest]; !ok {
+		cl.l.Unlock()
 		return false
 	}
 
 	srcnode.Session, destnode.Session = dest, src
 	srcnode.MailBox, destnode.MailBox = destnode.MailBox, srcnode.MailBox
 	cl.clients[src], cl.clients[dest] = destnode, srcnode
-
+	cl.l.Unlock()
 	return true
 }
 
 //移除一个客户端连接
 func (cl *ClientList) Remove(session int64) {
 	cl.l.Lock()
-	defer cl.l.Unlock()
 	if cn, ok := cl.clients[session]; ok {
 		delete(cl.clients, session)
 		log.LogDebug("remove client node, ", cn.Addr)
 		cn.Close()
 	}
+	cl.l.Unlock()
 }
 
 //检查需要删除的连接（延迟删除）
 func (cl *ClientList) Check() {
 	cl.l.Lock()
-	defer cl.l.Unlock()
 	for _, v := range cl.clients {
 		if v.DelayDestroy > 0 {
 			v.DelayDestroy--
@@ -208,16 +219,17 @@ func (cl *ClientList) Check() {
 			v.Close()
 		}
 	}
+	cl.l.Unlock()
 }
 
 //通过session获取连接
 func (cl *ClientList) FindNode(session int64) *ClientNode {
 	cl.l.RLock()
-	defer cl.l.RUnlock()
 	if cn, ok := cl.clients[session]; ok {
+		cl.l.RUnlock()
 		return cn
 	}
-
+	cl.l.RUnlock()
 	return nil
 }
 

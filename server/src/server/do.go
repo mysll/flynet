@@ -118,7 +118,9 @@ func Run(s *Server) {
 	s.Time.LastScanTime = now
 	s.Time.LastFreshTime = now
 	s.Time.RunTime = 0
+	s.Time.StartTime = now
 	begin := now
+	var ds *DispatchSlot
 	for !s.quit {
 		now := time.Now()
 		s.Time.RunTime = now.Sub(begin)
@@ -135,38 +137,40 @@ func Run(s *Server) {
 			s.apper.OnBeatRun()
 			//场景心跳
 			sceneBeat.Pump()
-
-			if dispatcherList.Len() > 0 {
-				for e := dispatcherList.Front(); e != nil; e = e.Next() {
-					e.Value.(Dispatcher).OnBeatRun()
+			ds = dispatcherList[DP_BEAT]
+			if ds != nil {
+				for _, dispatch := range ds.Dispatchs {
+					dispatch.OnBeatRun()
 				}
 			}
 			s.Time.LastBeatTime = now
 		}
 
-		if now.Sub(s.Time.LastUpdateTime) >= Updatetime {
+		if s.Time.DeltaTime = now.Sub(s.Time.LastUpdateTime); s.Time.DeltaTime >= Updatetime {
 			//准备更新回调
 			s.apper.OnBeginUpdate()
-			if dispatcherList.Len() > 0 {
-				for e := dispatcherList.Front(); e != nil; e = e.Next() {
-					e.Value.(Dispatcher).OnBeginUpdate()
+			ds = dispatcherList[DP_BEGINUPDATE]
+			if ds != nil {
+				for _, dispatch := range ds.Dispatchs {
+					dispatch.OnBeginUpdate()
 				}
 			}
 			//更新回调
 			s.apper.OnUpdate()
 			//更新kernel调度器
 			s.OnUpdate()
-			if dispatcherList.Len() > 0 {
-				for e := dispatcherList.Front(); e != nil; e = e.Next() {
-					e.Value.(Dispatcher).OnUpdate()
+			ds = dispatcherList[DP_UPDATE]
+			if ds != nil {
+				for _, dispatch := range ds.Dispatchs {
+					dispatch.OnUpdate()
 				}
 			}
-
 			//更新完成后回调
 			s.apper.OnLastUpdate()
-			if dispatcherList.Len() > 0 {
-				for e := dispatcherList.Front(); e != nil; e = e.Next() {
-					e.Value.(Dispatcher).OnLastUpdate()
+			ds = dispatcherList[DP_LASTUPDATE]
+			if ds != nil {
+				for _, dispatch := range ds.Dispatchs {
+					dispatch.OnLastUpdate()
 				}
 			}
 			s.Time.LastUpdateTime = now
@@ -174,9 +178,10 @@ func Run(s *Server) {
 
 		if now.Sub(s.Time.LastFreshTime) >= Freshtime {
 			s.apper.OnFlush()
-			if dispatcherList.Len() > 0 {
-				for e := dispatcherList.Front(); e != nil; e = e.Next() {
-					e.Value.(Dispatcher).OnFlush()
+			ds = dispatcherList[DP_FLUSH]
+			if ds != nil {
+				for _, dispatch := range ds.Dispatchs {
+					dispatch.OnFlush()
 				}
 			}
 			s.Time.LastFreshTime = now
@@ -186,9 +191,10 @@ func Run(s *Server) {
 		//删除对象
 		s.ObjectFactory.ClearDelete()
 		s.apper.OnFrame()
-		if dispatcherList.Len() > 0 {
-			for e := dispatcherList.Front(); e != nil; e = e.Next() {
-				e.Value.(Dispatcher).OnFrame()
+		ds = dispatcherList[DP_FRAME]
+		if ds != nil {
+			for _, dispatch := range ds.Dispatchs {
+				dispatch.OnFrame()
 			}
 		}
 		s.s2chelper.flush() //发送缓存数据

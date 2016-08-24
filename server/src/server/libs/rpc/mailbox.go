@@ -9,10 +9,10 @@ import (
 )
 
 type Mailbox struct {
-	App  int32
-	Flag int8
-	Id   int64
-	Uid  uint64
+	App  int32  //所在app的id
+	Flag int8   //0:app 1:player
+	Id   int64  //flag=1时，表示客户端的session.
+	Uid  uint64 //唯一id,由以上三个字段生成。主要用来传送
 }
 
 func (m Mailbox) String() string {

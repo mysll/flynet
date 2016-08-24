@@ -40,7 +40,6 @@ func GetLocalApp() *RemoteApp {
 //rpc调用，src==>dest, src 为空，则自动填充为当前app
 func MailTo(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args ...interface{}) error {
 	applock.RLock()
-	defer applock.RUnlock()
 	log.LogMessage("mailto:", *dest, "/", method)
 	var app *RemoteApp
 	if dest.App == core.AppId {
@@ -48,9 +47,11 @@ func MailTo(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args ...interfac
 	} else {
 		var exist bool
 		if app, exist = RemoteApps[dest.App]; !exist {
+			applock.RUnlock()
 			return ErrNotFoundApp
 		}
 	}
+	applock.RUnlock()
 
 	if dest.Flag == 0 {
 		return app.Call(src, method, args...)
@@ -63,7 +64,6 @@ func MailTo(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args ...interfac
 
 func MailToAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rpc.ReplyCB, args ...interface{}) error {
 	applock.RLock()
-	defer applock.RUnlock()
 	log.LogMessage("mailto:", *dest, "/", method)
 	var app *RemoteApp
 	if dest.App == core.AppId {
@@ -71,9 +71,11 @@ func MailToAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rp
 	} else {
 		var exist bool
 		if app, exist = RemoteApps[dest.App]; !exist {
+			applock.RUnlock()
 			return ErrNotFoundApp
 		}
 	}
+	applock.RUnlock()
 
 	if dest.Flag == 0 {
 		return app.CallBack(src, method, cb, args...)
@@ -82,78 +84,80 @@ func MailToAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rp
 	} else {
 		return ErrUnreachable
 	}
-
-	return nil
 }
 
 //获取远程进程的个数
 func GetAppCount() int {
 	applock.RLock()
-	defer applock.RUnlock()
-	return len(RemoteApps)
+	l := len(RemoteApps)
+	applock.RUnlock()
+	return l
 }
 
 //获取appid
 func GetAppIdByName(name string) int32 {
 	applock.RLock()
-	defer applock.RUnlock()
 	if appid, exist := RemoteAppName[name]; exist {
+		applock.RUnlock()
 		return appid
 	}
+	applock.RUnlock()
 	return -1
 }
 
 //通过name获取远程进程
 func GetAppByName(name string) *RemoteApp {
 	applock.RLock()
-	defer applock.RUnlock()
 	if appid, exist := RemoteAppName[name]; exist {
+		applock.RUnlock()
 		return RemoteApps[appid]
 	}
+	applock.RUnlock()
 	return nil
 }
 
 func GetAppById(id int32) *RemoteApp {
 	applock.RLock()
-	defer applock.RUnlock()
 	if app, exist := RemoteApps[id]; exist {
+		applock.RUnlock()
 		return app
 	}
+	applock.RUnlock()
 	return nil
 }
 
 //通过类型获取远程进程
 func GetAppByType(typ string) *RemoteApp {
 	applock.RLock()
-	defer applock.RUnlock()
 	for _, v := range RemoteApps {
 		if v.Type == typ {
+			applock.RUnlock()
 			return v
 		}
 	}
+	applock.RUnlock()
 	return nil
 }
 
 //获取某个类型的所有远程进程的appid
 func GetAppIdsByType(typ string) []string {
 	applock.RLock()
-	defer applock.RUnlock()
 	ret := make([]string, 0, 10)
 	for _, v := range RemoteApps {
 		if v.Type == typ {
 			ret = append(ret, v.Name)
 		}
 	}
+	applock.RUnlock()
 	return ret
 }
 
 //增加一个远程进程
 func AddApp(typ string, id int32, name string, host string, port int, clienthost string, clientport int, ready bool) {
-	applock.Lock()
-	defer applock.Unlock()
 	if core.Name == name {
 		return
 	}
+	applock.Lock()
 	if appid, ok := RemoteAppName[name]; ok {
 		app := RemoteApps[appid]
 		if app.Id == id &&
@@ -161,6 +165,7 @@ func AddApp(typ string, id int32, name string, host string, port int, clienthost
 			app.Port == port &&
 			app.ClientHost == clienthost &&
 			app.ClientPort == clientport { //已经存在
+			applock.Unlock()
 			return
 		}
 
@@ -176,39 +181,44 @@ func AddApp(typ string, id int32, name string, host string, port int, clienthost
 		RemoteApps[id].SetReady(ready)
 		core.Eventer.DispatchEvent("ready", name)
 	}
+	applock.Unlock()
 }
 
 //移除一个远程进程
 func RemoveAppById(id int32) {
-	applock.Lock()
-	defer applock.Unlock()
 	if core.AppId == id {
 		return
 	}
+
+	applock.Lock()
 	if app, ok := RemoteApps[id]; ok {
 		app.Close()
 		delete(RemoteApps, id)
 		log.LogInfo(core.Name, "> remove server:", app.Name)
+		applock.Unlock()
 		return
 	}
 
 	log.LogError(core.Name, "> remove server failed, ", id)
+	applock.Unlock()
 }
 
 func RemoveAppByName(name string) {
-	applock.Lock()
-	defer applock.Unlock()
 	if core.Name == name {
 		return
 	}
+
+	applock.Lock()
 	if appid, ex := RemoteAppName[name]; ex {
 		app := RemoteApps[appid]
 		app.Close()
 		delete(RemoteApps, appid)
 		delete(RemoteAppName, name)
 		log.LogInfo(core.Name, "> remove server:", name)
+		applock.Unlock()
 		return
 	}
 
 	log.LogError(core.Name, "> remove server failed, ", name)
+	applock.Unlock()
 }

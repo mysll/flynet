@@ -77,7 +77,10 @@ func (t *Thread) work(id int) {
 			if delay > warninglvl {
 				log.LogWarning("rpc call ", rpc.GetMethod(), " delay:", delay.Nanoseconds()/1000000, "ms")
 			}
-			rpc.Done()
+			err = rpc.Done()
+			if err != nil {
+				log.LogError("rpc error:", err)
+			}
 			rpc.Free()
 			break
 		default:
