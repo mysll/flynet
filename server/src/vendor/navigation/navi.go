@@ -1,8 +1,8 @@
 package navigation
 
 /*
-#cgo CPPFLAGS:-I./Recast/Include -I./DetourTileCache/Include -I./DetourCrowd/Include -I./Detour/Include -I./DebugUtils/Include -I./Navigation/Include
-#cgo LDFLAGS:-LC:/home/work/goserver/thirdparty/src/navigation/lib  -lnavi
+#cgo CPPFLAGS:-I./Navigation/Include/ -I./DebugUtils/Include/ -I./Detour/Include/ -I./DetourCrowd/Include/ -I./DetourTileCache/Include/ -I./Recast/Include/ -I./tmxparser/base64/ -I./tmxparser/tinyxml/ -I./tmxparser/zlib/ -I./tmxparser/
+#cgo LDFLAGS:-LC:/home/flynet_rpc/server/src/vendor/navigation/lib  -lnavi
 #include "navigation.h"
 */
 import "C"
@@ -11,6 +11,11 @@ import (
 	"fmt"
 	"reflect"
 	"unsafe"
+)
+
+const (
+	NAVIGATION_TILE    = 1
+	NAVIGATION_NAVMESH = 2
 )
 
 func init() {
@@ -23,12 +28,12 @@ func Cleanup() {
 	fmt.Println("navigation cleanup")
 }
 
-func CreateNavitation(mapid int, path string, file string) int {
+func CreateNavitation(mapid int, path string, file string, maptyp int) int {
 	cpath := C.CString(path)
 	cfile := C.CString(file)
 	defer C.Free(unsafe.Pointer(cpath))
 	defer C.Free(unsafe.Pointer(cfile))
-	res := C.CreateNavigation(C.int(mapid), cpath, cfile)
+	res := C.CreateNavigation(C.int(mapid), cpath, cfile, C.int(maptyp))
 	return int(res)
 }
 

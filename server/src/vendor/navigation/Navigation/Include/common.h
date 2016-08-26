@@ -33,5 +33,15 @@ struct Vector3{
 	float x;
 	float y;
 	float z;
+	Vector3(float xx, float yy, float zz)
+	{
+		x = xx;
+		y = yy;
+		z = zz;
+	}
+	Vector3()
+	{
+		x=y=z=0;
+	}
 };
 #endif

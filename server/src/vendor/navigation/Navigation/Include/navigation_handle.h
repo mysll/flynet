@@ -19,8 +19,8 @@ public:
 
 	enum NAV_OBJECT_STATE
 	{
-		NAV_OBJECT_STATE_MOVING = 1,	// ÒÆ¶¯ÖÐ
-		NAV_OBJECT_STATE_MOVEOVER = 2,	// ÒÆ¶¯ÒÑ¾­½áÊøÁË
+		NAV_OBJECT_STATE_MOVING = 1,	// ï¿½Æ¶ï¿½ï¿½ï¿½
+		NAV_OBJECT_STATE_MOVEOVER = 2,	// ï¿½Æ¶ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	};
 
 	NavigationHandle():
@@ -35,7 +35,7 @@ public:
 	virtual NavigationHandle::NAV_TYPE type() const{ return NAV_UNKNOWN; }
 
 	virtual int findStraightPath(int layer, const Vector3 & start, const Vector3 & end, std::vector<Vector3>& paths) = 0;
-	virtual int raycast(int layer, const Vector3 & start, const Vector3 & end, Vector3 & hitPointVec) = 0;
+	virtual int raycast(int layer, const Vector3 & start, const Vector3 & end, std::vector<Vector3>& hitPointVec) = 0;
 
 	std::string resPath;
 };

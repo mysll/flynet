@@ -2,7 +2,7 @@
 #include <common.h>
 #include "mesh_navigation.h"
 #include "navigation_mesh_handle.h"
-
+#include "navigation_tile_handle.h"
 
 MeshNavigation::MeshNavigation()
 {
@@ -42,7 +42,7 @@ NavigationHandle* MeshNavigation::findNavigation(std::string resPath)
 	return NULL;
 }
 
-NavigationHandle* MeshNavigation::LoadNavitagion(std::string resPath, const std::map< int, std::string >& params)
+NavigationHandle* MeshNavigation::LoadNavitagion(std::string resPath, const std::map< int, std::string >& params, int type)
 {
 	if(resPath == "")
 		return NULL;
@@ -54,8 +54,10 @@ NavigationHandle* MeshNavigation::LoadNavitagion(std::string resPath, const std:
 	}
 
 	NavigationHandle* pNavigationHandle_ = NULL;
-
-	pNavigationHandle_ = NavMeshHandle::create(resPath, params);
+	if(type == 1)
+		pNavigationHandle_ = NavTileHandle::create(resPath, params);
+	else if(type == 2)
+		pNavigationHandle_ = NavMeshHandle::create(resPath, params);
 	if(pNavigationHandle_ != NULL)
 		navhandles[resPath] = pNavigationHandle_;
 	return pNavigationHandle_;

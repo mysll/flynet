@@ -15,7 +15,7 @@ int InitNavigation() {
 	return 0;
 }
 
-int CreateNavigation(int mapid, const char * path, const char * file) {
+int CreateNavigation(int mapid, const char * path, const char * file, int type) {
 	if(g_Navigation == NULL)
 		return -1;
 	if(g_navHandles.find(mapid) != g_navHandles.end()) {
@@ -31,7 +31,7 @@ int CreateNavigation(int mapid, const char * path, const char * file) {
 
 	std::map<int, std::string> params;
 	params[0] = std::string(file);
-	ptr = g_Navigation->LoadNavitagion(path, params);
+	ptr = g_Navigation->LoadNavitagion(path, params, type);
 	if(ptr == NULL)
 		return -1;
 
@@ -66,8 +66,8 @@ void FreePaths(float * paths) {
 
 float * FindStraightPath(int mapid, int layer, float startx, float starty, float startz, float endx, float endy, float endz)
 {
-	Vector3 start = {startx, starty, startz};
-	Vector3 stop = {endx, endy, endz};
+	Vector3 start(startx, starty, startz);
+	Vector3 stop(endx, endy, endz);
 	std::vector<Vector3> paths;
 	std::map<int, NavigationHandle*>::iterator iter1 = g_navHandles.find(mapid);
 	if(iter1 == g_navHandles.end() ) {
@@ -98,21 +98,33 @@ float * FindStraightPath(int mapid, int layer, float startx, float starty, float
 
 float* Raycast(int mapid, int layer, float startx, float starty, float startz, float endx, float endy, float endz)
 {
-	Vector3 start = {startx, starty, startz};
-	Vector3 stop = {endx, endy, endz};
+	Vector3 start(startx, starty, startz);
+	Vector3 stop(endx, endy, endz);
 	std::map<int, NavigationHandle*>::iterator iter1 = g_navHandles.find(mapid);
 	if(iter1 == g_navHandles.end() ) {
 		return NULL;
 	}
-	Vector3  hitPointVec;
+	std::vector<Vector3>  hitPointVec;
 	int ret = iter1->second->raycast(layer, start, stop, hitPointVec);
-	if(ret != 0)
+	if(ret <= 0)
 		return NULL;
 
-	float *retpos = (float*)malloc(sizeof(float) * 3);
-	retpos[0] = hitPointVec.x;
-	retpos[1] = hitPointVec.y;
-	retpos[2] = hitPointVec.z;
+	float *retpos = (float*)malloc(sizeof(float) * ret * 3 + 1);
+	if(retpos == NULL) {
+		printf("out of memory");
+		return NULL;
+	}
+
+	retpos[0] = float(ret*3); //第一位保存长度
+	int index = 1;
+	std::vector<Vector3>::iterator iter = hitPointVec.begin();
+	for(; iter != hitPointVec.end(); ++iter)
+	{
+		retpos[index++] = iter->x;
+		retpos[index++] = iter->y;
+		retpos[index++] = iter->z;
+	}
+
 	return retpos;
 }
 

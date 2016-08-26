@@ -106,7 +106,7 @@ int NavMeshHandle::findStraightPath(int layer, const Vector3 & start, const Vect
 }
 
 //-------------------------------------------------------------------------------------
-int NavMeshHandle::raycast(int layer, const Vector3 & start, const Vector3 & end, Vector3 & hitPointVec)
+int NavMeshHandle::raycast(int layer, const Vector3 & start, const Vector3 & end, std::vector<Vector3>& hitPointVec)
 {
 	std::map<int, NavmeshLayer>::iterator iter = navmeshLayer.find(layer);
 	if(iter == navmeshLayer.end())
@@ -172,10 +172,8 @@ int NavMeshHandle::raycast(int layer, const Vector3 & start, const Vector3 & end
 			hitPoint[1] = h;
 		}
 	}
-	hitPointVec.x = hitPoint[0];
-	hitPointVec.y = hitPoint[1];
-	hitPointVec.z = hitPoint[2];
-	return 0;
+	hitPointVec.push_back(Vector3(hitPoint[0],hitPoint[1],hitPoint[2]));
+	return 1;
 }
 
 //-------------------------------------------------------------------------------------

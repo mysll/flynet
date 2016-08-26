@@ -8,7 +8,7 @@ public:
 	MeshNavigation();
 	~MeshNavigation();
 	NavigationHandle* findNavigation(std::string resPath);
-	NavigationHandle* LoadNavitagion(std::string respath, const std::map< int, std::string >& params);
+	NavigationHandle* LoadNavitagion(std::string respath, const std::map< int, std::string >& params, int type);
 	void Finalise();
 private:
 	std::map<std::string, NavigationHandle*> navhandles;

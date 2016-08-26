@@ -62,7 +62,7 @@ public:
 	virtual ~NavMeshHandle();
 
 	int findStraightPath(int layer, const Vector3 & start, const Vector3 & end, std::vector<Vector3>& paths);
-	int raycast(int layer, const Vector3 & start, const Vector3 & end, Vector3 & hitPointVec);
+	int raycast(int layer, const Vector3 & start, const Vector3 & end, std::vector<Vector3>& hitPointVec);
 
 	virtual NavigationHandle::NAV_TYPE type() const{ return NAV_MESH; }
 
