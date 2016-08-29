@@ -2,7 +2,7 @@ package navigation
 
 /*
 #cgo CPPFLAGS:-I./Navigation/Include/ -I./DebugUtils/Include/ -I./Detour/Include/ -I./DetourCrowd/Include/ -I./DetourTileCache/Include/ -I./Recast/Include/ -I./tmxparser/base64/ -I./tmxparser/tinyxml/ -I./tmxparser/zlib/ -I./tmxparser/
-#cgo LDFLAGS:-LC:/home/flynet_rpc/server/src/vendor/navigation/lib  -lnavi
+#cgo LDFLAGS:-L./lib  -lnavi
 #include "navigation.h"
 */
 import "C"
