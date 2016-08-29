@@ -10,5 +10,8 @@ env.bat
 *.o
 *.a
 .vscode/
+CMakeFiles/
+CMakeCache.txt
+*.cmake
 
 server/src/test.go
