@@ -51,7 +51,7 @@ direction8_(navTileHandle.direction8_)
 //-------------------------------------------------------------------------------------
 NavTileHandle::~NavTileHandle()
 {
-	printf("NavTileHandle::~NavTileHandle(%p, pTilemap=%p): (%s) is destroyed!\n", 
+	printf("NavTileHandle::~NavTileHandle: (%s) is destroyed!\n", 
 		(void*)this, (void*)pTilemap, resPath.c_str());
 	
 	SAFE_RELEASE(pTilemap);
