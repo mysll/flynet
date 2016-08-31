@@ -24,11 +24,11 @@ func (t *C2SHelper) RegisterCallback(s rpc.Servicer) {
 }
 
 //处理客户端的调用
-func (ch *C2SHelper) Call(sender rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (ch *C2SHelper) Call(sender rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	node, sm, data, err := core.rpcProto.DecodeRpcMessage(msg)
 	if err != nil {
 		log.LogError(err)
-		return nil
+		return share.ERR_ARGS_ERROR, nil
 	}
 
 	var app *RemoteApp
@@ -37,7 +37,7 @@ func (ch *C2SHelper) Call(sender rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	} else {
 		if app = GetAppByName(node); app == nil {
 			log.LogError(ErrAppNotFound)
-			return nil
+			return share.ERR_SYSTEM_ERROR, nil
 		}
 	}
 
@@ -45,7 +45,7 @@ func (ch *C2SHelper) Call(sender rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	if err := app.Handle(sender, sm, data); err != nil {
 		log.LogError(err)
 	}
-	return nil
+	return 0, nil
 }
 
 //服务器向客户端的远程调用
@@ -82,18 +82,18 @@ func (s *S2CHelper) flush() {
 }
 
 //处理服务器向客户端的调用，对消息进行封装转成客户端的协议
-func (s *S2CHelper) Call(src rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (s *S2CHelper) Call(src rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	request := &share.S2CMsg{}
 	reader := NewMessageReader(msg)
 	if err := reader.ReadObject(request); err != nil {
 		log.LogError(err)
-		return nil
+		return 0, nil
 	}
 
 	out, err := util.CreateMsg(s.sendbuf, request.Data, share.S2C_RPC)
 	if err != nil {
 		log.LogError(err)
-		return nil
+		return 0, nil
 	}
 
 	err = s.call(src, request.To, request.Method, out)
@@ -101,7 +101,7 @@ func (s *S2CHelper) Call(src rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 		log.LogError(err)
 	}
 
-	return nil
+	return 0, nil
 }
 
 func (s *S2CHelper) call(src rpc.Mailbox, session int64, method string, out []byte) error {
@@ -143,18 +143,18 @@ func (s *S2CHelper) call(src rpc.Mailbox, session int64, method string, out []by
 }
 
 //处理服务器向客户端的广播
-func (s *S2CHelper) Broadcast(src rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (s *S2CHelper) Broadcast(src rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	request := &share.S2CBrocast{}
 	reader := NewMessageReader(msg)
 	if err := reader.ReadObject(request); err != nil {
 		log.LogError(err)
-		return nil
+		return 0, nil
 	}
 
 	out, err := util.CreateMsg(s.sendbuf, request.Data, share.S2C_RPC)
 	if err != nil {
 		log.LogError(err)
-		return nil
+		return 0, nil
 	}
 
 	for _, to := range request.To {
@@ -162,5 +162,5 @@ func (s *S2CHelper) Broadcast(src rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 			log.LogError(to, err)
 		}
 	}
-	return nil
+	return 0, nil
 }

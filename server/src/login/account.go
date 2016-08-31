@@ -17,16 +17,16 @@ func (t *Account) RegisterCallback(s rpc.Servicer) {
 	s.RegisterCallback("Login", t.Login)
 }
 
-func (a *Account) Login(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (a *Account) Login(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	logindata := &c2s.Loginuser{}
 	if server.Check(server.ParseProto(msg, logindata)) {
-		return nil
+		return 0, nil
 	}
 	if logindata.GetPassword() == "123" {
 		apps := server.GetAppByName("basemgr")
 		if apps != nil {
 			server.Check(apps.Call(&mailbox, "Session.GetBaseAndId", logindata.GetUser()))
-			return nil
+			return 0, nil
 		}
 	} else {
 		e := &s2c.Error{}
@@ -34,5 +34,5 @@ func (a *Account) Login(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 		server.MailTo(nil, &mailbox, "Login.Error", e)
 	}
 
-	return nil
+	return 0, nil
 }

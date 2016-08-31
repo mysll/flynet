@@ -65,11 +65,11 @@ func (s *Sync) sync(info *EntityInfo) (obj Entityer, err error) {
 	return
 }
 
-func (s *Sync) SyncPlayer(src rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (s *Sync) SyncPlayer(src rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	infos := make(map[string]interface{})
 	if server.Check(r.ReadObject(&infos)) {
-		return nil
+		return 0, nil
 	}
 	mb := infos["mailbox"].(rpc.Mailbox)
 	info := infos["data"].(*EntityInfo)
@@ -77,7 +77,7 @@ func (s *Sync) SyncPlayer(src rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	player := App.GetEntity(playerid)
 	if player == nil || player.ObjType() != PLAYER {
 		log.LogError("sync player player not found", playerid)
-		return nil
+		return 0, nil
 	}
 	for k := range s.childs {
 		delete(s.childs, k)
@@ -92,7 +92,7 @@ func (s *Sync) SyncPlayer(src rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	}
 
 	server.Check(server.MailTo(&mb, &src, "BaseProxy.SyncPlayerBak", s.newobj))
-	return nil
+	return 0, nil
 }
 
 func NewSync() *Sync {

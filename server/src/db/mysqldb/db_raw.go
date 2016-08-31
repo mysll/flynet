@@ -3,15 +3,14 @@ package mysqldb
 import (
 	"bytes"
 	"database/sql"
-	"database/sql/driver"
 	"fmt"
 	"server"
 	"server/libs/log"
 	"server/libs/rpc"
 	"server/share"
+	"server/util"
 	"strings"
 	"time"
-	"server/util"
 )
 
 type Database struct {
@@ -159,24 +158,24 @@ func (this *Database) backLetterBySerial(uid uint64, serial_no uint64, new_type 
 	return nil
 }
 
-func (this *Database) RecvLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) RecvLetter(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var uid uint64
 	var serial_no uint64
 	var callback string
 	var callbackparams share.DBParams
 
 	if server.Check(server.ParseArgs(msg, &uid, &serial_no, &callback, &callbackparams)) {
-		return nil
+		return 0, nil
 	}
 
 	letter, err := this.recvLetterBySerial(uid, serial_no)
 	if err != nil {
 		log.LogError(err)
-		return nil
+		return share.ERR_REPLY_FAILED, nil
 	}
 
 	if callback == "_" {
-		return nil
+		return 0, nil
 	}
 	callbackparams["result"] = false
 	if letter != nil {
@@ -185,22 +184,22 @@ func (this *Database) RecvLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 	}
 
 	server.Check(server.MailTo(nil, &mailbox, callback, callbackparams))
-	return nil
+	return 0, nil
 }
 
-func (this *Database) LookLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) LookLetter(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var uid uint64
 	var callback string
 	var callbackparams share.DBParams
 
 	if server.Check(server.ParseArgs(msg, &uid, &callback, &callbackparams)) {
-		return nil
+		return 0, nil
 	}
 
 	letters, err := this.lookLetter(uid)
 	if err != nil {
 		log.LogError(err)
-		return nil
+		return 0, nil
 	}
 
 	callbackparams["result"] = false
@@ -210,25 +209,25 @@ func (this *Database) LookLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 	}
 
 	server.Check(server.MailTo(nil, &mailbox, callback, callbackparams))
-	return nil
+	return 0, nil
 }
 
-func (this *Database) QueryLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) QueryLetter(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var uid uint64
 	var callback string
 	var callbackparams share.DBParams
 
 	if server.Check(server.ParseArgs(msg, &uid, &callback, &callbackparams)) {
-		return nil
+		return 0, nil
 	}
 
 	count, _ := this.queryLetter(uid)
 	callbackparams["count"] = count
 	server.Check(server.MailTo(nil, &mailbox, callback, callbackparams))
-	return nil
+	return 0, nil
 }
 
-func (this *Database) SendSystemLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) SendSystemLetter(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var source_name string
 	var recvacc, recvrole string
 	var typ int32
@@ -236,7 +235,7 @@ func (this *Database) SendSystemLetter(mailbox rpc.Mailbox, msg *rpc.Message) *r
 	var callback string
 	var callbackparams share.DBParams
 	if server.Check(server.ParseArgs(msg, &source_name, &recvacc, &recvrole, &typ, &title, &content, &appendix, &callback, &callbackparams)) {
-		return nil
+		return 0, nil
 	}
 
 	var roleid uint64
@@ -252,7 +251,7 @@ func (this *Database) SendSystemLetter(mailbox rpc.Mailbox, msg *rpc.Message) *r
 				server.Check(server.MailTo(nil, &mailbox, callback, callbackparams))
 			}
 			log.LogError(err)
-			return nil
+			return 0, nil
 		}
 	}
 
@@ -264,7 +263,7 @@ func (this *Database) SendSystemLetter(mailbox rpc.Mailbox, msg *rpc.Message) *r
 			server.Check(server.MailTo(nil, &mailbox, callback, callbackparams))
 		}
 		log.LogError(err)
-		return nil
+		return 0, nil
 	}
 
 	if callback != "_" {
@@ -272,38 +271,38 @@ func (this *Database) SendSystemLetter(mailbox rpc.Mailbox, msg *rpc.Message) *r
 		callbackparams["serial_no"] = serial_no
 		server.Check(server.MailTo(nil, &mailbox, callback, callbackparams))
 	}
-	return nil
+	return 0, nil
 
 }
 
-func (this *Database) Log(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) Log(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var log_name string
 	var log_source, log_type int32
 	var log_content, log_comment string
 
 	if server.Check(server.ParseArgs(msg, &log_name, &log_source, &log_type, &log_content, &log_comment)) {
-		return nil
+		return 0, nil
 	}
 
 	sqlconn := db.sql
 	uid, err := sqlconn.GetUid("serial_no")
 	if err != nil {
 		log.LogError(err)
-		return nil
+		return 0, nil
 	}
 	sql := fmt.Sprintf("INSERT INTO `log_data`(`serial_no`, `log_time`,`log_name`, `log_source`, `log_type`, `log_content`, `log_comment`) VALUES(?,?,?,?,?,?,?)")
 	server.Check2(sqlconn.Exec(sql, uid, time.Now().Format(util.TIME_LAYOUT), log_name, log_source, log_type, log_content, log_comment))
-	return nil
+	return 0, nil
 }
 
-func (this *Database) Count(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) Count(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var tbl string
 	var condition string
 	var callback string
 	var callbackparams share.DBParams
 
 	if server.Check(server.ParseArgs(msg, &tbl, &condition, &callback, &callbackparams)) {
-		return nil
+		return 0, nil
 	}
 
 	sqlconn := db.sql
@@ -320,26 +319,26 @@ func (this *Database) Count(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message 
 	sqlstr := fmt.Sprintf("SELECT COUNT(*) FROM `%s` %s LIMIT 1", tbl, condition)
 	if r, err = sqlconn.Query(sqlstr); err != nil {
 		log.LogError("sql:", sqlstr)
-		return nil
+		return 0, nil
 	}
 	defer r.Close()
 	if !r.Next() {
 		server.Check(app.Call(nil, callback, -1))
-		return nil
+		return 0, nil
 	}
 
 	var count int32
 	if err = r.Scan(&count); err != nil {
 		log.LogError(err)
 		server.Check(app.Call(nil, callback, -1))
-		return nil
+		return 0, nil
 	}
 
 	server.Check(app.Call(nil, callback, callbackparams, count))
-	return nil
+	return 0, nil
 }
 
-func (this *Database) InsertRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) InsertRows(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var tbl string
 	var keys []string
 	var values []interface{}
@@ -347,7 +346,7 @@ func (this *Database) InsertRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 	var callbackparams share.DBParams
 
 	if server.Check(server.ParseArgs(msg, &tbl, &keys, &values, &callback, &callbackparams)) {
-		return nil
+		return 0, nil
 	}
 
 	sqlconn := db.sql
@@ -356,7 +355,7 @@ func (this *Database) InsertRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return 0, nil
 	}
 
 	var sql bytes.Buffer
@@ -375,7 +374,7 @@ func (this *Database) InsertRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 	split = " "
 	if len(values)%len(keys) != 0 {
 		log.LogError("length is not match")
-		return nil
+		return 0, nil
 	}
 	rows := len(values) / len(keys)
 	for j := 0; j < rows; j++ {
@@ -396,28 +395,28 @@ func (this *Database) InsertRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 		log.LogError("sql:", sql.String())
 		if callback == "_" {
 			log.LogError(err)
-			return nil
+			return 0, nil
 		}
 		server.Check(app.Call(nil, callback, callbackparams, 0, err.Error()))
-		return nil
+		return 0, nil
 	}
 
 	if callback == "_" {
-		return nil
+		return 0, nil
 	}
 	eff, _ := r.RowsAffected()
 	server.Check(app.Call(nil, callback, callbackparams, eff, ""))
-	return nil
+	return 0, nil
 }
 
-func (this *Database) InsertRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) InsertRow(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var tbl string
 	var values map[string]interface{}
 	var callback string
 	var callbackparams share.DBParams
 
 	if server.Check(server.ParseArgs(msg, &tbl, &values, &callback, &callbackparams)) {
-		return nil
+		return 0, nil
 	}
 
 	sqlconn := db.sql
@@ -427,7 +426,7 @@ func (this *Database) InsertRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return 0, nil
 	}
 
 	args := make([]interface{}, 0, len(values))
@@ -450,28 +449,28 @@ func (this *Database) InsertRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 		log.LogError(sql.String())
 		if callback == "_" {
 			log.LogError(err)
-			return nil
+			return 0, nil
 		}
 		server.Check(app.Call(nil, callback, callbackparams, 0, err.Error()))
-		return nil
+		return 0, nil
 	}
 	if callback == "_" {
-		return nil
+		return 0, nil
 	}
 	eff, _ := r.RowsAffected()
 	server.Check(app.Call(nil, callback, callbackparams, eff, ""))
-	return nil
+	return 0, nil
 
 }
 
-func (this *Database) DeleteRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) DeleteRow(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var tbl string
 	var condition string
 	var callback string
 	var callbackparams share.DBParams
 
 	if server.Check(server.ParseArgs(msg, &tbl, &condition, &callback, &callbackparams)) {
-		return nil
+		return 0, nil
 	}
 
 	sqlconn := db.sql
@@ -480,7 +479,7 @@ func (this *Database) DeleteRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return 0, nil
 	}
 
 	if condition != "" {
@@ -492,20 +491,20 @@ func (this *Database) DeleteRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 		log.LogError("sql:", sqlstr)
 		if callback != "_" {
 			server.Check(app.Call(nil, callback, callbackparams, 0, err.Error()))
-			return nil
+			return 0, nil
 		}
 	}
 
 	if callback == "_" {
-		return nil
+		return 0, nil
 	}
 
 	eff, _ := r.RowsAffected()
 	server.Check(app.Call(nil, callback, callbackparams, eff, ""))
-	return nil
+	return 0, nil
 }
 
-func (this *Database) UpdateRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) UpdateRow(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var tbl string
 	var values map[string]interface{}
 	var condition string
@@ -513,7 +512,7 @@ func (this *Database) UpdateRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 	var callbackparams share.DBParams
 
 	if server.Check(server.ParseArgs(msg, &tbl, &values, &condition, &callback, &callbackparams)) {
-		return nil
+		return 0, nil
 	}
 
 	sqlconn := db.sql
@@ -523,7 +522,7 @@ func (this *Database) UpdateRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return 0, nil
 	}
 
 	if condition != "" {
@@ -550,20 +549,20 @@ func (this *Database) UpdateRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 		log.LogError("sql:", sqlstr)
 		if callback == "_" {
 			log.LogError(err)
-			return nil
+			return 0, nil
 		}
 		server.Check(app.Call(nil, callback, callbackparams, 0, err.Error()))
-		return nil
+		return 0, nil
 	}
 	if callback == "_" {
-		return nil
+		return 0, nil
 	}
 	eff, _ := r.RowsAffected()
 	server.Check(app.Call(nil, callback, callbackparams, eff, ""))
-	return nil
+	return 0, nil
 }
 
-func (this *Database) QueryRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) QueryRow(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var tbl string
 	var condition string
 	var orderby string
@@ -571,7 +570,7 @@ func (this *Database) QueryRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messa
 	var callbackparams share.DBParams
 
 	if server.Check(server.ParseArgs(msg, &tbl, &condition, &orderby, &callback, &callbackparams)) {
-		return nil
+		return 0, nil
 	}
 
 	sqlconn := db.sql
@@ -581,7 +580,7 @@ func (this *Database) QueryRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messa
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return 0, nil
 	}
 
 	if condition != "" {
@@ -593,19 +592,19 @@ func (this *Database) QueryRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messa
 	sqlstr := fmt.Sprintf("SELECT * FROM `%s`%s%s LIMIT 1", tbl, condition, orderby)
 	if r, err = sqlconn.Query(sqlstr); err != nil {
 		log.LogError(sqlstr, " ", err)
-		return nil
+		return 0, nil
 	}
 	defer r.Close()
 	var cols []string
 	cols, err = r.Columns()
 	if err != nil {
 		server.Check(app.Call(nil, callback, callbackparams, share.DBRow{}))
-		return nil
+		return 0, nil
 	}
 
 	if !r.Next() {
 		server.Check(app.Call(nil, callback, callbackparams, share.DBRow{}))
-		return nil
+		return 0, nil
 	}
 
 	result := make([]interface{}, len(cols))
@@ -617,7 +616,7 @@ func (this *Database) QueryRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messa
 	if err != nil {
 		log.LogError("sql:", sqlstr)
 		server.Check(app.Call(nil, callback, callbackparams, share.DBRow{"error": []byte(err.Error())}))
-		return nil
+		return 0, nil
 	}
 
 	mapresult := make(share.DBRow, len(cols))
@@ -626,10 +625,10 @@ func (this *Database) QueryRow(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messa
 	}
 
 	server.Check(app.Call(nil, callback, callbackparams, mapresult))
-	return nil
+	return 0, nil
 }
 
-func (this *Database) QueryRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) QueryRows(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var tbl string
 	var condition string
 	var orderby string
@@ -638,7 +637,7 @@ func (this *Database) QueryRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 	var callbackparams share.DBParams
 
 	if server.Check(server.ParseArgs(msg, &tbl, &condition, &orderby, &index, &count, &callback, &callbackparams)) {
-		return nil
+		return 0, nil
 	}
 
 	sqlconn := db.sql
@@ -646,13 +645,13 @@ func (this *Database) QueryRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 	var err error
 	if count <= 0 {
 		log.LogError("count must above zero")
-		return nil
+		return 0, nil
 	}
 
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return 0, nil
 	}
 
 	if condition != "" {
@@ -665,14 +664,14 @@ func (this *Database) QueryRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 	sqlstr := fmt.Sprintf("SELECT * FROM `%s`%s%s LIMIT %d, %d", tbl, condition, orderby, index, count)
 	if r, err = sqlconn.Query(sqlstr); err != nil {
 		log.LogError(err)
-		return nil
+		return 0, nil
 	}
 	defer r.Close()
 	var cols []string
 	cols, err = r.Columns()
 	if err != nil {
 		server.Check(app.Call(nil, callback, callbackparams, []share.DBRow{share.DBRow{"error": []byte(err.Error())}}, index, count))
-		return nil
+		return 0, nil
 	}
 
 	result := make([]interface{}, len(cols))
@@ -687,7 +686,7 @@ func (this *Database) QueryRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 		if err != nil {
 			log.LogError("sql:", sqlstr)
 			server.Check(app.Call(nil, callback, callbackparams, []share.DBRow{share.DBRow{"error": []byte(err.Error())}}, index, count))
-			return nil
+			return 0, nil
 		}
 
 		mapresult := make(share.DBRow, len(cols))
@@ -698,16 +697,16 @@ func (this *Database) QueryRows(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 	}
 
 	server.Check(app.Call(nil, callback, callbackparams, arrresult, index, count))
-	return nil
+	return 0, nil
 }
 
-func (this *Database) QuerySql(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) QuerySql(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var sqlstr string
 	var callback string
 	var callbackparams share.DBParams
 
 	if server.Check(server.ParseArgs(msg, &sqlstr, &callback, &callbackparams)) {
-		return nil
+		return 0, nil
 	}
 
 	sqlconn := db.sql
@@ -717,19 +716,19 @@ func (this *Database) QuerySql(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messa
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return 0, nil
 	}
 
 	if r, err = sqlconn.Query(sqlstr); err != nil {
 		log.LogError(err)
-		return nil
+		return 0, nil
 	}
 	defer r.Close()
 	var cols []string
 	cols, err = r.Columns()
 	if err != nil {
 		server.Check(app.Call(nil, callback, callbackparams, []share.DBRow{share.DBRow{"error": []byte(err.Error())}}))
-		return nil
+		return 0, nil
 	}
 
 	result := make([]interface{}, len(cols))
@@ -744,7 +743,7 @@ func (this *Database) QuerySql(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messa
 		if err != nil {
 			log.LogError("sql:", sqlstr)
 			server.Check(app.Call(nil, callback, callbackparams, []share.DBRow{share.DBRow{"error": []byte(err.Error())}}))
-			return nil
+			return 0, nil
 		}
 
 		mapresult := make(share.DBRow, len(cols))
@@ -758,16 +757,16 @@ func (this *Database) QuerySql(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messa
 	}
 
 	server.Check(app.Call(nil, callback, callbackparams, arrresult))
-	return nil
+	return 0, nil
 }
 
-func (this *Database) ExecSql(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) ExecSql(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var sqlstr string
 	var callback string
 	var callbackparams share.DBParams
 
 	if server.Check(server.ParseArgs(msg, &sqlstr, &callback, &callbackparams)) {
-		return nil
+		return 0, nil
 	}
 
 	sqlconn := db.sql
@@ -777,159 +776,154 @@ func (this *Database) ExecSql(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messag
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return 0, nil
 	}
 
 	if r, err = sqlconn.Exec(sqlstr); err != nil {
 		log.LogError("sql:", sqlstr)
 		server.Check(app.Call(nil, callback, callbackparams, 0, err.Error()))
-		return nil
+		return 0, nil
 	}
 
 	eff, _ := r.RowsAffected()
 	server.Check(app.Call(nil, callback, callbackparams, eff, ""))
-	return nil
+	return 0, nil
 }
 
-func (this *Database) SaveObject(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) SaveObject(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var object share.DbSave
-	var callback string
 	var callbackparams share.DBParams
-	if server.Check(server.ParseArgs(msg, &object, &callback, &callbackparams)) {
-		return nil
+	if server.Check(server.ParseArgs(msg, &object, &callbackparams)) {
+		return share.ERR_ARGS_ERROR, nil
 	}
 
+	reply = server.CreateMessage(callbackparams)
 	sqlconn := db.sql
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return share.ERR_SYSTEM_ERROR, reply
 	}
 
 	err := SaveItem(sqlconn, true, object.Data.DBId, object.Data)
 
-	callbackparams["result"] = "ok"
 	if err != nil {
-		callbackparams["result"] = err.Error()
-	}
-	if callback != "_" {
-		server.Check(app.Call(nil, callback, callbackparams))
-		return nil
+		return share.ERR_REPLY_FAILED, reply
 	}
 
-	return nil
+	return share.ERR_REPLY_SUCCEED, reply
 }
 
-func (this *Database) UpdateObject(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) UpdateObject(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var object share.DbSave
-	var callback string
 	var callbackparams share.DBParams
 
-	if server.Check(server.ParseArgs(msg, &object, &callback, &callbackparams)) {
-		return nil
+	if server.Check(server.ParseArgs(msg, &object, &callbackparams)) {
+		return share.ERR_ARGS_ERROR, nil
 	}
 
+	reply = server.CreateMessage(callbackparams)
 	sqlconn := db.sql
 
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return share.ERR_SYSTEM_ERROR, reply
 	}
 
 	err := SaveItem(sqlconn, false, object.Data.DBId, object.Data)
-	callbackparams["result"] = "ok"
+
 	if err != nil {
-		callbackparams["result"] = err.Error()
+		return share.ERR_REPLY_FAILED, reply
 	}
 
-	if callback != "_" {
-		server.Check(app.Call(nil, callback, callbackparams))
-		return nil
-	}
-
-	return nil
-
+	return share.ERR_REPLY_SUCCEED, reply
 }
 
-func (this *Database) LoadObject(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) LoadObject(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var ent string
 	var dbid uint64
-	var callback string
 	var callbackparams share.DBParams
 	var err error
-	if server.Check(server.ParseArgs(msg, &ent, &dbid, &callback, &callbackparams)) {
-		return nil
+	if server.Check(server.ParseArgs(msg, &ent, &dbid, &callbackparams)) {
+		return share.ERR_ARGS_ERROR, nil
 	}
 
+	reply = server.CreateMessage(callbackparams)
 	sqlconn := db.sql
 
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return share.ERR_SYSTEM_ERROR, reply
 	}
 
 	savedata := share.DbSave{}
 	savedata.Data, err = LoadEntity(sqlconn, dbid, ent, 0)
 
 	if err != nil {
-		callbackparams["result"] = err.Error()
-	} else {
-		callbackparams["result"] = "ok"
-		callbackparams["data"] = savedata
+		return share.ERR_REPLY_FAILED, reply
 	}
 
-	if callback == "_" || callback == "" {
-		log.LogError("need callback")
-		return nil
-	}
-
-	server.Check(app.Call(nil, callback, callbackparams))
-	return nil
+	server.AppendArgs(reply, savedata)
+	return share.ERR_REPLY_SUCCEED, reply
 }
 
-func (this *Database) DeleteObject(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (this *Database) LoadObjectByName(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	var ent string
-	var dbid uint64
-	var callback string
+	var name string
 	var callbackparams share.DBParams
 	var err error
-
-	if server.Check(server.ParseArgs(msg, &ent, &dbid, &callback, &callbackparams)) {
-		return nil
+	if server.Check(server.ParseArgs(msg, &ent, &name, &callbackparams)) {
+		return share.ERR_ARGS_ERROR, nil
 	}
 
+	reply = server.CreateMessage(callbackparams)
 	sqlconn := db.sql
 
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return share.ERR_SYSTEM_ERROR, reply
 	}
 
-	sqlstr := fmt.Sprintf("DELETE FROM `tbl_%s` where id=？", strings.ToLower(ent))
-	var r driver.Result
-	if r, err = sqlconn.Exec(sqlstr, dbid); err != nil {
+	savedata := share.DbSave{}
+	savedata.Data, err = LoadEntityByName(sqlconn, name, ent, 0)
+
+	if err != nil {
+		return share.ERR_REPLY_FAILED, reply
+	}
+
+	server.AppendArgs(reply, savedata)
+	return share.ERR_REPLY_SUCCEED, reply
+}
+
+func (this *Database) DeleteObject(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
+	var ent string
+	var dbid uint64
+	var callbackparams share.DBParams
+	var err error
+
+	if server.Check(server.ParseArgs(msg, &ent, &dbid, &callbackparams)) {
+		return share.ERR_ARGS_ERROR, nil
+	}
+
+	reply = server.CreateMessage(callbackparams)
+	sqlconn := db.sql
+
+	app := server.GetAppById(mailbox.App)
+	if app == nil {
+		log.LogError(server.ErrAppNotFound)
+		return share.ERR_SYSTEM_ERROR, reply
+	}
+
+	sqlstr := fmt.Sprintf("DELETE FROM `tbl_%s` WHERE `id`=?", strings.ToLower(ent))
+	if _, err = sqlconn.Exec(sqlstr, dbid); err != nil {
 		log.LogError("sql:", sqlstr)
-		callbackparams["result"] = err.Error()
-		if callback == "_" {
-			server.Check(app.Call(nil, callback, callbackparams))
-			return nil
-		}
+		return share.ERR_REPLY_FAILED, reply
 	}
 
-	if callback == "_" {
-		return nil
-	}
-
-	eff, _ := r.RowsAffected()
-	if eff > 0 {
-		callbackparams["result"] = "ok"
-		server.Check(app.Call(nil, callback, callbackparams))
-	}
-
-	return nil
+	return share.ERR_REPLY_SUCCEED, reply
 }
 
 func (t *Database) RegisterCallback(s rpc.Servicer) {
@@ -950,5 +944,6 @@ func (t *Database) RegisterCallback(s rpc.Servicer) {
 	s.RegisterCallback("SaveObject", t.SaveObject)
 	s.RegisterCallback("UpdateObject", t.UpdateObject)
 	s.RegisterCallback("LoadObject", t.LoadObject)
+	s.RegisterCallback("LoadObjectByName", t.LoadObjectByName)
 	s.RegisterCallback("DeleteObject", t.DeleteObject)
 }

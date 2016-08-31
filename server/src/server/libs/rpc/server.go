@@ -20,7 +20,7 @@ var (
 	responseCache = make(chan *Response, 32)
 )
 
-type CB func(Mailbox, *Message) *Message
+type CB func(Mailbox, *Message) (int32, *Message)
 
 type RpcRegister interface {
 	RegisterCallback(Servicer)
@@ -98,13 +98,14 @@ type RpcCall struct {
 	header  *Header
 	message *Message
 	reply   *Message
+	errcode int32
 	method  CB
 	cb      ReplyCB
 }
 
 func (call *RpcCall) Call() error {
 	mb := NewMailBoxFromUid(call.header.Mb)
-	call.reply = call.method(mb, call.message)
+	call.errcode, call.reply = call.method(mb, call.message)
 	return nil
 }
 
@@ -129,6 +130,7 @@ func (call *RpcCall) Free() error {
 	call.srv = nil
 	call.cb = nil
 	call.session = 0
+	call.errcode = 0
 	if call.reply != nil {
 		call.reply.Free()
 		call.reply = nil
@@ -142,6 +144,17 @@ func (call *RpcCall) Free() error {
 
 func (call *RpcCall) Done() error {
 	if call.header.Seq != 0 || call.cb != nil {
+		if call.errcode != 0 {
+			if call.reply == nil {
+				call.reply = NewMessage(1)
+			}
+			call.reply.Header = call.reply.Header[:0]
+			sr := util.NewStoreArchiver(call.reply.Header)
+			sr.Write(int8(1))
+			sr.Write(call.errcode)
+			call.reply.Header = call.reply.Header[:sr.Len()]
+
+		}
 		return call.srv.svr.sendResponse(call)
 	}
 	return nil
@@ -474,9 +487,18 @@ func (c *byteServerCodec) WriteResponse(seq uint64, body *Message) (err error) {
 		body = NewMessage(1)
 	}
 
+	var sendheader []byte
+	if len(body.Header) > 0 { //保存原头部
+		sendheader = make([]byte, 0, len(body.Header))
+		sendheader = append(sendheader, body.Header...)
+		body.Header = body.Header[:0]
+	}
 	w := util.NewStoreArchiver(body.Header)
 	w.Write(seq)
 	body.Header = body.Header[:w.Len()]
+	if len(sendheader) > 0 { //写入原头部
+		body.Header = append(body.Header, sendheader...)
+	}
 	count := uint16(len(body.Header) + len(body.Body))
 	binary.Write(c.encBuf, binary.BigEndian, count)                    //数据大小
 	binary.Write(c.encBuf, binary.BigEndian, uint16(len(body.Header))) //头部大小

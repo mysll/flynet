@@ -29,11 +29,11 @@ func (t *Login) RegisterCallback(s rpc.Servicer) {
 	s.RegisterCallback("SwitchPlayer", t.SwitchPlayer)
 }
 
-func (l *Login) AddClient(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (l *Login) AddClient(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	user, err := r.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 	serial := rand.Int31()
 	log.LogMessage("client serial:", serial)
@@ -44,14 +44,14 @@ func (l *Login) AddClient(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	ret.Port = proto.Int32(int32(App.ClientPort))
 	ret.Key = proto.Int32(serial)
 	server.Check(server.MailTo(nil, &mailbox, "Login.LoginResult", ret))
-	return nil
+	return 0, nil
 }
 
-func (l *Login) SwitchPlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (l *Login) SwitchPlayer(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	user, err := r.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 	serial := rand.Int31()
 	log.LogMessage("client serial:", serial)
@@ -62,7 +62,7 @@ func (l *Login) SwitchPlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message
 	ret.Port = proto.Int32(int32(App.ClientPort))
 	ret.Key = proto.Int32(serial)
 	server.Check(server.MailTo(nil, &mailbox, "Login.SwitchBase", ret))
-	return nil
+	return 0, nil
 }
 
 func (l *Login) checkClient(user string, key int32) bool {

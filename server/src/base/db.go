@@ -23,15 +23,15 @@ func (t *DbBridge) RegisterCallback(s rpc.Servicer) {
 	s.RegisterCallback("UpdateUserInfo", t.UpdateUserInfo)
 }
 
-func (d *DbBridge) LookLetterBack(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (d *DbBridge) LookLetterBack(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	params := share.DBParams{}
 	r := server.NewMessageReader(msg)
 	if server.Check(r.ReadObject(&params)) {
-		return nil
+		return 0, nil
 	}
 
 	if !params["result"].(bool) {
-		return nil
+		return 0, nil
 	}
 
 	mailbox = params["mailbox"].(rpc.Mailbox)
@@ -39,14 +39,14 @@ func (d *DbBridge) LookLetterBack(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Me
 	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
 		//角色没有找到
-		return nil
+		return 0, nil
 	}
 	player := p.Entity.(*entity.Player)
 
 	db := server.GetAppByType("database")
 	if db == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return 0, nil
 	}
 
 	warp := server.NewDBWarp(db)
@@ -62,7 +62,7 @@ func (d *DbBridge) LookLetterBack(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Me
 		warp.RecvLetter(nil, player.GetDbId(), letter.Serial_no, "_", share.DBParams{})
 	}
 
-	return nil
+	return 0, nil
 }
 
 func (d *DbBridge) createRole(mailbox rpc.Mailbox, obj datatype.Entityer, account string, name string, index int, save *share.DbSave) error {
@@ -81,31 +81,31 @@ func (d *DbBridge) createRole(mailbox rpc.Mailbox, obj datatype.Entityer, accoun
 	return server.ErrAppNotFound
 }
 
-func (d *DbBridge) CreateRoleBack(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (d *DbBridge) CreateRoleBack(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	errstr, err := r.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 	if errstr != "ok" {
 		server.Check(server.Error(nil, &mailbox, "Role.Error", share.ERROR_CREATE_ROLE_ERROR))
-		return nil
+		return 0, nil
 	}
 
 	player := App.Players.GetPlayer(mailbox.Id)
 	if player == nil {
 		log.LogError("player not found, id:", mailbox.Id)
 		//角色没有找到
-		return nil
+		return 0, nil
 	}
 
 	if player.State != STATE_LOGGED {
 		log.LogError("player state not logged")
-		return nil
+		return 0, nil
 	}
 
 	server.Check(d.getUserInfo(mailbox, player.Account))
-	return nil
+	return 0, nil
 }
 
 func (d *DbBridge) getUserInfo(mailbox rpc.Mailbox, account string) error {
@@ -132,37 +132,37 @@ func (d *DbBridge) selectUser(mailbox rpc.Mailbox, account string, rolename stri
 	return server.ErrAppNotFound
 }
 
-func (d *DbBridge) RoleInUse(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (d *DbBridge) RoleInUse(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	serverid, err := r.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 	player := App.Players.GetPlayer(mailbox.Id)
 	if player == nil {
-		return nil
+		return 0, nil
 	}
 
 	if serverid == App.Name {
 		server.Check(App.Players.SwitchPlayer(player))
-		return nil
+		return 0, nil
 	}
 
 	app := server.GetAppByName(serverid)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return 0, nil
 	}
 
 	app.Call(&mailbox, "Login.SwitchPlayer", player.Account)
-	return nil
+	return 0, nil
 }
 
-func (d *DbBridge) SelectUserBak(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (d *DbBridge) SelectUserBak(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	save := share.LoadUserBak{}
 	if server.Check(r.ReadObject(&save)) {
-		return nil
+		return 0, nil
 	}
 	db := server.GetAppByType("database")
 	info := share.ClearUser{save.Account, save.Name}
@@ -171,26 +171,26 @@ func (d *DbBridge) SelectUserBak(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 		log.LogError("player not found, id:", mailbox.Id)
 		db.Call(&mailbox, "Account.ClearPlayerStatus", info)
 		//角色没有找到
-		return nil
+		return 0, nil
 	}
 
 	if player.State != STATE_LOGGED {
 		log.LogError("player state not logged")
 		db.Call(&mailbox, "Account.ClearPlayerStatus", info)
 		player.Leave()
-		return nil
+		return 0, nil
 	}
 
 	if save.Data == nil {
 		db.Call(&mailbox, "Account.ClearPlayerStatus", info)
 		server.Check(server.Error(nil, &mailbox, "Login.Error", share.ERROR_SELECT_ROLE_ERROR))
-		return nil
+		return 0, nil
 	}
 
 	err := player.LoadPlayer(save)
 	if server.Check(err) {
 		db.Call(&mailbox, "Account.ClearPlayerStatus", info)
-		return nil
+		return 0, nil
 	}
 
 	status := server.GetAppByType("status")
@@ -198,19 +198,19 @@ func (d *DbBridge) SelectUserBak(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 		status.Call(&mailbox, "PlayerList.UpdatePlayer", player.Account, player.ChooseRole, App.Name)
 	}
 	//App.AreaBridge.getArea(mailbox, save.Scene) //这里会自动加入场景
-	return nil
+	return 0, nil
 }
 
-func (d *DbBridge) SavePlayerBak(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (d *DbBridge) SavePlayerBak(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	err, e := r.ReadString()
 	if server.Check(e) {
-		return nil
+		return 0, nil
 	}
 	player := App.Players.GetPlayer(mailbox.Id)
 	if player == nil || player.State != STATE_SAVING {
 		log.LogError(errors.New("player not found"))
-		return nil
+		return 0, nil
 	}
 
 	if err == "ok" {
@@ -220,7 +220,7 @@ func (d *DbBridge) SavePlayerBak(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mes
 		player.SaveFailed()
 	}
 
-	return nil
+	return 0, nil
 }
 
 func (d *DbBridge) savePlayer(p *BasePlayer, typ int) error {
@@ -251,11 +251,11 @@ func (d *DbBridge) savePlayer(p *BasePlayer, typ int) error {
 
 }
 
-func (d *DbBridge) UpdateUserInfo(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (d *DbBridge) UpdateUserInfo(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	infos := share.UpdateUserBak{}
 	if server.Check(r.ReadObject(&infos)) {
-		return nil
+		return 0, nil
 	}
 	for _, info := range infos.Infos {
 		if e := App.GetEntity(info.ObjId); e != nil {
@@ -265,7 +265,7 @@ func (d *DbBridge) UpdateUserInfo(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Me
 
 		log.LogWarning("update user info failed, object not found,", info.ObjId)
 	}
-	return nil
+	return 0, nil
 }
 
 func NewDbBridge() *DbBridge {

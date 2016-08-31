@@ -21,19 +21,19 @@ func (t *Account) RegisterCallback(s rpc.Servicer) {
 	s.RegisterCallback("Login", t.Login)
 }
 
-func (a *Account) SelectUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (a *Account) SelectUser(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	args := &c2s.Selectuser{}
 	if server.Check(server.ParseProto(msg, args)) {
-		return nil
+		return 0, nil
 	}
 	player := App.Players.GetPlayer(mailbox.Id)
 	if player == nil {
 		//角色没有找到
-		return nil
+		return 0, nil
 	}
 	if player.State != STATE_LOGGED {
 		log.LogWarning("player state not logged")
-		return nil
+		return 0, nil
 	}
 
 	player.ChooseRole = args.GetRolename()
@@ -42,40 +42,40 @@ func (a *Account) SelectUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message
 		log.LogError(err)
 	}
 
-	return nil
+	return 0, nil
 }
 
-func (a *Account) CreatePlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (a *Account) CreatePlayer(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	args := &c2s.Create{}
 	if server.Check(server.ParseProto(msg, args)) {
-		return nil
+		return 0, nil
 	}
 
 	player := App.Players.GetPlayer(mailbox.Id)
 	if player == nil {
 		//角色没有找到
-		return nil
+		return 0, nil
 	}
 	if player.State != STATE_LOGGED {
 		log.LogWarning("player state not logged")
-		return nil
+		return 0, nil
 	}
 	obj, err := App.CreateRole("Player", args)
 	if err != nil {
 		log.LogError(err)
-		return nil
+		return 0, nil
 	}
 
 	save := share.GetSaveData(obj)
 	server.Check(App.DbBridge.createRole(mailbox, obj, player.Account, args.GetName(), int(args.GetIndex()), save))
 	App.Destroy(obj.GetObjId())
-	return nil
+	return 0, nil
 }
 
-func (a *Account) Login(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (a *Account) Login(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	args := &c2s.Enterbase{}
 	if server.Check(server.ParseProto(msg, args)) {
-		return nil
+		return 0, nil
 	}
 	if App.Login.checkClient(args.GetUser(), args.GetKey()) {
 		if pl := App.Players.AddPlayer(mailbox.Id); pl != nil {
@@ -85,19 +85,19 @@ func (a *Account) Login(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 			if args.GetRolename() != "" {
 				pl.ChooseRole = args.GetRolename()
 				server.Check(App.DbBridge.selectUser(mailbox, pl.Account, args.GetRolename(), int(args.GetRoleindex())))
-				return nil
+				return 0, nil
 			}
 			server.Check(App.DbBridge.getUserInfo(mailbox, args.GetUser()))
-			return nil
+			return 0, nil
 		}
 		log.LogError("player add failed", mailbox)
-		return nil
+		return 0, nil
 	} else {
 		log.LogDebug(args.GetUser(), args.GetKey())
 		err := &s2c.Error{}
 		err.ErrorNo = proto.Int32(share.ERROR_LOGIN_FAILED)
 		server.Check(server.MailTo(nil, &mailbox, "Login.Error", err))
-		return nil
+		return 0, nil
 	}
 }
 

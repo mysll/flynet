@@ -110,6 +110,28 @@ func parseEntity(data *share.SaveEntity) error {
 
 }
 
+func LoadEntityByName(sqlconn SqlWrapper, name string, ent string, index int) (*share.SaveEntity, error) {
+	sql := fmt.Sprintf("SELECT `id` FROM `tbl_%s WHERE `p_name`='%s' LIMIT 1", ent, name)
+	row, err := sqlconn.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer row.Close()
+
+	var uid uint64
+	if !row.Next() {
+		return nil, fmt.Errorf("name not found from tbl_%s", ent)
+	}
+
+	err = row.Scan(&uid)
+	if err != nil {
+		return nil, err
+	}
+
+	return LoadEntity(sqlconn, uid, ent, index)
+
+}
+
 func LoadEntity(sqlconn SqlWrapper, uid uint64, ent string, index int) (*share.SaveEntity, error) {
 	si := &share.SaveEntity{}
 	si.Typ = ent

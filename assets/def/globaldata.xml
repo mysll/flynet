@@ -1,0 +1,10 @@
+<BaseScene>
+	<name>GlobalData</name>
+	<type>HELPER</type>
+	<persistent>true</persistent>
+	<propertys>
+		<property name="Name" type="string" len="32" save="true" public="" realtime="" comment="名称" scenedata="false"/>
+	</propertys>
+	<records>
+	</records>
+</BaseScene>

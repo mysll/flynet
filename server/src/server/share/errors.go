@@ -1,0 +1,9 @@
+package share
+
+const (
+	ERR_REPLY_SUCCEED = iota
+	ERR_ARGS_ERROR
+	ERR_SYSTEM_ERROR
+	ERR_REPLY_FAILED
+	ERR_FUNC_BEGIN
+)

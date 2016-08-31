@@ -41,19 +41,19 @@ func NewPlayerList() *PlayerList {
 	return pl
 }
 
-func (pl *PlayerList) UpdatePlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (pl *PlayerList) UpdatePlayer(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	account, err := r.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 	role_name, err := r.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 	base_id, err := r.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 
 	if base_id == "" {
@@ -65,7 +65,7 @@ func (pl *PlayerList) UpdatePlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.M
 			}
 		}
 
-		return nil
+		return 0, nil
 	}
 
 	if acc, ok := pl.accounts[account]; ok {
@@ -73,13 +73,13 @@ func (pl *PlayerList) UpdatePlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.M
 		if p != nil {
 			log.LogMessage("update ", account, ",", role_name, " base:", base_id)
 			p.BaseId = base_id
-			return nil
+			return 0, nil
 		}
 
 		p = &PlayerInfo{role_name, base_id}
 		acc.roles[role_name] = p
 		log.LogMessage("add ", account, ",", role_name, " base:", base_id)
-		return nil
+		return 0, nil
 	}
 
 	p := &PlayerInfo{role_name, base_id}
@@ -88,38 +88,38 @@ func (pl *PlayerList) UpdatePlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.M
 	acc.roles[role_name] = p
 	pl.accounts[account] = acc
 	log.LogMessage("add ", account, ",", role_name, " base:", base_id)
-	return nil
+	return 0, nil
 }
 
-func (pl *PlayerList) GetPlayerBase(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (pl *PlayerList) GetPlayerBase(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	account, err := r.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 	role_name, err := r.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 	callback, err := r.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		server.Check(server.ErrAppNotFound)
-		return nil
+		return 0, nil
 	}
 
 	if acc, ok := pl.accounts[account]; ok {
 		pl := acc.GetPlayInfo(role_name)
 		if pl != nil {
 			server.Check(app.Call(&mailbox, callback, account, role_name, pl.BaseId))
-			return nil
+			return 0, nil
 		}
 	}
 
 	server.Check(app.Call(&mailbox, callback, account, role_name, ""))
-	return nil
+	return 0, nil
 }

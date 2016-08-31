@@ -23,27 +23,27 @@ func NewAccount(pool int) *Account {
 	return a
 }
 
-func (a *Account) CheckAccount(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	return nil
+func (a *Account) CheckAccount(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
+	return 0, nil
 }
 
-func (a *Account) ClearStatus(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (a *Account) ClearStatus(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	serverid, err := r.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 
 	server.Check2(db.sql.Exec("UPDATE `role_info` SET `status`=?, `serverid`=? WHERE `status`=? and `serverid`=?", 0, "", 1, serverid))
 	log.LogMessage("clear server:", serverid)
-	return nil
+	return 0, nil
 }
 
-func (a *Account) LoadUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (a *Account) LoadUser(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	reader := server.NewMessageReader(msg)
 	var info share.LoadUser
 	if server.Check(reader.ReadObject(&info)) {
-		return nil
+		return 0, nil
 	}
 
 	sqlconn := db.sql
@@ -54,18 +54,18 @@ func (a *Account) LoadUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return 0, nil
 	}
 
 	if r, err = sqlconn.Query("SELECT `uid`,`locktime`,`locked`,`entity`, `status`, `serverid`, `scene`, `scene_x`, `scene_y`, `scene_z`, `scene_dir`, `roleinfo`, `landtimes` FROM `role_info` WHERE `account`=? and `rolename`=? and `roleindex`=? LIMIT 1", info.Account, info.RoleName, info.Index); err != nil {
 		server.Check(err)
-		return nil
+		return 0, nil
 	}
 	if !r.Next() {
 		log.LogError("user not found")
 		r.Close()
 		server.Check(app.Call(&mailbox, "DbBridge.SelectUserBak", bak))
-		return nil
+		return 0, nil
 	}
 	var uid uint64
 	var ltime mysql.NullTime
@@ -81,24 +81,24 @@ func (a *Account) LoadUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	if err != nil {
 		log.LogError("scan user failed")
 		r.Close()
-		return nil
+		return 0, nil
 	}
 	r.Close()
 
 	if status == 1 {
 		server.Check(app.Call(&mailbox, "DbBridge.RoleInUse", serverid))
-		return nil
+		return 0, nil
 	}
 
 	data, err := LoadUser(sqlconn, uid, ent)
 	if server.Check(err) {
 		server.Check(err)
-		return nil
+		return 0, nil
 	}
 
 	if _, err = sqlconn.Exec("UPDATE `role_info` set `lastlogintime`=?,`status`=?,`serverid`=?,`landtimes`=`landtimes`+1 WHERE `account`=? and `rolename`=? LIMIT 1", time.Now().Format("2006-01-02 15:04:05"), 1, app.Name, info.Account, info.RoleName); err != nil {
 		log.LogError(err)
-		return nil
+		return 0, nil
 	}
 	data.RoleInfo = roleinfo
 	bak.Account = info.Account
@@ -111,24 +111,24 @@ func (a *Account) LoadUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
 	bak.LandTimes = landtimes
 	bak.Data = &data
 	server.Check(app.Call(&mailbox, "DbBridge.SelectUserBak", bak))
-	return nil
+	return 0, nil
 }
 
-func (a *Account) CreateUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (a *Account) CreateUser(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	reader := server.NewMessageReader(msg)
 	var info share.CreateUser
 	if server.Check(reader.ReadObject(&info)) {
-		return nil
+		return 0, nil
 	}
 	if info.SaveData.Data == nil {
 		log.LogError("save data is nil")
-		return nil
+		return 0, nil
 	}
 
 	app := server.GetAppById(mailbox.App)
 	if app == nil {
 		log.LogError(server.ErrAppNotFound)
-		return nil
+		return 0, nil
 	}
 	sqlconn := db.sql
 	var r *sql.Rows
@@ -137,7 +137,7 @@ func (a *Account) CreateUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message
 	if r, err = sqlconn.Query("SELECT count(*) FROM `role_info` WHERE `account`=?", info.Account); err != nil {
 		log.LogError(err)
 		server.Check(app.Call(&mailbox, "DbBridge.CreateRoleBack", err.Error()))
-		return nil
+		return 0, nil
 	}
 	var count int
 	if r.Next() {
@@ -149,14 +149,14 @@ func (a *Account) CreateUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message
 		errmsg := &s2c.Error{}
 		errmsg.ErrorNo = proto.Int32(share.ERROR_ROLE_LIMIT)
 		server.MailTo(&mailbox, &mailbox, "Role.Error", errmsg)
-		return nil
+		return 0, nil
 	}
 
 	if db.nameunique { //名称是否唯一
 		if r, err = sqlconn.Query("SELECT `uid` FROM `role_info` WHERE `account`=? and `rolename`=? LIMIT 1", info.Account, info.Name); err != nil {
 			log.LogError(err)
 			server.Check(app.Call(&mailbox, "DbBridge.CreateRoleBack", err.Error()))
-			return nil
+			return 0, nil
 		}
 		if r.Next() {
 			log.LogError("name conflict")
@@ -164,7 +164,7 @@ func (a *Account) CreateUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message
 			errmsg := &s2c.Error{}
 			errmsg.ErrorNo = proto.Int32(share.ERROR_NAME_CONFLIT)
 			server.Check(server.MailTo(&mailbox, &mailbox, "Role.Error", errmsg))
-			return nil
+			return 0, nil
 		}
 		r.Close()
 	}
@@ -173,26 +173,26 @@ func (a *Account) CreateUser(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message
 	if err != nil {
 		log.LogError(err)
 		server.Check(app.Call(&mailbox, "DbBridge.CreateRoleBack", err.Error()))
-		return nil
+		return 0, nil
 	}
 
 	if err = CreateUser(sqlconn, uid, info.Account, info.Name, info.Index, info.Scene, info.X, info.Y, info.Z, info.Dir, info.SaveData.Data.Typ, &info.SaveData); err != nil {
 		log.LogError(err)
 		server.Check(app.Call(&mailbox, "DbBridge.CreateRoleBack", err.Error()))
-		return nil
+		return 0, nil
 	}
 
 	server.Check(server.GetLocalApp().Call(&mailbox, "Account.GetUserInfo", info.Account))
 
-	return nil
+	return 0, nil
 	//return app.Call(&mailbox, "DbBridge.CreateRoleBack", "ok")
 }
 
-func (a *Account) GetUserInfo(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (a *Account) GetUserInfo(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	reader := server.NewMessageReader(msg)
 	account, err := reader.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 
 	s := db.sql
@@ -201,7 +201,7 @@ FROM role_info
 WHERE account=? and deleted =0`, account)
 	if err != nil {
 		log.LogError(err)
-		return nil
+		return 0, nil
 	}
 	defer r.Close()
 
@@ -217,7 +217,7 @@ WHERE account=? and deleted =0`, account)
 		err = r.Scan(&rolename, &roleindex, &roleinfo, &locktime, &locked)
 		if err != nil {
 			log.LogError(err)
-			return nil
+			return 0, nil
 		}
 		if locked == 0 {
 			role := &s2c.Role{}
@@ -229,35 +229,35 @@ WHERE account=? and deleted =0`, account)
 		}
 	}
 	server.Check(server.MailTo(nil, &mailbox, "Role.RoleInfo", info))
-	return nil
+	return 0, nil
 }
 
-func (a *Account) ClearPlayerStatus(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (a *Account) ClearPlayerStatus(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	var info share.ClearUser
 	if server.Check(r.ReadObject(&info)) {
-		return nil
+		return 0, nil
 	}
 
 	sqlconn := db.sql
 	_, err := sqlconn.Exec("UPDATE `role_info` SET `status`=?, `serverid`=? WHERE `account`=? and `rolename`=?", 0, "", info.Account, info.Name)
 	if err != nil {
 		log.LogError(err)
-		return nil
+		return 0, nil
 	}
 	log.LogMessage("player clear status,", info.Name)
-	return nil
+	return 0, nil
 }
 
-func (a *Account) SavePlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (a *Account) SavePlayer(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	var data share.UpdateUser
 	if server.Check(r.ReadObject(&data)) {
-		return nil
+		return 0, nil
 	}
 	if data.SaveData.Data == nil {
 		log.LogError("save data is nil")
-		return nil
+		return 0, nil
 	}
 
 	sqlconn := db.sql
@@ -266,7 +266,7 @@ func (a *Account) SavePlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message
 	if err := UpdateItem(sqlconn, data.SaveData.Data.DBId, data.SaveData.Data); err != nil {
 		log.LogError(err)
 		server.Check(server.MailTo(&mailbox, &base, "DbBridge.SavePlayerBak", err.Error()))
-		return nil
+		return 0, nil
 	}
 
 	if data.Type == share.SAVETYPE_OFFLINE {
@@ -281,17 +281,17 @@ func (a *Account) SavePlayer(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message
 		if err != nil {
 			log.LogError(err)
 			server.Check(server.MailTo(&mailbox, &base, "DbBridge.SavePlayerBak", err.Error()))
-			return nil
+			return 0, nil
 		}
 
 		server.Check(server.MailTo(&mailbox, &base, "DbBridge.SavePlayerBak", "ok"))
-		return nil
+		return 0, nil
 	}
 
 	bakinfo := share.UpdateUserBak{}
 	bakinfo.Infos = infos
 	server.Check(server.MailTo(&mailbox, &base, "DbBridge.UpdateUserInfo", bakinfo))
-	return nil
+	return 0, nil
 }
 
 func (t *Account) RegisterCallback(s rpc.Servicer) {

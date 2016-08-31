@@ -50,62 +50,62 @@ func DeleteExpiredLetter(player *entity.Player) {
 }
 
 //删除所有信件
-func (l *LetterSystem) DeleteAllLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (l *LetterSystem) DeleteAllLetter(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	p := App.Players.GetPlayer(mailbox.Id)
 	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
 		//角色没有找到
-		return nil
+		return 0, nil
 	}
 	player := p.Entity.(*entity.Player)
 	player.MailBox_r.Clear()
-	return nil
+	return 0, nil
 }
 
 //删除信件
-func (l *LetterSystem) DeleteLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (l *LetterSystem) DeleteLetter(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	args := &c2s.Reqoperatemail{}
 	if server.Check(server.ParseProto(msg, args)) {
-		return nil
+		return 0, nil
 	}
 	p := App.Players.GetPlayer(mailbox.Id)
 	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
 		//角色没有找到
-		return nil
+		return 0, nil
 	}
 	player := p.Entity.(*entity.Player)
 
 	if len(args.Mails) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	for _, sno := range args.Mails {
 		row := player.MailBox_r.FindSerial_no(uint64(sno))
 		if row == -1 {
-			return nil
+			return 0, nil
 		}
 		player.MailBox_r.Del(row)
 	}
-	return nil
+	return 0, nil
 }
 
 //接收附件
-func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	args := &c2s.Reqoperatemail{}
 	if server.Check(server.ParseProto(msg, args)) {
-		return nil
+		return 0, nil
 	}
 	p := App.Players.GetPlayer(mailbox.Id)
 	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
 		//角色没有找到
-		return nil
+		return 0, nil
 	}
 	player := p.Entity.(*entity.Player)
 
 	if player.MailBox_r.GetRows() == 0 {
-		return nil
+		return 0, nil
 	}
 
 	var mails []uint64
@@ -182,31 +182,31 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.
 		player.MailBox_r.SetAppendix(row, "")
 	}
 
-	return nil
+	return 0, nil
 }
 
 //读信件
-func (l *LetterSystem) ReadLetter(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (l *LetterSystem) ReadLetter(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	args := &c2s.Reqoperatemail{}
 	if server.Check(server.ParseProto(msg, args)) {
-		return nil
+		return 0, nil
 	}
 	p := App.Players.GetPlayer(mailbox.Id)
 	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
 		//角色没有找到
-		return nil
+		return 0, nil
 	}
 	player := p.Entity.(*entity.Player)
 
 	if len(args.Mails) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	row := player.MailBox_r.FindSerial_no(uint64(args.Mails[0]))
 	if row == -1 {
-		return nil
+		return 0, nil
 	}
 	player.MailBox_r.SetIsRead(row, 1)
-	return nil
+	return 0, nil
 }

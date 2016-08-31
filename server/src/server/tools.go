@@ -60,6 +60,31 @@ func NewHeadWriter(msg *rpc.Message) *HeadWriter {
 	return w
 }
 
+//获取rpc消息的错误代码，返回0没有错误
+func GetReplyError(msg *rpc.Message) int32 {
+	ar := util.NewLoadArchiver(msg.Header)
+	if len(msg.Header) <= 8 {
+		return 0
+	}
+	ar.Seek(8, 0)
+
+	haserror, err := ar.ReadInt8()
+	if err != nil {
+		return 0
+	}
+
+	if haserror != 1 {
+		return 0
+	}
+
+	errcode, err := ar.ReadInt32()
+	if err != nil {
+		return 0
+	}
+
+	return errcode
+}
+
 func ParseProto(msg *rpc.Message, obj interface{}) error {
 	return core.rpcProto.DecodeMessage(msg, obj)
 }
@@ -102,18 +127,71 @@ func Check2(_ interface{}, err error) bool {
 	return false
 }
 
-func CreateMessage(args ...interface{}) (*rpc.Message, error) {
+func CreateMessage(args ...interface{}) *rpc.Message {
 	if len(args) > 0 {
 		msg := NewMessage()
 		for i := 0; i < len(args); i++ {
 			err := msg.Write(args[i])
 			if err != nil {
 				msg.Free()
-				return nil, err
+				panic("write args failed")
 			}
 		}
 		msg.Flush()
-		return msg.GetMessage(), nil
+		return msg.GetMessage()
 	}
-	return nil, nil
+	return nil
+}
+
+func AppendArgs(msg *rpc.Message, args ...interface{}) {
+	w := &BodyWriter{util.NewStoreArchiver(msg.Body), msg}
+	if len(args) > 0 {
+		for i := 0; i < len(args); i++ {
+			err := w.Write(args[i])
+			if err != nil {
+				msg.Free()
+				panic("write args failed")
+			}
+		}
+		w.Flush()
+	}
+}
+
+//错误消息
+func ReplyErrorMessage(errcode int32) *rpc.Message {
+	msg := rpc.NewMessage(1)
+	if errcode == 0 {
+		return msg
+	}
+	sr := util.NewStoreArchiver(msg.Header)
+	sr.Write(int8(1))
+	sr.Write(errcode)
+	msg.Header = msg.Header[:sr.Len()]
+	return msg
+}
+
+func ReplyErrorAndArgs(errcode int32, args ...interface{}) *rpc.Message {
+	msg := rpc.NewMessage(rpc.MAX_BUF_LEN)
+
+	if errcode > 0 {
+		sr := util.NewStoreArchiver(msg.Header)
+		sr.Write(int8(1))
+		sr.Write(errcode)
+		msg.Header = msg.Header[:sr.Len()]
+	}
+
+	if len(args) > 0 {
+		mw := NewMessageWriter(msg)
+		for i := 0; i < len(args); i++ {
+			err := mw.Write(args[i])
+			if err != nil {
+				msg.Free()
+				panic("write args failed")
+				return nil
+			}
+		}
+		mw.Flush()
+	}
+
+	return msg
 }

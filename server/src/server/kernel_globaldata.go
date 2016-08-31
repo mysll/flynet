@@ -9,6 +9,6 @@ func (gd *GlobalDataHelper) RegisterCallback(s rpc.Servicer) {
 	s.RegisterCallback("SyncGlobalData", gd.SyncGlobalData)
 }
 
-func (gd *GlobalDataHelper) SyncGlobalData(sender rpc.Mailbox, msg *rpc.Message) *rpc.Message {
-	return nil
+func (gd *GlobalDataHelper) SyncGlobalData(sender rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
+	return 0, nil
 }

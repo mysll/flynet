@@ -18,11 +18,11 @@ func (t *Session) RegisterCallback(s rpc.Servicer) {
 	s.RegisterCallback("GetBaseAndId", t.GetBaseAndId)
 }
 
-func (s *Session) GetBaseAndId(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (s *Session) GetBaseAndId(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	user, err := r.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 	s.l.Lock()
 	defer s.l.Unlock()
@@ -39,13 +39,13 @@ func (s *Session) GetBaseAndId(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Messa
 		s.id++
 		if base := server.GetAppByName(baseid); base != nil {
 			server.Check(base.Call(&mailbox, "Login.AddClient", user))
-			return nil
+			return 0, nil
 		}
 
 		log.LogError(server.ErrNotFoundApp)
-		return nil
+		return 0, nil
 	}
 
 	log.LogError(server.ErrNotFoundApp)
-	return nil
+	return 0, nil
 }

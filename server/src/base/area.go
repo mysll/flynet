@@ -35,15 +35,15 @@ func (a *AreaBridge) getArea(mailbox rpc.Mailbox, id string) error {
 	return err
 }
 
-func (a *AreaBridge) GetAreaBak(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (a *AreaBridge) GetAreaBak(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	areaid, err := r.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 	if areaid == "" {
 		log.LogError("enter area failed")
-		return nil
+		return 0, nil
 	}
 	player := App.Players.GetPlayer(mailbox.Id)
 	if player != nil {
@@ -54,7 +54,7 @@ func (a *AreaBridge) GetAreaBak(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Mess
 		log.LogMessage("enter area:", areaid)
 	}
 
-	return nil
+	return 0, nil
 }
 
 func (a *AreaBridge) enterArea(player *BasePlayer, areaid string) error {
@@ -113,31 +113,31 @@ func (a *AreaBridge) areaAddPlayer(ap *server.RemoteApp, player *BasePlayer) err
 	return nil
 }
 
-func (a *AreaBridge) AddPlayerBak(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (a *AreaBridge) AddPlayerBak(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	r := server.NewMessageReader(msg)
 	res, err := r.ReadString()
 	if server.Check(err) {
-		return nil
+		return 0, nil
 	}
 	if res == "ok" {
 		player := App.Players.GetPlayer(mailbox.Id)
 		if player == nil {
 			log.LogFatalf("can not be nil")
-			return nil
+			return 0, nil
 		}
 
 		if player.State != STATE_ENTERAREA { //可能客户端已经断开了，则让玩家下线
 			player.Leave()
-			return nil
+			return 0, nil
 		}
 
 		player.EnterScene()
-		return nil
+		return 0, nil
 	} else {
 		err := &s2c.Error{}
 		err.ErrorNo = proto.Int32(share.ERROR_ROLE_ENTERAREA_ERROR)
 		server.Check(server.MailTo(nil, &mailbox, "error", err))
-		return nil
+		return 0, nil
 	}
 
 }
@@ -157,14 +157,14 @@ func (a *AreaBridge) areaRemovePlayer(player *BasePlayer, typ int) {
 
 }
 
-func (a *AreaBridge) RemovePlayerBak(mailbox rpc.Mailbox, msg *rpc.Message) *rpc.Message {
+func (a *AreaBridge) RemovePlayerBak(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
 	player := App.Players.GetPlayer(mailbox.Id)
 	if player == nil {
 		log.LogFatalf("can not be nil", mailbox)
-		return nil
+		return 0, nil
 	}
 	player.LeaveArea()
-	return nil
+	return 0, nil
 }
 
 func NewAreaBridge() *AreaBridge {

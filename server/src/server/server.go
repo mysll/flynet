@@ -26,44 +26,46 @@ const (
 
 type Server struct {
 	*Kernel
-	StartArgs      *simplejson.Json
-	Type           string
-	Host           string
-	Port           int
-	ClientHost     string
-	ClientPort     int
-	AppId          int32
-	Name           string
-	Fronted        bool
-	Debug          bool
-	PProfPort      int
-	ObjectFactory  *Factory
-	MustAppReady   bool
-	MailBox        rpc.Mailbox
-	Emitter        *event.EventList
-	Eventer        *EventListener
-	WaitGroup      *util.WaitGroupWrapper
-	IsReady        bool
-	Time           TimeInfo
-	AssetPath      string
-	Closing        bool
-	channel        map[string]*Channel
-	noder          *peer
-	clientListener net.Listener
-	exitChannel    chan struct{}
-	shutdown       chan struct{}
-	rpcListener    net.Listener //rpc监听
-	rpcServer      *rpc.Server
-	rpcCh          chan *rpc.RpcCall
-	apper          Apper
-	quit           bool
-	clientList     *ClientList
-	startTime      time.Time
-	s2chelper      *S2CHelper
-	c2shelper      *C2SHelper
-	teleport       *TeleportHelper
-	Sockettype     string
-	rpcProto       ProtoCodec
+	StartArgs        *simplejson.Json
+	Type             string
+	Host             string
+	Port             int
+	ClientHost       string
+	ClientPort       int
+	AppId            int32
+	Name             string
+	Fronted          bool
+	Debug            bool
+	PProfPort        int
+	ObjectFactory    *Factory
+	MustAppReady     bool
+	MailBox          rpc.Mailbox
+	Emitter          *event.EventList
+	Eventer          *EventListener
+	WaitGroup        *util.WaitGroupWrapper
+	IsReady          bool
+	Time             TimeInfo
+	AssetPath        string
+	Closing          bool
+	channel          map[string]*Channel
+	noder            *peer
+	clientListener   net.Listener
+	exitChannel      chan struct{}
+	shutdown         chan struct{}
+	rpcListener      net.Listener //rpc监听
+	rpcServer        *rpc.Server
+	rpcCh            chan *rpc.RpcCall
+	apper            Apper
+	quit             bool
+	clientList       *ClientList
+	startTime        time.Time
+	s2chelper        *S2CHelper
+	c2shelper        *C2SHelper
+	teleport         *TeleportHelper
+	Sockettype       string
+	rpcProto         ProtoCodec
+	globalset        string
+	enableglobaldata bool
 }
 
 type StartStoper interface {
@@ -243,6 +245,22 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 		v, err := loglevel.Int()
 		if err == nil {
 			log.SetLogLevel("stdout", v)
+		}
+	}
+
+	svr.globalset = "GlobalSet"
+	if gs, ok := args.CheckGet("globalset"); ok {
+		v, err := gs.String()
+		if err == nil {
+			svr.globalset = v
+		}
+	}
+
+	svr.enableglobaldata = false
+	if enable, ok := args.CheckGet("enableglobaldata"); ok {
+		v, err := enable.Bool()
+		if err == nil {
+			svr.enableglobaldata = v
 		}
 	}
 

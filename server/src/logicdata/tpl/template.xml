@@ -1,16 +1,17 @@
 <object_name>  <!-- object_name 首字母大写-->
 	<name>object_name</name>
 	<type>object_type:see@datatype.go</type>
+	<persistent>true</persistent><!--是否需要存档 -->
 	<include/>
 	<interfaces><!--接口-->
 		<interface><!-- --></interface>
 	</interfaces>
 	<propertys>
-		<property name="property_name:首字母大写" type="int8|uint8|int16|uint16|int32|uint32|float32|float64|string|customtype" len="" save="true|false" public="self|other：可视的范围，为空则表示不可视，self是同步到自己的客户端,other同步范围内的可视玩家的客户端" tag="`json:&quot;&quot;`" realtime="true:实时同步" scenedata="true|false:场景数据" comment="名称" /> <!--[len:只有字符串类型需要加长度 -->
+		<property name="property_name:首字母大写" type="int8|uint8|int16|uint16|int32|uint32|int64|uint64|float32|float64|string|customtype" len="" save="true|false" public="self|other：可视的范围，为空则表示不可视，self是同步到自己的客户端,other同步范围内的可视玩家的客户端" tag="`json:&quot;&quot;`" realtime="true:实时同步" scenedata="true|false:场景数据" comment="名称" /> <!--[len:只有字符串类型需要加长度 -->
 	</propertys>
 	<records>
 		<record name="record_name:首字母大写" cols="1：列数" maxrows="256：最大行数" save="true|false" visible="false：是否需要同步到客户端" comment="" type="TEXT|MEDIUMTEXT|LONGTEXT"> <!--type为空的时候，会另建一张表来存,否则会存在一个字段中，用json来序列化 -->
-				<column type="int8|uint8|int16|uint16|int32|uint32|float32|float64|string|customtype" name="col_name" tag="`json:&quot;&quot;`" comment="" scenedata="true|false:场景数据"/>
+				<column type="int8|uint8|int16|uint16|int32|uint32|int64|uint64|float32|float64|string|customtype" name="col_name" tag="`json:&quot;&quot;`" comment="" scenedata="true|false:场景数据"/>
 		</record>
 	</records>
 		
