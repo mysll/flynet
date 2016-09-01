@@ -6,6 +6,7 @@ import (
 	"logicdata/entity"
 	"server/data/datatype"
 	"server/share"
+	"strings"
 	"time"
 )
 
@@ -111,8 +112,8 @@ func parseEntity(data *share.SaveEntity) error {
 }
 
 func LoadEntityByName(sqlconn SqlWrapper, name string, ent string, index int) (*share.SaveEntity, error) {
-	sql := fmt.Sprintf("SELECT `id` FROM `tbl_%s WHERE `p_name`='%s' LIMIT 1", ent, name)
-	row, err := sqlconn.Query(sql)
+	sql := fmt.Sprintf("SELECT `id` FROM `tbl_%s` WHERE `p_name`=? LIMIT 1", strings.ToLower(ent))
+	row, err := sqlconn.Query(sql, name)
 	if err != nil {
 		return nil, err
 	}

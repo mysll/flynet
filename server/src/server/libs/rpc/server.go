@@ -75,9 +75,10 @@ func (h *Header) Free() {
 }
 
 type Response struct {
-	Seq   uint64
-	Reply *Message
-	cb    ReplyCB
+	Seq     uint64
+	Errcode int32
+	Reply   *Message
+	cb      ReplyCB
 }
 
 func (r *Response) Free() {
@@ -144,17 +145,6 @@ func (call *RpcCall) Free() error {
 
 func (call *RpcCall) Done() error {
 	if call.header.Seq != 0 || call.cb != nil {
-		if call.errcode != 0 {
-			if call.reply == nil {
-				call.reply = NewMessage(1)
-			}
-			call.reply.Header = call.reply.Header[:0]
-			sr := util.NewStoreArchiver(call.reply.Header)
-			sr.Write(int8(1))
-			sr.Write(call.errcode)
-			call.reply.Header = call.reply.Header[:sr.Len()]
-
-		}
 		return call.srv.svr.sendResponse(call)
 	}
 	return nil
@@ -314,7 +304,7 @@ func (session *Session) send() {
 				log.LogFatalf("resp.seq is zero")
 			}
 
-			err := session.codec.WriteResponse(resp.Seq, resp.Reply)
+			err := session.codec.WriteResponse(resp.Seq, resp.Errcode, resp.Reply)
 			if err != nil {
 				resp.Free()
 				log.LogError(err)
@@ -333,6 +323,13 @@ func (session *Session) send() {
 
 func (server *Server) sendResponse(call *RpcCall) error {
 	if call.cb != nil { //本地回调
+		if call.reply == nil && call.errcode != 0 {
+			call.reply = NewMessage(1)
+		}
+		w := util.NewStoreArchiver(call.reply.Header)
+		w.Write(int8(1))
+		w.Write(call.errcode)
+		call.reply.Header = call.reply.Header[:w.Len()]
 		call.cb(call.reply)
 		return nil
 	}
@@ -346,6 +343,7 @@ func (server *Server) sendResponse(call *RpcCall) error {
 
 	resp := NewResponse()
 	resp.Seq = call.header.Seq
+	resp.Errcode = call.errcode
 	resp.cb = call.cb
 	resp.Reply = call.reply.Dup()
 	session.sendQueue <- resp
@@ -482,23 +480,19 @@ func (c *byteServerCodec) ReadRequest(maxrc uint16) (*Message, error) {
 	return ReadMessage(c.rwc, maxrc)
 }
 
-func (c *byteServerCodec) WriteResponse(seq uint64, body *Message) (err error) {
+func (c *byteServerCodec) WriteResponse(seq uint64, errcode int32, body *Message) (err error) {
 	if body == nil {
 		body = NewMessage(1)
 	}
 
-	var sendheader []byte
-	if len(body.Header) > 0 { //保存原头部
-		sendheader = make([]byte, 0, len(body.Header))
-		sendheader = append(sendheader, body.Header...)
-		body.Header = body.Header[:0]
-	}
+	body.Header = body.Header[:0]
 	w := util.NewStoreArchiver(body.Header)
 	w.Write(seq)
-	body.Header = body.Header[:w.Len()]
-	if len(sendheader) > 0 { //写入原头部
-		body.Header = append(body.Header, sendheader...)
+	if errcode != 0 {
+		w.Write(int8(1))
+		w.Write(errcode)
 	}
+	body.Header = body.Header[:w.Len()]
 	count := uint16(len(body.Header) + len(body.Body))
 	binary.Write(c.encBuf, binary.BigEndian, count)                    //数据大小
 	binary.Write(c.encBuf, binary.BigEndian, uint16(len(body.Header))) //头部大小
@@ -525,7 +519,7 @@ func (c *byteServerCodec) GetConn() io.ReadWriteCloser {
 
 type ServerCodec interface {
 	ReadRequest(maxrc uint16) (*Message, error)
-	WriteResponse(seq uint64, body *Message) (err error)
+	WriteResponse(seq uint64, errcode int32, body *Message) (err error)
 	GetConn() io.ReadWriteCloser
 	Close() error
 }

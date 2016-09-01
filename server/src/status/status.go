@@ -1,6 +1,7 @@
 package status
 
 import (
+	_ "logicdata/entity"
 	_ "pb"
 	"server"
 	"server/libs/log"

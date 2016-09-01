@@ -43,11 +43,9 @@ func (c *ClientCodec) ReadRequest(maxrc uint16) (*rpc.Message, error) {
 			return msg, nil
 		}
 	}
-
-	return nil, nil
 }
 
-func (c *ClientCodec) WriteResponse(seq uint64, body *rpc.Message) (err error) {
+func (c *ClientCodec) WriteResponse(seq uint64, errcode int32, body *rpc.Message) (err error) {
 	return ERRNOTSUPPORT
 }
 

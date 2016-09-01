@@ -13,23 +13,6 @@ import (
 	"server/util"
 )
 
-//数据集合行定义
-type GlobalSetDataSetRow struct {
-	DataName string `json:"1"` //数据名称(key)
-	Id       uint64 `json:"2"` //DBID
-	Ent      string `json:"3"` //entity type
-}
-
-//数据集合
-type GlobalSetDataSet struct {
-	MaxRows int `json:"-"`
-	Cols    int `json:"-"`
-	Rows    []GlobalSetDataSetRow
-	Dirty   bool `json:"-"`
-	syncer  TableSyncer
-	owner   *GlobalSet
-}
-
 type GlobalSet_Save_Property struct {
 	Capacity int32  `json:"C"` //容量
 	ConfigId string `json:"I"`
@@ -39,8 +22,6 @@ type GlobalSet_Save_Property struct {
 //保存到DB的数据
 type GlobalSet_Save struct {
 	GlobalSet_Save_Property
-
-	DataSet_r GlobalSetDataSet
 }
 
 func (s *GlobalSet_Save) Base() string {
@@ -104,19 +85,11 @@ func (s *GlobalSet_Save) Update(eq ExecQueryer, dbId uint64, extfields string, e
 		return
 	}
 
-	if err = s.DataSet_r.Update(eq, dbId); err != nil {
-		return
-	}
-
 	return
 }
 
 func (s *GlobalSet_Save) Insert(eq ExecQueryer, dbId uint64, extfields string, extplacehold string, extobjs ...interface{}) (err error) {
 	if err = s.InsertOrUpdate(eq, true, dbId, extfields, extplacehold, extobjs...); err != nil {
-		return
-	}
-
-	if err = s.DataSet_r.Update(eq, dbId); err != nil {
 		return
 	}
 
@@ -147,11 +120,6 @@ func (s *GlobalSet_Save) Load(eq ExecQueryer, dbId uint64, extfield string, exto
 		args = append(args, extobjs...)
 	}
 	if err = r.Scan(args...); err != nil {
-		log.LogError("load error:", err)
-		return err
-	}
-
-	if err = s.DataSet_r.Load(eq, dbId); err != nil {
 		log.LogError("load error:", err)
 		return err
 	}
@@ -197,8 +165,6 @@ type GlobalSet struct {
 	GlobalSet_t
 	GlobalSet_Save
 	GlobalSet_Propertys
-
-	//表格定义
 }
 
 func (obj *GlobalSet) SetInBase(v bool) {
@@ -254,11 +220,10 @@ func (obj *GlobalSet) SetSaveFlag() {
 func (obj *GlobalSet) ClearSaveFlag() {
 	obj.dirty = false
 
-	obj.DataSet_r.Dirty = false
 }
 
 func (obj *GlobalSet) NeedSave() bool {
-	if obj.dirty || obj.DataSet_r.Dirty {
+	if obj.dirty {
 		return true
 	}
 	return false
@@ -903,591 +868,14 @@ func (obj *GlobalSet) GetName() string {
 	return obj.Name
 }
 
-func (rec *GlobalSetDataSet) Marshal() ([]byte, error) {
-	return json.Marshal(rec)
-}
-
-func (rec *GlobalSetDataSet) Unmarshal(data []byte) error {
-	return json.Unmarshal(data, rec)
-}
-
-//DB
-func (rec *GlobalSetDataSet) Update(eq ExecQueryer, dbId uint64) error {
-
-	if !rec.Dirty {
-		return nil
-	}
-
-	data, err := rec.Marshal()
-	if err != nil {
-		return err
-	}
-	sql := "UPDATE `tbl_globalset` SET `r_dataset`=? WHERE `id` = ?"
-
-	if _, err := eq.Exec(sql, data, dbId); err != nil {
-		log.LogError("update record GlobalSetDataSet error:", sql, data, dbId)
-		return err
-	}
-
-	return nil
-}
-
-func (rec *GlobalSetDataSet) Load(eq ExecQueryer, dbId uint64) error {
-
-	rec.Rows = rec.Rows[:0]
-
-	sql := "SELECT `r_dataset` FROM `tbl_globalset` WHERE `id`=? LIMIT 1"
-	r, err := eq.Query(sql, dbId)
-	if err != nil {
-		log.LogError("load record GlobalSetDataSet error:", err)
-		return err
-	}
-	defer r.Close()
-	if !r.Next() {
-		log.LogError("load record GlobalSetDataSet error:", sql, dbId)
-		return ErrSqlRowError
-	}
-	var json []byte
-	if err = r.Scan(&json); err != nil {
-		log.LogError("load record GlobalSetDataSet error:", err)
-		return err
-	}
-
-	if json == nil || len(json) < 2 {
-		log.LogWarning("load record GlobalSetDataSet error: nil")
-		return nil
-	}
-
-	err = rec.Unmarshal(json)
-	if err != nil {
-		log.LogError("unmarshal record GlobalSetDataSet error:", err)
-		return err
-	}
-
-	return nil
-}
-
-func (rec *GlobalSetDataSet) GetName() string {
-	return "DataSet"
-}
-
-//表格的容量
-func (rec *GlobalSetDataSet) GetCap() int {
-	return rec.MaxRows
-}
-
-//表格当前的行数
-func (rec *GlobalSetDataSet) GetRows() int {
-	return len(rec.Rows)
-}
-
-//获取列定义
-func (rec *GlobalSetDataSet) ColTypes() ([]int, []string) {
-	col := []int{DT_STRING, DT_UINT64, DT_STRING}
-	cols := []string{"string", "uint64", "string"}
-	return col, cols
-}
-
-//获取列数
-func (rec *GlobalSetDataSet) GetCols() int {
-	return rec.Cols
-}
-
-//是否要同步到客户端
-func (rec *GlobalSetDataSet) IsVisible() bool {
-	return true
-}
-
-//脏标志
-func (rec *GlobalSetDataSet) IsDirty() bool {
-	return rec.Dirty
-}
-
-func (rec *GlobalSetDataSet) ClearDirty() {
-	rec.Dirty = false
-}
-
-func (rec *GlobalSetDataSet) SetSyncer(s TableSyncer) {
-	rec.syncer = s
-}
-
-func (rec *GlobalSetDataSet) GetSyncer() TableSyncer {
-	return rec.syncer
-}
-
-//序列化
-func (rec *GlobalSetDataSet) Serial() ([]byte, error) {
-	ar := util.NewStoreArchiver(nil)
-	for _, v := range rec.Rows {
-		ar.WriteString(v.DataName)
-		ar.Write(v.Id)
-		ar.WriteString(v.Ent)
-	}
-	return ar.Data(), nil
-}
-
-//序列化一行
-func (rec *GlobalSetDataSet) SerialRow(row int) ([]byte, error) {
-	if row < 0 || row >= len(rec.Rows) {
-		return nil, ErrRowError
-	}
-	ar := util.NewStoreArchiver(nil)
-	v := rec.Rows[row]
-	ar.WriteString(v.DataName)
-	ar.Write(v.Id)
-	ar.WriteString(v.Ent)
-	return ar.Data(), nil
-}
-
-//通过行列设置值
-func (rec *GlobalSetDataSet) Set(row, col int, val interface{}) error {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the DataSet will be overwritten by scenedata")
-	}
-
-	if row < 0 || row >= len(rec.Rows) {
-		return ErrRowError
-	}
-
-	if col < 0 || col >= 3 {
-		return ErrColError
-	}
-
-	r := rec.Rows[row]
-
-	switch col {
-	case 0:
-		val, ok := val.(string)
-		if ok {
-			r.DataName = val
-		} else {
-			return ErrTypeMismatch
-		}
-	case 1:
-		val, ok := val.(uint64)
-		if ok {
-			r.Id = val
-		} else {
-			return ErrTypeMismatch
-		}
-	case 2:
-		val, ok := val.(string)
-		if ok {
-			r.Ent = val
-		} else {
-			return ErrTypeMismatch
-		}
-	}
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec, row, col)
-	}
-	rec.Dirty = true
-	return nil
-}
-
-//通过行列获取值
-func (rec *GlobalSetDataSet) Get(row, col int) (val interface{}, err error) {
-	if row < 0 || row >= len(rec.Rows) {
-		err = ErrRowError
-		return
-	}
-
-	if col < 0 || col >= 3 {
-		err = ErrColError
-		return
-	}
-
-	r := rec.Rows[row]
-
-	switch col {
-	case 0:
-		val = r.DataName
-	case 1:
-		val = r.Id
-	case 2:
-		val = r.Ent
-	}
-
-	return
-}
-
-//查找数据名称(key)
-func (rec *GlobalSetDataSet) FindDataName(v string) int {
-	for idx, row := range rec.Rows {
-		if row.DataName == v {
-			return idx
-		}
-	}
-	return -1
-}
-
-//查找数据名称(key)
-func (rec *GlobalSetDataSet) FindNextDataName(v string, itr int) int {
-	itr++
-	if itr+1 >= len(rec.Rows) {
-		return -1
-	}
-	for idx, row := range rec.Rows[itr:] {
-		if row.DataName == v {
-			return idx
-		}
-	}
-	return -1
-}
-
-//设置数据名称(key)
-func (rec *GlobalSetDataSet) SetDataName(row int, v string) error {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the DataName will be overwritten by scenedata")
-	}
-
-	if row < 0 || row >= len(rec.Rows) {
-		return ErrRowError
-	}
-
-	rec.Rows[row].DataName = v
-	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec, row, 0)
-	}
-	return nil
-}
-
-//获取数据名称(key)
-func (rec *GlobalSetDataSet) GetDataName(row int) (val string, err error) {
-	if row < 0 || row >= len(rec.Rows) {
-		err = ErrRowError
-		return
-	}
-
-	val = rec.Rows[row].DataName
-	return
-}
-
-//查找DBID
-func (rec *GlobalSetDataSet) FindId(v uint64) int {
-	for idx, row := range rec.Rows {
-		if row.Id == v {
-			return idx
-		}
-	}
-	return -1
-}
-
-//查找DBID
-func (rec *GlobalSetDataSet) FindNextId(v uint64, itr int) int {
-	itr++
-	if itr+1 >= len(rec.Rows) {
-		return -1
-	}
-	for idx, row := range rec.Rows[itr:] {
-		if row.Id == v {
-			return idx
-		}
-	}
-	return -1
-}
-
-//设置DBID
-func (rec *GlobalSetDataSet) SetId(row int, v uint64) error {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the Id will be overwritten by scenedata")
-	}
-
-	if row < 0 || row >= len(rec.Rows) {
-		return ErrRowError
-	}
-
-	rec.Rows[row].Id = v
-	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec, row, 1)
-	}
-	return nil
-}
-
-//获取DBID
-func (rec *GlobalSetDataSet) GetId(row int) (val uint64, err error) {
-	if row < 0 || row >= len(rec.Rows) {
-		err = ErrRowError
-		return
-	}
-
-	val = rec.Rows[row].Id
-	return
-}
-
-//查找entity type
-func (rec *GlobalSetDataSet) FindEnt(v string) int {
-	for idx, row := range rec.Rows {
-		if row.Ent == v {
-			return idx
-		}
-	}
-	return -1
-}
-
-//查找entity type
-func (rec *GlobalSetDataSet) FindNextEnt(v string, itr int) int {
-	itr++
-	if itr+1 >= len(rec.Rows) {
-		return -1
-	}
-	for idx, row := range rec.Rows[itr:] {
-		if row.Ent == v {
-			return idx
-		}
-	}
-	return -1
-}
-
-//设置entity type
-func (rec *GlobalSetDataSet) SetEnt(row int, v string) error {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the Ent will be overwritten by scenedata")
-	}
-
-	if row < 0 || row >= len(rec.Rows) {
-		return ErrRowError
-	}
-
-	rec.Rows[row].Ent = v
-	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec, row, 2)
-	}
-	return nil
-}
-
-//获取entity type
-func (rec *GlobalSetDataSet) GetEnt(row int) (val string, err error) {
-	if row < 0 || row >= len(rec.Rows) {
-		err = ErrRowError
-		return
-	}
-
-	val = rec.Rows[row].Ent
-	return
-}
-
-//设置一行的值
-func (rec *GlobalSetDataSet) SetRow(row int, args ...interface{}) error {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the DataSet will be overwritten by scenedata")
-	}
-
-	if _, ok := args[0].(string); !ok {
-		return ErrColTypeError
-	}
-	if _, ok := args[1].(uint64); !ok {
-		return ErrColTypeError
-	}
-	if _, ok := args[2].(string); !ok {
-		return ErrColTypeError
-	}
-	return rec.SetRowValue(row, args[0].(string), args[1].(uint64), args[2].(string))
-}
-
-//设置一行的值
-func (rec *GlobalSetDataSet) SetRowValue(row int, dataname string, id uint64, ent string) error {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the DataSet will be overwritten by scenedata")
-	}
-
-	if row < 0 || row >= len(rec.Rows) {
-		return ErrRowError
-	}
-
-	rec.Rows[row].DataName = dataname
-	rec.Rows[row].Id = id
-	rec.Rows[row].Ent = ent
-
-	if rec.syncer != nil {
-		rec.syncer.RecSetRow(rec, row)
-	}
-	rec.Dirty = true
-	return nil
-}
-
-//增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
-func (rec *GlobalSetDataSet) Add(row int, args ...interface{}) int {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the DataSet will be overwritten by scenedata")
-	}
-
-	if len(args) != rec.Cols {
-		return -1
-	}
-
-	if _, ok := args[0].(string); !ok {
-		return -1
-	}
-	if _, ok := args[1].(uint64); !ok {
-		return -1
-	}
-	if _, ok := args[2].(string); !ok {
-		return -1
-	}
-	return rec.AddRowValue(row, args[0].(string), args[1].(uint64), args[2].(string))
-}
-
-//增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
-func (rec *GlobalSetDataSet) AddRow(row int) int {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the DataSet will be overwritten by scenedata")
-	}
-	add := -1
-
-	if len(rec.Rows) >= rec.MaxRows {
-		return add
-	}
-
-	r := GlobalSetDataSetRow{}
-
-	return rec.AddRowValue(row, r.DataName, r.Id, r.Ent)
-
-}
-
-//增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
-func (rec *GlobalSetDataSet) AddRowValue(row int, dataname string, id uint64, ent string) int {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the DataSet will be overwritten by scenedata")
-	}
-
-	add := -1
-
-	if len(rec.Rows) >= rec.MaxRows {
-		return add
-	}
-
-	r := GlobalSetDataSetRow{dataname, id, ent}
-
-	if row == -1 {
-		rec.Rows = append(rec.Rows, r)
-		add = len(rec.Rows) - 1
-	} else {
-		if row >= 0 && row < len(rec.Rows) {
-			rec.Rows = append(rec.Rows, GlobalSetDataSetRow{})
-			copy(rec.Rows[row+1:], rec.Rows[row:])
-			rec.Rows[row] = r
-			add = row
-		} else {
-			rec.Rows = append(rec.Rows, r)
-			add = len(rec.Rows) - 1
-		}
-
-	}
-	if add != -1 {
-		if rec.syncer != nil {
-			rec.syncer.RecAppend(rec, add)
-		}
-		rec.Dirty = true
-	}
-	return add
-}
-
-//获取一行数据
-func (rec *GlobalSetDataSet) GetRow(row int) (dataname string, id uint64, ent string, err error) {
-
-	if row < 0 || row >= len(rec.Rows) {
-		err = ErrRowError
-		return
-	}
-
-	r := rec.Rows[row]
-	dataname = r.DataName
-	id = r.Id
-	ent = r.Ent
-
-	return
-}
-
-//获取一行数据
-func (rec *GlobalSetDataSet) GetRowInterface(row int) (rowvalue interface{}, err error) {
-
-	if row < 0 || row >= len(rec.Rows) {
-		err = ErrRowError
-		return
-	}
-
-	rowvalue = rec.Rows[row]
-	return
-}
-
-//获取数据
-func (rec *GlobalSetDataSet) Scan(row int, dataname *string, id *uint64, ent *string) bool {
-
-	if row < 0 || row >= len(rec.Rows) {
-		return false
-	}
-
-	r := rec.Rows[row]
-	*dataname = r.DataName
-	*id = r.Id
-	*ent = r.Ent
-
-	return true
-}
-
-//删除一行
-func (rec *GlobalSetDataSet) Del(row int) {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the DataSet will be overwritten by scenedata")
-	}
-	if row < 0 || row >= len(rec.Rows) {
-		return
-	}
-
-	copy(rec.Rows[row:], rec.Rows[row+1:])
-	rec.Rows = rec.Rows[:len(rec.Rows)-1]
-	rec.Dirty = true
-
-	if rec.syncer != nil {
-		rec.syncer.RecDelete(rec, row)
-	}
-}
-
-//清空表格
-func (rec *GlobalSetDataSet) Clear() {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the DataSet will be overwritten by scenedata")
-	}
-	rec.Rows = rec.Rows[:0]
-	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecClear(rec)
-	}
-}
-
-//是否保存
-func (rec *GlobalSetDataSet) IsSave() bool {
-	return true
-}
-
-//初始化GlobalSetDataSet表
-func (obj *GlobalSet) initGlobalSetDataSet() {
-	obj.DataSet_r.MaxRows = 100
-	obj.DataSet_r.Cols = 3
-	obj.DataSet_r.Rows = make([]GlobalSetDataSetRow, 0, 100)
-	obj.DataSet_r.owner = obj
-}
-
-//获取GlobalSetDataSet表
-func (obj *GlobalSet) GetGlobalSetDataSet() *GlobalSetDataSet {
-	return &obj.DataSet_r
-}
-
 //初始化所有的表格
 func (obj *GlobalSet) initRec() {
 
-	obj.initGlobalSetDataSet()
 }
 
 //获取某个表格
 func (obj *GlobalSet) GetRec(rec string) Recorder {
 	switch rec {
-	case "DataSet":
-		return &obj.DataSet_r
 	default:
 		return nil
 	}
@@ -1495,7 +883,7 @@ func (obj *GlobalSet) GetRec(rec string) Recorder {
 
 //获取所有表格名称
 func (obj *GlobalSet) GetRecNames() []string {
-	return []string{"DataSet"}
+	return []string{}
 }
 
 func (obj *GlobalSet) GlobalSetInit() {
@@ -1515,8 +903,6 @@ func (obj *GlobalSet) Reset() {
 	obj.GlobalSet_Propertys = GlobalSet_Propertys{}
 	obj.GlobalSetInit()
 	//表格初始化
-	obj.DataSet_r.Clear()
-	obj.DataSet_r.syncer = nil
 
 	obj.ClearDirty()
 	obj.ClearModify()
@@ -1540,13 +926,7 @@ func (obj *GlobalSet) Copy(other Entityer) error {
 		obj.GlobalSet_Save.GlobalSet_Save_Property = t.GlobalSet_Save_Property
 		obj.GlobalSet_Propertys = t.GlobalSet_Propertys
 
-		var l int
 		//表格复制
-		obj.DataSet_r.Clear()
-		l = len(t.DataSet_r.Rows)
-		for i := 0; i < l; i++ {
-			obj.DataSet_r.AddRowValue(-1, t.DataSet_r.Rows[i].DataName, t.DataSet_r.Rows[i].Id, t.DataSet_r.Rows[i].Ent)
-		}
 
 		return nil
 	}
@@ -1573,13 +953,6 @@ func (obj *GlobalSet) GetConfigFromDb(data interface{}) string {
 func (obj *GlobalSet) SyncFromDb(data interface{}) bool {
 	if v, ok := data.(*GlobalSet_Save); ok {
 		obj.GlobalSet_Save.GlobalSet_Save_Property = v.GlobalSet_Save_Property
-
-		obj.DataSet_r.Clear()
-		if l := len(v.DataSet_r.Rows); l > 0 {
-			for i := 0; i < l; i++ {
-				obj.DataSet_r.AddRowValue(-1, v.DataSet_r.Rows[i].DataName, v.DataSet_r.Rows[i].Id, v.DataSet_r.Rows[i].Ent)
-			}
-		}
 
 		obj.NameHash = Hash(obj.Name)
 		obj.IDHash = Hash(obj.ConfigId)
@@ -1722,12 +1095,6 @@ func (obj *GlobalSet) SyncFromSceneData(val interface{}) error {
 		return fmt.Errorf("type not GlobalSetSceneData", sd)
 	}
 
-	if sd.DataSet_r.Dirty {
-		obj.DataSet_r.Rows = obj.DataSet_r.Rows[:0]
-		obj.DataSet_r.Rows = append(obj.DataSet_r.Rows, sd.DataSet_r.Rows...) //数据集合
-		obj.DataSet_r.Dirty = true
-	}
-
 	return nil
 }
 
@@ -1737,7 +1104,6 @@ func (obj *GlobalSet) GetSceneData() interface{} {
 	//属性
 
 	//表格
-	sd.DataSet_r = obj.DataSet_r
 	return sd
 }
 
@@ -1760,7 +1126,6 @@ func CreateGlobalSet() *GlobalSet {
 }
 
 type GlobalSetSceneData struct {
-	DataSet_r GlobalSetDataSet //数据集合
 }
 
 func IsGlobalSetSceneData(idx int) bool {

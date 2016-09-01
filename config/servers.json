@@ -36,7 +36,8 @@
 		"assets": "../assets",
 		"loglevel":1,
 		"debug":true,
-		"pprof":6800
+		"pprof":6800,
+		"enableglobaldata":true
 	}],
 	"basemgr": [{
 		"name": "basemgr",
@@ -46,12 +47,15 @@
 	"area": [{
 		"name": "area_1",
 		"host": "127.0.0.1",
-		"port": 0
+		"port": 0,
+		"enableglobaldata":true
 	}],
 	"status": [{
 		"name": "status",
 		"host": "127.0.0.1",
-		"port": 0
+		"port": 0,
+		"globalset":"GlobalSet",
+		"globaldataserver":true
 	}],
 	"database": [{
 		"name": "db_1",

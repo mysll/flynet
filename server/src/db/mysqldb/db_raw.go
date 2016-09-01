@@ -799,11 +799,6 @@ func (this *Database) SaveObject(mailbox rpc.Mailbox, msg *rpc.Message) (errcode
 
 	reply = server.CreateMessage(callbackparams)
 	sqlconn := db.sql
-	app := server.GetAppById(mailbox.App)
-	if app == nil {
-		log.LogError(server.ErrAppNotFound)
-		return share.ERR_SYSTEM_ERROR, reply
-	}
 
 	err := SaveItem(sqlconn, true, object.Data.DBId, object.Data)
 
@@ -825,12 +820,6 @@ func (this *Database) UpdateObject(mailbox rpc.Mailbox, msg *rpc.Message) (errco
 	reply = server.CreateMessage(callbackparams)
 	sqlconn := db.sql
 
-	app := server.GetAppById(mailbox.App)
-	if app == nil {
-		log.LogError(server.ErrAppNotFound)
-		return share.ERR_SYSTEM_ERROR, reply
-	}
-
 	err := SaveItem(sqlconn, false, object.Data.DBId, object.Data)
 
 	if err != nil {
@@ -851,12 +840,6 @@ func (this *Database) LoadObject(mailbox rpc.Mailbox, msg *rpc.Message) (errcode
 
 	reply = server.CreateMessage(callbackparams)
 	sqlconn := db.sql
-
-	app := server.GetAppById(mailbox.App)
-	if app == nil {
-		log.LogError(server.ErrAppNotFound)
-		return share.ERR_SYSTEM_ERROR, reply
-	}
 
 	savedata := share.DbSave{}
 	savedata.Data, err = LoadEntity(sqlconn, dbid, ent, 0)
@@ -881,16 +864,11 @@ func (this *Database) LoadObjectByName(mailbox rpc.Mailbox, msg *rpc.Message) (e
 	reply = server.CreateMessage(callbackparams)
 	sqlconn := db.sql
 
-	app := server.GetAppById(mailbox.App)
-	if app == nil {
-		log.LogError(server.ErrAppNotFound)
-		return share.ERR_SYSTEM_ERROR, reply
-	}
-
 	savedata := share.DbSave{}
 	savedata.Data, err = LoadEntityByName(sqlconn, name, ent, 0)
 
 	if err != nil {
+		log.LogError(err)
 		return share.ERR_REPLY_FAILED, reply
 	}
 
@@ -910,12 +888,6 @@ func (this *Database) DeleteObject(mailbox rpc.Mailbox, msg *rpc.Message) (errco
 
 	reply = server.CreateMessage(callbackparams)
 	sqlconn := db.sql
-
-	app := server.GetAppById(mailbox.App)
-	if app == nil {
-		log.LogError(server.ErrAppNotFound)
-		return share.ERR_SYSTEM_ERROR, reply
-	}
 
 	sqlstr := fmt.Sprintf("DELETE FROM `tbl_%s` WHERE `id`=?", strings.ToLower(ent))
 	if _, err = sqlconn.Exec(sqlstr, dbid); err != nil {

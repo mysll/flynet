@@ -65,7 +65,17 @@
 		"#debug": "是否打开pprof",
 		"debug":true,
 		"#pprof": "pprof监听端口",
-		"pprof":6800
+		"pprof":6800,
+		"#enableglobaldata":"全局数据是否启用",
+		"enableglobaldata":true
+	}],
+	"area": [{
+		"#name": "名称,全局唯一，不能重复",
+		"name": "basemgr",
+		"#port": "端口，为0，则为随机端口",
+		"port": 0,
+		"#enableglobaldata":"全局数据是否启用",
+		"enableglobaldata":true
 	}],
 	"basemgr": [{
 		"#name": "名称,全局唯一，不能重复",
@@ -80,8 +90,8 @@
 		"port": 0,
 		"#globalset":"全局数据的entity名称，默认为GlobalSet",
 		"globalset":"GlobalSet",
-		"#enableglobaldata":"是否开启全局数据,默认不开启",
-		"enableglobaldata":false
+		"#globaldataserver":"是否开启全局数据服务器,默认不开启",
+		"globaldataserver":false
 	}],
 	"database": [{
 		"#name": "名称,全局唯一，不能重复",

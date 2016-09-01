@@ -6,10 +6,5 @@
 		<property name="Name" type="string" len="32" save="true" public="" comment="名称" scenedata="false"/>
 	</propertys>
 	<records>
-		<record name="DataSet" cols="6" maxrows="100" save="true" visible="true" comment="数据集合" type="MEDIUMTEXT" scenedata="true">
-			<column type="string" len="32" name="DataName" tag="`json:&quot;1&quot;`" comment="数据名称(key)"/>
-			<column type="uint64" name="Id" tag="`json:&quot;2&quot;`" comment="DBID"/>
-			<column type="string" len="64" name="Ent" tag="`json:&quot;3&quot;`" comment="entity type"/>
-		</record>
 	</records>
 </BaseScene>

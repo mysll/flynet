@@ -73,9 +73,11 @@ func DoEvent(e *event.Event) {
 		core.clientList.Remove(e.Args["id"].(int64))
 		return
 	case NEWAPPREADY:
+		core.OnAppReady(e.Args["id"].(string))
 		core.apper.OnReady(e.Args["id"].(string))
 		return
 	case APPLOST:
+		core.OnAppLost(e.Args["id"].(string))
 		core.apper.OnLost(e.Args["id"].(string))
 		return
 	}

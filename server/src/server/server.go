@@ -65,7 +65,9 @@ type Server struct {
 	Sockettype       string
 	rpcProto         ProtoCodec
 	globalset        string
+	globaldataserver bool
 	enableglobaldata bool
+	globalHelper     *GlobalDataHelper
 }
 
 type StartStoper interface {
@@ -256,12 +258,26 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 		}
 	}
 
+	svr.globaldataserver = false
+	if enable, ok := args.CheckGet("globaldataserver"); ok {
+		v, err := enable.Bool()
+		if err == nil {
+			svr.globaldataserver = v
+		}
+	}
+
 	svr.enableglobaldata = false
 	if enable, ok := args.CheckGet("enableglobaldata"); ok {
 		v, err := enable.Bool()
 		if err == nil {
 			svr.enableglobaldata = v
 		}
+	}
+
+	log.LogMessage("global data status is ", svr.enableglobaldata)
+
+	if svr.globaldataserver {
+		svr.globalHelper.SetServer()
 	}
 
 	serial := (uint64(time.Now().Unix()%0x80000000) << 32) | (uint64(svr.AppId) << 24)
@@ -382,4 +398,19 @@ func (svr *Server) MustReady() {
 		svr.MustAppReady = true
 		svr.apper.OnMustAppReady()
 	}
+
+	if svr.globaldataserver {
+		err := svr.globalHelper.LoadGlobalData()
+		if err != nil {
+			log.LogError(err)
+		}
+	}
+}
+
+func (svr *Server) OnAppReady(app string) {
+	svr.globalHelper.OnAppReady(app)
+}
+
+func (svr *Server) OnAppLost(app string) {
+	svr.globalHelper.OnAppLost(app)
 }
