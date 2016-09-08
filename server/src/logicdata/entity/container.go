@@ -780,6 +780,29 @@ func (obj *Container) Set(p string, v interface{}) error {
 	return nil
 }
 
+//通过属性索引设置值
+func (obj *Container) SetByIndex(index int16, v interface{}) error {
+	switch index {
+	case 0:
+		val, ok := v.(string)
+		if ok {
+			obj.SetName(val)
+		} else {
+			return ErrTypeMismatch
+		}
+	case 1:
+		var dst int32
+		err := ParseNumber(v, &dst)
+		if err == nil {
+			obj.SetContainerType(dst)
+		}
+		return err
+	default:
+		return ErrPropertyNotFound
+	}
+	return nil
+}
+
 //通过属性名获取值
 func (obj *Container) MustGet(p string) interface{} {
 	switch p {

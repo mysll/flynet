@@ -27,6 +27,7 @@ const (
 	DT_VECTOR2
 	DT_VECTOR3
 	DT_OBJECTID
+	DT_INTERFACE
 	DT_MAX
 )
 
@@ -171,6 +172,7 @@ func init() {
 	gob.Register(Vector3{})
 	gob.Register(ObjectID{})
 	gob.Register(&EntityInfo{})
+	gob.Register(Any{})
 	types["Vector2"] = &Vector2{}
 	types["Vector3"] = &Vector3{}
 	types["ObjectID"] = &ObjectID{}

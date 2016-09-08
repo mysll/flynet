@@ -280,9 +280,10 @@ func (server *Server) ServeCodec(codec ServerCodec, maxlen uint16) {
 		}
 
 		call := server.createCall(msg)
-		call.session = serial
 		if call != nil {
+			call.session = serial
 			server.ch <- call
+			continue
 		}
 	}
 

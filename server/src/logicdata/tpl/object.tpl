@@ -840,6 +840,27 @@ func (obj *{{.Name}}) Set(p string, v interface{}) error {
 	return nil
 }
 
+//通过属性索引设置值
+func (obj *{{.Name}}) SetByIndex(index int16, v interface{}) error {
+	switch index {
+	{{range $idx, $val := .Propertys}}case {{$idx}}:{{if eq $val.Type "int8" "uint8" "int16" "uint16" "int32" "uint32" "int64" "uint64" "int" "int64" "float32" "float64"}}
+		var dst {{$val.Type}}
+		err := ParseNumber(v, &dst)
+		if err == nil {
+			obj.Set{{$val.Name}}(dst)
+		} 
+		return err {{else}}
+		val, ok := v.({{$val.Type}})
+		if ok {
+			obj.Set{{$val.Name}}(val)
+		} else { 
+			return ErrTypeMismatch 
+		}{{end}}
+	{{end}}default:
+	{{if .Base}}	return obj.{{.Base}}.Set(p, v){{else}}	return ErrPropertyNotFound{{end}}
+	}
+	return nil
+}
 //通过属性名获取值
 func (obj *{{.Name}}) MustGet(p string) interface{} {
 	switch p {
@@ -944,7 +965,7 @@ func (obj *{{$Obj}}) Set{{$prop.Name}}(v {{$prop.Type}}) {
 	}{{if eq $prop.Name "Name"}}
 	obj.NameHash = Hash(v){{end}}{{if eq $prop.Realtime "true"}}{{if eq (isprivate $prop.Public) "true"}}
 	if obj.propsyncer != nil {
-		obj.propsyncer.Update({{$idx}}, v)
+		obj.propsyncer.Update(obj, {{$idx}}, v)
 	} else {
 		obj.setModify("{{$prop.Name}}", v)
 	}{{end}}{{else if $prop.Public}}
@@ -1188,7 +1209,7 @@ func (rec *{{$Obj}}{{.Name}}) Set(row, col int, val interface{}) error {
 		}{{end}}
 	}
 	if rec.syncer != nil {
-		rec.syncer.RecModify(rec, row, col)
+		rec.syncer.RecModify(rec.owner, rec, row, col)
 	}
 	{{if eq .Save "true"}}rec.Dirty = true{{end}}
 	return nil
@@ -1255,7 +1276,7 @@ func (rec *{{$Obj}}{{$rec}}) Set{{$col.Name}}(row int, v {{$col.Type}}) error {
 	rec.Rows[row].{{$col.Name}} = v
 	rec.Dirty = true
 	if rec.syncer != nil {
-		rec.syncer.RecModify(rec, row, {{$idx}})
+		rec.syncer.RecModify(rec.owner, rec, row, {{$idx}})
 	}
 	return nil
 }
@@ -1285,6 +1306,45 @@ func (rec *{{$Obj}}{{.Name}}) SetRow(row int, args ...interface{} ) error {
 	return rec.SetRowValue(row,{{range $idx, $c := .Columns}}{{if eq 0 $idx}}args[{{$idx}}].({{$c.Type}}){{else}},args[{{$idx}}].({{$c.Type}}){{end}}{{end}})
 }
 
+func (rec *{{$Obj}}{{.Name}}) SetRowInterface(row int, rowvalue interface{}) error {
+	{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the {{.Name}} will be overwritten by scenedata")
+	} {{else}} if !rec.owner.InBase {//只有base能够修改自身的数据
+		log.LogError("can't change {{.Name}}")
+	} {{end}}
+
+	if row < 0 || row >= len(rec.Rows) {
+		return ErrRowError
+	}
+
+	if value, ok  :=rowvalue.({{$Obj}}{{.Name}}Row);ok {
+		rec.Rows[row] = value
+		if rec.syncer != nil {
+			rec.syncer.RecSetRow(rec.owner, rec, row)
+		}
+		rec.Dirty = true
+		return nil
+	}
+	
+	return ErrColTypeError
+}
+
+func (rec *{{$Obj}}{{.Name}}) SetRowByBytes(row int, rowdata []byte) error {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the TaskAccepted will be overwritten by scenedata")
+	}
+
+	lr := util.NewLoadArchiver(rowdata)
+	
+	{{range .Columns}}var {{tolower .Name}} {{.Type}}
+	{{end}}
+	{{range .Columns}}if err := lr.Read(&{{tolower .Name}}); err != nil {
+		return err 
+	}
+	{{end}}
+	return rec.SetRowValue(row{{range .Columns}}, {{tolower .Name}}{{end}})
+}
+
 //设置一行的值
 func (rec *{{$Obj}}{{.Name}}) SetRowValue(row int{{range .Columns}}, {{tolower .Name}} {{.Type}}{{end}} ) error {
 	{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
@@ -1300,7 +1360,7 @@ func (rec *{{$Obj}}{{.Name}}) SetRowValue(row int{{range .Columns}}, {{tolower .
 	rec.Rows[row].{{$c.Name}}={{tolower $c.Name}}{{end}}
 
 	if rec.syncer != nil {
-		rec.syncer.RecSetRow(rec, row)
+		rec.syncer.RecSetRow(rec.owner, rec, row)
 	}
 	rec.Dirty = true
 	return nil
@@ -1322,6 +1382,24 @@ func (rec *{{$Obj}}{{.Name}}) Add(row int, args ...interface{} ) int {
 		return -1
 	}{{end}}
 	return rec.AddRowValue(row,{{range $idx, $c := .Columns}}{{if eq 0 $idx}}args[{{$idx}}].({{$c.Type}}){{else}},args[{{$idx}}].({{$c.Type}}){{end}}{{end}})
+}
+
+//增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
+func (rec *{{$Obj}}{{.Name}}) AddByBytes(row int, rowdata []byte) int {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the TaskAccepted will be overwritten by scenedata")
+	}
+
+	lr := util.NewLoadArchiver(rowdata)
+	
+	{{range .Columns}}var {{tolower .Name}} {{.Type}}
+	{{end}}
+	{{range .Columns}}if err := lr.Read(&{{tolower .Name}}); err != nil {
+		return -1 
+	}
+	{{end}}
+
+	return rec.AddRowValue(row{{range .Columns}},{{tolower .Name}}{{end}})
 }
 
 //增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
@@ -1357,7 +1435,7 @@ func (rec *{{$Obj}}{{.Name}}) AddRow(row int) int {
 	}
 	if add != -1 {
 		if rec.syncer != nil {
-			rec.syncer.RecAppend(rec, add)
+			rec.syncer.RecAppendrec.owner, rec, add)
 		}
 		rec.Dirty = true
 	}
@@ -1397,7 +1475,7 @@ func (rec *{{$Obj}}{{.Name}}) AddRowValue(row int {{range .Columns}}, {{tolower 
 	}
 	if add != -1 {
 		if rec.syncer != nil {
-			rec.syncer.RecAppend(rec, add)
+			rec.syncer.RecAppend(rec.owner, rec, add)
 		}
 		rec.Dirty = true
 	}
@@ -1459,7 +1537,7 @@ func (rec *{{$Obj}}{{.Name}}) Del(row int) {
 	rec.Dirty = true
 
 	if rec.syncer != nil {
-		rec.syncer.RecDelete(rec, row)
+		rec.syncer.RecDelete(rec.owner, rec, row)
 	}
 }
 
@@ -1473,7 +1551,7 @@ func (rec *{{$Obj}}{{.Name}}) Clear() {
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
 	if rec.syncer != nil {
-		rec.syncer.RecClear(rec)
+		rec.syncer.RecClear(rec.owner, rec)
 	}
 }
 

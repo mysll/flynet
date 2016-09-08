@@ -13,15 +13,35 @@ import (
 	"server/util"
 )
 
+//Test任务表行定义
+type GlobalDataTestRecRow struct {
+	ID   string `json:"1"` //Test1
+	Flag int8   `json:"2"` //Test2
+}
+
+//Test任务表
+type GlobalDataTestRec struct {
+	MaxRows int `json:"-"`
+	Cols    int `json:"-"`
+	Rows    []GlobalDataTestRecRow
+	Dirty   bool `json:"-"`
+	syncer  TableSyncer
+	owner   *GlobalData
+}
+
 type GlobalData_Save_Property struct {
 	Capacity int32  `json:"C"` //容量
 	ConfigId string `json:"I"`
 	Name     string //名称
+	Test1    string //测试数据1
+	Test2    string //测试数据2
 }
 
 //保存到DB的数据
 type GlobalData_Save struct {
 	GlobalData_Save_Property
+
+	TestRec_r GlobalDataTestRec
 }
 
 func (s *GlobalData_Save) Base() string {
@@ -56,18 +76,18 @@ func (s *GlobalData_Save) InsertOrUpdate(eq ExecQueryer, insert bool, dbId uint6
 	var sql string
 	var args []interface{}
 	if insert {
-		sql = "INSERT INTO `tbl_globaldata`(`id`,`capacity`,`configid`,`p_name`%s ) VALUES(?,?,?,?%s) "
-		args = []interface{}{dbId, s.Capacity, s.ConfigId, s.Name}
+		sql = "INSERT INTO `tbl_globaldata`(`id`,`capacity`,`configid`,`p_name`,`p_test1`,`p_test2`%s ) VALUES(?,?,?,?,?,?%s) "
+		args = []interface{}{dbId, s.Capacity, s.ConfigId, s.Name, s.Test1, s.Test2}
 		sql = fmt.Sprintf(sql, extfields, extplacehold)
 		if extobjs != nil {
 			args = append(args, extobjs...)
 		}
 	} else {
-		sql = "UPDATE `tbl_globaldata` SET %s`capacity`=?, `configid`=?,`p_name`=? WHERE `id` = ?"
+		sql = "UPDATE `tbl_globaldata` SET %s`capacity`=?, `configid`=?,`p_name`=?,`p_test1`=?,`p_test2`=? WHERE `id` = ?"
 		if extobjs != nil {
 			args = append(args, extobjs...)
 		}
-		args = append(args, []interface{}{s.Capacity, s.ConfigId, s.Name, dbId}...)
+		args = append(args, []interface{}{s.Capacity, s.ConfigId, s.Name, s.Test1, s.Test2, dbId}...)
 		sql = fmt.Sprintf(sql, extfields)
 
 	}
@@ -85,6 +105,10 @@ func (s *GlobalData_Save) Update(eq ExecQueryer, dbId uint64, extfields string, 
 		return
 	}
 
+	if err = s.TestRec_r.Update(eq, dbId); err != nil {
+		return
+	}
+
 	return
 }
 
@@ -93,11 +117,15 @@ func (s *GlobalData_Save) Insert(eq ExecQueryer, dbId uint64, extfields string, 
 		return
 	}
 
+	if err = s.TestRec_r.Update(eq, dbId); err != nil {
+		return
+	}
+
 	return
 }
 
 func (s *GlobalData_Save) Query(dbId uint64) (sql string, args []interface{}) {
-	sql = "SELECT `id`,`capacity`,`configid`,`p_name` %s FROM `tbl_globaldata` WHERE `id`=? LIMIT 1"
+	sql = "SELECT `id`,`capacity`,`configid`,`p_name`,`p_test1`,`p_test2` %s FROM `tbl_globaldata` WHERE `id`=? LIMIT 1"
 	args = []interface{}{dbId}
 	return
 }
@@ -115,11 +143,16 @@ func (s *GlobalData_Save) Load(eq ExecQueryer, dbId uint64, extfield string, ext
 		log.LogError("load error:", sql, a)
 		return ErrSqlRowError
 	}
-	args := []interface{}{&dbId, &s.Capacity, &s.ConfigId, &s.Name}
+	args := []interface{}{&dbId, &s.Capacity, &s.ConfigId, &s.Name, &s.Test1, &s.Test2}
 	if extobjs != nil {
 		args = append(args, extobjs...)
 	}
 	if err = r.Scan(args...); err != nil {
+		log.LogError("load error:", err)
+		return err
+	}
+
+	if err = s.TestRec_r.Load(eq, dbId); err != nil {
 		log.LogError("load error:", err)
 		return err
 	}
@@ -165,6 +198,8 @@ type GlobalData struct {
 	GlobalData_t
 	GlobalData_Save
 	GlobalData_Propertys
+
+	//表格定义
 }
 
 func (obj *GlobalData) SetInBase(v bool) {
@@ -220,10 +255,11 @@ func (obj *GlobalData) SetSaveFlag() {
 func (obj *GlobalData) ClearSaveFlag() {
 	obj.dirty = false
 
+	obj.TestRec_r.Dirty = false
 }
 
 func (obj *GlobalData) NeedSave() bool {
-	if obj.dirty {
+	if obj.dirty || obj.TestRec_r.Dirty {
 		return true
 	}
 	return false
@@ -702,13 +738,19 @@ func (obj *GlobalData) ClearCritical(prop string) {
 func (obj *GlobalData) GetPropertys() []string {
 	return []string{
 		"Name",
+		"Test1",
+		"Test2",
 	}
 }
 
 //获取所有可视属性
 func (obj *GlobalData) GetVisiblePropertys(typ int) []string {
 	if typ == 0 {
-		return []string{}
+		return []string{
+			"Name",
+			"Test1",
+			"Test2",
+		}
 	} else {
 		return []string{}
 	}
@@ -720,6 +762,10 @@ func (obj *GlobalData) GetPropertyType(p string) (int, string, error) {
 	switch p {
 	case "Name":
 		return DT_STRING, "string", nil
+	case "Test1":
+		return DT_STRING, "string", nil
+	case "Test2":
+		return DT_STRING, "string", nil
 	default:
 		return DT_NONE, "", ErrPropertyNotFound
 	}
@@ -730,6 +776,10 @@ func (obj *GlobalData) GetPropertyIndex(p string) (int, error) {
 	switch p {
 	case "Name":
 		return 0, nil
+	case "Test1":
+		return 1, nil
+	case "Test2":
+		return 2, nil
 	default:
 		return -1, ErrPropertyNotFound
 	}
@@ -754,6 +804,50 @@ func (obj *GlobalData) Set(p string, v interface{}) error {
 		} else {
 			return ErrTypeMismatch
 		}
+	case "Test1":
+		val, ok := v.(string)
+		if ok {
+			obj.SetTest1(val)
+		} else {
+			return ErrTypeMismatch
+		}
+	case "Test2":
+		val, ok := v.(string)
+		if ok {
+			obj.SetTest2(val)
+		} else {
+			return ErrTypeMismatch
+		}
+	default:
+		return ErrPropertyNotFound
+	}
+	return nil
+}
+
+//通过属性索引设置值
+func (obj *GlobalData) SetByIndex(index int16, v interface{}) error {
+	switch index {
+	case 0:
+		val, ok := v.(string)
+		if ok {
+			obj.SetName(val)
+		} else {
+			return ErrTypeMismatch
+		}
+	case 1:
+		val, ok := v.(string)
+		if ok {
+			obj.SetTest1(val)
+		} else {
+			return ErrTypeMismatch
+		}
+	case 2:
+		val, ok := v.(string)
+		if ok {
+			obj.SetTest2(val)
+		} else {
+			return ErrTypeMismatch
+		}
 	default:
 		return ErrPropertyNotFound
 	}
@@ -765,6 +859,10 @@ func (obj *GlobalData) MustGet(p string) interface{} {
 	switch p {
 	case "Name":
 		return obj.Name
+	case "Test1":
+		return obj.Test1
+	case "Test2":
+		return obj.Test2
 	default:
 		return nil
 	}
@@ -775,6 +873,10 @@ func (obj *GlobalData) Get(p string) (val interface{}, err error) {
 	switch p {
 	case "Name":
 		return obj.Name, nil
+	case "Test1":
+		return obj.Test1, nil
+	case "Test2":
+		return obj.Test2, nil
 	default:
 		return nil, ErrPropertyNotFound
 	}
@@ -785,6 +887,10 @@ func (obj *GlobalData) PropertyIsPublic(p string) bool {
 	switch p {
 	case "Name":
 		return false
+	case "Test1":
+		return false
+	case "Test2":
+		return false
 	default:
 		return false
 	}
@@ -794,7 +900,11 @@ func (obj *GlobalData) PropertyIsPublic(p string) bool {
 func (obj *GlobalData) PropertyIsPrivate(p string) bool {
 	switch p {
 	case "Name":
-		return false
+		return true
+	case "Test1":
+		return true
+	case "Test2":
+		return true
 	default:
 		return false
 	}
@@ -804,6 +914,10 @@ func (obj *GlobalData) PropertyIsPrivate(p string) bool {
 func (obj *GlobalData) PropertyIsSave(p string) bool {
 	switch p {
 	case "Name":
+		return true
+	case "Test1":
+		return true
+	case "Test2":
 		return true
 	default:
 		return false
@@ -861,6 +975,11 @@ func (obj *GlobalData) SetName(v string) {
 		obj.SetPropFlag(0, false)
 	}
 	obj.NameHash = Hash(v)
+	if obj.propsyncer != nil {
+		obj.propsyncer.Update(obj, 0, v)
+	} else {
+		obj.setModify("Name", v)
+	}
 
 	obj.setDirty("Name", v)
 }
@@ -868,14 +987,640 @@ func (obj *GlobalData) GetName() string {
 	return obj.Name
 }
 
+//测试数据1
+func (obj *GlobalData) SetTest1(v string) {
+	if obj.Test1 == v {
+		return
+	}
+
+	old := obj.Test1
+
+	if !obj.InBase { //只有base能够修改自身的数据
+		log.LogError("can't change base data")
+	}
+
+	obj.Test1 = v
+	if obj.prophooker != nil && obj.IsCritical(1) && !obj.GetPropFlag(1) {
+		obj.SetPropFlag(1, true)
+		obj.prophooker.OnPropChange(obj, "Test1", old)
+		obj.SetPropFlag(1, false)
+	}
+	if obj.propsyncer != nil {
+		obj.propsyncer.Update(obj, 1, v)
+	} else {
+		obj.setModify("Test1", v)
+	}
+
+	obj.setDirty("Test1", v)
+}
+func (obj *GlobalData) GetTest1() string {
+	return obj.Test1
+}
+
+//测试数据2
+func (obj *GlobalData) SetTest2(v string) {
+	if obj.Test2 == v {
+		return
+	}
+
+	old := obj.Test2
+
+	if !obj.InBase { //只有base能够修改自身的数据
+		log.LogError("can't change base data")
+	}
+
+	obj.Test2 = v
+	if obj.prophooker != nil && obj.IsCritical(2) && !obj.GetPropFlag(2) {
+		obj.SetPropFlag(2, true)
+		obj.prophooker.OnPropChange(obj, "Test2", old)
+		obj.SetPropFlag(2, false)
+	}
+	if obj.propsyncer != nil {
+		obj.propsyncer.Update(obj, 2, v)
+	} else {
+		obj.setModify("Test2", v)
+	}
+
+	obj.setDirty("Test2", v)
+}
+func (obj *GlobalData) GetTest2() string {
+	return obj.Test2
+}
+
+func (rec *GlobalDataTestRec) Marshal() ([]byte, error) {
+	return json.Marshal(rec)
+}
+
+func (rec *GlobalDataTestRec) Unmarshal(data []byte) error {
+	return json.Unmarshal(data, rec)
+}
+
+//DB
+func (rec *GlobalDataTestRec) Update(eq ExecQueryer, dbId uint64) error {
+
+	if !rec.Dirty {
+		return nil
+	}
+
+	data, err := rec.Marshal()
+	if err != nil {
+		return err
+	}
+	sql := "UPDATE `tbl_globaldata` SET `r_testrec`=? WHERE `id` = ?"
+
+	if _, err := eq.Exec(sql, data, dbId); err != nil {
+		log.LogError("update record GlobalDataTestRec error:", sql, data, dbId)
+		return err
+	}
+
+	return nil
+}
+
+func (rec *GlobalDataTestRec) Load(eq ExecQueryer, dbId uint64) error {
+
+	rec.Rows = rec.Rows[:0]
+
+	sql := "SELECT `r_testrec` FROM `tbl_globaldata` WHERE `id`=? LIMIT 1"
+	r, err := eq.Query(sql, dbId)
+	if err != nil {
+		log.LogError("load record GlobalDataTestRec error:", err)
+		return err
+	}
+	defer r.Close()
+	if !r.Next() {
+		log.LogError("load record GlobalDataTestRec error:", sql, dbId)
+		return ErrSqlRowError
+	}
+	var json []byte
+	if err = r.Scan(&json); err != nil {
+		log.LogError("load record GlobalDataTestRec error:", err)
+		return err
+	}
+
+	if json == nil || len(json) < 2 {
+		log.LogWarning("load record GlobalDataTestRec error: nil")
+		return nil
+	}
+
+	err = rec.Unmarshal(json)
+	if err != nil {
+		log.LogError("unmarshal record GlobalDataTestRec error:", err)
+		return err
+	}
+
+	return nil
+}
+
+func (rec *GlobalDataTestRec) GetName() string {
+	return "TestRec"
+}
+
+//表格的容量
+func (rec *GlobalDataTestRec) GetCap() int {
+	return rec.MaxRows
+}
+
+//表格当前的行数
+func (rec *GlobalDataTestRec) GetRows() int {
+	return len(rec.Rows)
+}
+
+//获取列定义
+func (rec *GlobalDataTestRec) ColTypes() ([]int, []string) {
+	col := []int{DT_STRING, DT_INT8}
+	cols := []string{"string", "int8"}
+	return col, cols
+}
+
+//获取列数
+func (rec *GlobalDataTestRec) GetCols() int {
+	return rec.Cols
+}
+
+//是否要同步到客户端
+func (rec *GlobalDataTestRec) IsVisible() bool {
+	return true
+}
+
+//脏标志
+func (rec *GlobalDataTestRec) IsDirty() bool {
+	return rec.Dirty
+}
+
+func (rec *GlobalDataTestRec) ClearDirty() {
+	rec.Dirty = false
+}
+
+func (rec *GlobalDataTestRec) SetSyncer(s TableSyncer) {
+	rec.syncer = s
+}
+
+func (rec *GlobalDataTestRec) GetSyncer() TableSyncer {
+	return rec.syncer
+}
+
+//序列化
+func (rec *GlobalDataTestRec) Serial() ([]byte, error) {
+	ar := util.NewStoreArchiver(nil)
+	for _, v := range rec.Rows {
+		ar.WriteString(v.ID)
+		ar.Write(v.Flag)
+	}
+	return ar.Data(), nil
+}
+
+//序列化一行
+func (rec *GlobalDataTestRec) SerialRow(row int) ([]byte, error) {
+	if row < 0 || row >= len(rec.Rows) {
+		return nil, ErrRowError
+	}
+	ar := util.NewStoreArchiver(nil)
+	v := rec.Rows[row]
+	ar.WriteString(v.ID)
+	ar.Write(v.Flag)
+	return ar.Data(), nil
+}
+
+//通过行列设置值
+func (rec *GlobalDataTestRec) Set(row, col int, val interface{}) error {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the TestRec will be overwritten by scenedata")
+	}
+
+	if row < 0 || row >= len(rec.Rows) {
+		return ErrRowError
+	}
+
+	if col < 0 || col >= 2 {
+		return ErrColError
+	}
+
+	r := rec.Rows[row]
+
+	switch col {
+	case 0:
+		val, ok := val.(string)
+		if ok {
+			r.ID = val
+		} else {
+			return ErrTypeMismatch
+		}
+	case 1:
+		val, ok := val.(int8)
+		if ok {
+			r.Flag = val
+		} else {
+			return ErrTypeMismatch
+		}
+	}
+	if rec.syncer != nil {
+		rec.syncer.RecModify(rec.owner, rec, row, col)
+	}
+	rec.Dirty = true
+	return nil
+}
+
+//通过行列获取值
+func (rec *GlobalDataTestRec) Get(row, col int) (val interface{}, err error) {
+	if row < 0 || row >= len(rec.Rows) {
+		err = ErrRowError
+		return
+	}
+
+	if col < 0 || col >= 2 {
+		err = ErrColError
+		return
+	}
+
+	r := rec.Rows[row]
+
+	switch col {
+	case 0:
+		val = r.ID
+	case 1:
+		val = r.Flag
+	}
+
+	return
+}
+
+//查找Test1
+func (rec *GlobalDataTestRec) FindID(v string) int {
+	for idx, row := range rec.Rows {
+		if row.ID == v {
+			return idx
+		}
+	}
+	return -1
+}
+
+//查找Test1
+func (rec *GlobalDataTestRec) FindNextID(v string, itr int) int {
+	itr++
+	if itr+1 >= len(rec.Rows) {
+		return -1
+	}
+	for idx, row := range rec.Rows[itr:] {
+		if row.ID == v {
+			return idx
+		}
+	}
+	return -1
+}
+
+//设置Test1
+func (rec *GlobalDataTestRec) SetID(row int, v string) error {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the ID will be overwritten by scenedata")
+	}
+
+	if row < 0 || row >= len(rec.Rows) {
+		return ErrRowError
+	}
+
+	rec.Rows[row].ID = v
+	rec.Dirty = true
+	if rec.syncer != nil {
+		rec.syncer.RecModify(rec.owner, rec, row, 0)
+	}
+	return nil
+}
+
+//获取Test1
+func (rec *GlobalDataTestRec) GetID(row int) (val string, err error) {
+	if row < 0 || row >= len(rec.Rows) {
+		err = ErrRowError
+		return
+	}
+
+	val = rec.Rows[row].ID
+	return
+}
+
+//查找Test2
+func (rec *GlobalDataTestRec) FindFlag(v int8) int {
+	for idx, row := range rec.Rows {
+		if row.Flag == v {
+			return idx
+		}
+	}
+	return -1
+}
+
+//查找Test2
+func (rec *GlobalDataTestRec) FindNextFlag(v int8, itr int) int {
+	itr++
+	if itr+1 >= len(rec.Rows) {
+		return -1
+	}
+	for idx, row := range rec.Rows[itr:] {
+		if row.Flag == v {
+			return idx
+		}
+	}
+	return -1
+}
+
+//设置Test2
+func (rec *GlobalDataTestRec) SetFlag(row int, v int8) error {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the Flag will be overwritten by scenedata")
+	}
+
+	if row < 0 || row >= len(rec.Rows) {
+		return ErrRowError
+	}
+
+	rec.Rows[row].Flag = v
+	rec.Dirty = true
+	if rec.syncer != nil {
+		rec.syncer.RecModify(rec.owner, rec, row, 1)
+	}
+	return nil
+}
+
+//获取Test2
+func (rec *GlobalDataTestRec) GetFlag(row int) (val int8, err error) {
+	if row < 0 || row >= len(rec.Rows) {
+		err = ErrRowError
+		return
+	}
+
+	val = rec.Rows[row].Flag
+	return
+}
+
+//设置一行的值
+func (rec *GlobalDataTestRec) SetRow(row int, args ...interface{}) error {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the TestRec will be overwritten by scenedata")
+	}
+
+	if _, ok := args[0].(string); !ok {
+		return ErrColTypeError
+	}
+	if _, ok := args[1].(int8); !ok {
+		return ErrColTypeError
+	}
+	return rec.SetRowValue(row, args[0].(string), args[1].(int8))
+}
+
+func (rec *GlobalDataTestRec) SetRowInterface(row int, rowvalue interface{}) error {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the TestRec will be overwritten by scenedata")
+	}
+
+	if row < 0 || row >= len(rec.Rows) {
+		return ErrRowError
+	}
+
+	if value, ok := rowvalue.(GlobalDataTestRecRow); ok {
+		rec.Rows[row] = value
+		if rec.syncer != nil {
+			rec.syncer.RecSetRow(rec.owner, rec, row)
+		}
+		rec.Dirty = true
+		return nil
+	}
+
+	return ErrColTypeError
+}
+
+func (rec *GlobalDataTestRec) SetRowByBytes(row int, rowdata []byte) error {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the TaskAccepted will be overwritten by scenedata")
+	}
+
+	lr := util.NewLoadArchiver(rowdata)
+
+	var id string
+	var flag int8
+
+	if err := lr.Read(&id); err != nil {
+		return err
+	}
+	if err := lr.Read(&flag); err != nil {
+		return err
+	}
+
+	return rec.SetRowValue(row, id, flag)
+}
+
+//设置一行的值
+func (rec *GlobalDataTestRec) SetRowValue(row int, id string, flag int8) error {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the TestRec will be overwritten by scenedata")
+	}
+
+	if row < 0 || row >= len(rec.Rows) {
+		return ErrRowError
+	}
+
+	rec.Rows[row].ID = id
+	rec.Rows[row].Flag = flag
+
+	if rec.syncer != nil {
+		rec.syncer.RecSetRow(rec.owner, rec, row)
+	}
+	rec.Dirty = true
+	return nil
+}
+
+//增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
+func (rec *GlobalDataTestRec) Add(row int, args ...interface{}) int {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the TestRec will be overwritten by scenedata")
+	}
+
+	if len(args) != rec.Cols {
+		return -1
+	}
+
+	if _, ok := args[0].(string); !ok {
+		return -1
+	}
+	if _, ok := args[1].(int8); !ok {
+		return -1
+	}
+	return rec.AddRowValue(row, args[0].(string), args[1].(int8))
+}
+
+//增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
+func (rec *GlobalDataTestRec) AddByBytes(row int, rowdata []byte) int {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the TaskAccepted will be overwritten by scenedata")
+	}
+
+	lr := util.NewLoadArchiver(rowdata)
+
+	var id string
+	var flag int8
+
+	if err := lr.Read(&id); err != nil {
+		return -1
+	}
+	if err := lr.Read(&flag); err != nil {
+		return -1
+	}
+
+	return rec.AddRowValue(row, id, flag)
+}
+
+//增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
+func (rec *GlobalDataTestRec) AddRow(row int) int {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the TestRec will be overwritten by scenedata")
+	}
+	add := -1
+
+	if len(rec.Rows) >= rec.MaxRows {
+		return add
+	}
+
+	r := GlobalDataTestRecRow{}
+
+	return rec.AddRowValue(row, r.ID, r.Flag)
+
+}
+
+//增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
+func (rec *GlobalDataTestRec) AddRowValue(row int, id string, flag int8) int {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the TestRec will be overwritten by scenedata")
+	}
+
+	add := -1
+
+	if len(rec.Rows) >= rec.MaxRows {
+		return add
+	}
+
+	r := GlobalDataTestRecRow{id, flag}
+
+	if row == -1 {
+		rec.Rows = append(rec.Rows, r)
+		add = len(rec.Rows) - 1
+	} else {
+		if row >= 0 && row < len(rec.Rows) {
+			rec.Rows = append(rec.Rows, GlobalDataTestRecRow{})
+			copy(rec.Rows[row+1:], rec.Rows[row:])
+			rec.Rows[row] = r
+			add = row
+		} else {
+			rec.Rows = append(rec.Rows, r)
+			add = len(rec.Rows) - 1
+		}
+
+	}
+	if add != -1 {
+		if rec.syncer != nil {
+			rec.syncer.RecAppend(rec.owner, rec, add)
+		}
+		rec.Dirty = true
+	}
+	return add
+}
+
+//获取一行数据
+func (rec *GlobalDataTestRec) GetRow(row int) (id string, flag int8, err error) {
+
+	if row < 0 || row >= len(rec.Rows) {
+		err = ErrRowError
+		return
+	}
+
+	r := rec.Rows[row]
+	id = r.ID
+	flag = r.Flag
+
+	return
+}
+
+//获取一行数据
+func (rec *GlobalDataTestRec) GetRowInterface(row int) (rowvalue interface{}, err error) {
+
+	if row < 0 || row >= len(rec.Rows) {
+		err = ErrRowError
+		return
+	}
+
+	rowvalue = rec.Rows[row]
+	return
+}
+
+//获取数据
+func (rec *GlobalDataTestRec) Scan(row int, id *string, flag *int8) bool {
+
+	if row < 0 || row >= len(rec.Rows) {
+		return false
+	}
+
+	r := rec.Rows[row]
+	*id = r.ID
+	*flag = r.Flag
+
+	return true
+}
+
+//删除一行
+func (rec *GlobalDataTestRec) Del(row int) {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the TestRec will be overwritten by scenedata")
+	}
+	if row < 0 || row >= len(rec.Rows) {
+		return
+	}
+
+	copy(rec.Rows[row:], rec.Rows[row+1:])
+	rec.Rows = rec.Rows[:len(rec.Rows)-1]
+	rec.Dirty = true
+
+	if rec.syncer != nil {
+		rec.syncer.RecDelete(rec.owner, rec, row)
+	}
+}
+
+//清空表格
+func (rec *GlobalDataTestRec) Clear() {
+	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+		log.LogError("the TestRec will be overwritten by scenedata")
+	}
+	rec.Rows = rec.Rows[:0]
+	rec.Dirty = true
+	if rec.syncer != nil {
+		rec.syncer.RecClear(rec.owner, rec)
+	}
+}
+
+//是否保存
+func (rec *GlobalDataTestRec) IsSave() bool {
+	return true
+}
+
+//初始化GlobalDataTestRec表
+func (obj *GlobalData) initGlobalDataTestRec() {
+	obj.TestRec_r.MaxRows = 1024
+	obj.TestRec_r.Cols = 2
+	obj.TestRec_r.Rows = make([]GlobalDataTestRecRow, 0, 1024)
+	obj.TestRec_r.owner = obj
+}
+
+//获取GlobalDataTestRec表
+func (obj *GlobalData) GetGlobalDataTestRec() *GlobalDataTestRec {
+	return &obj.TestRec_r
+}
+
 //初始化所有的表格
 func (obj *GlobalData) initRec() {
 
+	obj.initGlobalDataTestRec()
 }
 
 //获取某个表格
 func (obj *GlobalData) GetRec(rec string) Recorder {
 	switch rec {
+	case "TestRec":
+		return &obj.TestRec_r
 	default:
 		return nil
 	}
@@ -883,7 +1628,7 @@ func (obj *GlobalData) GetRec(rec string) Recorder {
 
 //获取所有表格名称
 func (obj *GlobalData) GetRecNames() []string {
-	return []string{}
+	return []string{"TestRec"}
 }
 
 func (obj *GlobalData) GlobalDataInit() {
@@ -903,6 +1648,8 @@ func (obj *GlobalData) Reset() {
 	obj.GlobalData_Propertys = GlobalData_Propertys{}
 	obj.GlobalDataInit()
 	//表格初始化
+	obj.TestRec_r.Clear()
+	obj.TestRec_r.syncer = nil
 
 	obj.ClearDirty()
 	obj.ClearModify()
@@ -926,7 +1673,13 @@ func (obj *GlobalData) Copy(other Entityer) error {
 		obj.GlobalData_Save.GlobalData_Save_Property = t.GlobalData_Save_Property
 		obj.GlobalData_Propertys = t.GlobalData_Propertys
 
+		var l int
 		//表格复制
+		obj.TestRec_r.Clear()
+		l = len(t.TestRec_r.Rows)
+		for i := 0; i < l; i++ {
+			obj.TestRec_r.AddRowValue(-1, t.TestRec_r.Rows[i].ID, t.TestRec_r.Rows[i].Flag)
+		}
 
 		return nil
 	}
@@ -953,6 +1706,13 @@ func (obj *GlobalData) GetConfigFromDb(data interface{}) string {
 func (obj *GlobalData) SyncFromDb(data interface{}) bool {
 	if v, ok := data.(*GlobalData_Save); ok {
 		obj.GlobalData_Save.GlobalData_Save_Property = v.GlobalData_Save_Property
+
+		obj.TestRec_r.Clear()
+		if l := len(v.TestRec_r.Rows); l > 0 {
+			for i := 0; i < l; i++ {
+				obj.TestRec_r.AddRowValue(-1, v.TestRec_r.Rows[i].ID, v.TestRec_r.Rows[i].Flag)
+			}
+		}
 
 		obj.NameHash = Hash(obj.Name)
 		obj.IDHash = Hash(obj.ConfigId)
@@ -1056,6 +1816,12 @@ func (obj *GlobalData) Serial() ([]byte, error) {
 	ps := obj.GetVisiblePropertys(0)
 	ar.Write(int16(len(ps)))
 
+	ar.Write(int16(0))
+	ar.Write(obj.Name)
+	ar.Write(int16(1))
+	ar.Write(obj.Test1)
+	ar.Write(int16(2))
+	ar.Write(obj.Test2)
 	return ar.Data(), nil
 }
 
@@ -1095,6 +1861,12 @@ func (obj *GlobalData) SyncFromSceneData(val interface{}) error {
 		return fmt.Errorf("type not GlobalDataSceneData", sd)
 	}
 
+	if sd.TestRec_r.Dirty {
+		obj.TestRec_r.Rows = obj.TestRec_r.Rows[:0]
+		obj.TestRec_r.Rows = append(obj.TestRec_r.Rows, sd.TestRec_r.Rows...) //Test任务表
+		obj.TestRec_r.Dirty = true
+	}
+
 	return nil
 }
 
@@ -1104,6 +1876,7 @@ func (obj *GlobalData) GetSceneData() interface{} {
 	//属性
 
 	//表格
+	sd.TestRec_r = obj.TestRec_r
 	return sd
 }
 
@@ -1114,8 +1887,8 @@ func CreateGlobalData() *GlobalData {
 	obj.ObjectType = HELPER
 	obj.initRec()
 
-	obj.propcritical = make([]uint64, int(math.Ceil(float64(1)/64)))
-	obj.propflag = make([]uint64, int(math.Ceil(float64(1)/64)))
+	obj.propcritical = make([]uint64, int(math.Ceil(float64(3)/64)))
+	obj.propflag = make([]uint64, int(math.Ceil(float64(3)/64)))
 	obj.GlobalDataInit()
 
 	obj.Mdirty = make(map[string]interface{}, 32)
@@ -1126,11 +1899,16 @@ func CreateGlobalData() *GlobalData {
 }
 
 type GlobalDataSceneData struct {
+	TestRec_r GlobalDataTestRec //Test任务表
 }
 
 func IsGlobalDataSceneData(idx int) bool {
 	switch idx {
 	case 0: //名称
+		return false
+	case 1: //测试数据1
+		return false
+	case 2: //测试数据2
 		return false
 	}
 	return false

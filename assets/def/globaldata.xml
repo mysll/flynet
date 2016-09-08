@@ -3,8 +3,14 @@
 	<type>HELPER</type>
 	<persistent>true</persistent>
 	<propertys>
-		<property name="Name" type="string" len="32" save="true" public="" realtime="" comment="名称" scenedata="false"/>
+		<property name="Name" type="string" len="32" save="true" public="self" realtime="true" comment="名称" scenedata="false"/>
+		<property name="Test1" type="string" len="32" save="true" public="self" realtime="true" comment="测试数据1" scenedata="false"/>
+		<property name="Test2" type="string" len="32" save="true" public="self" realtime="true" comment="测试数据2" scenedata="false"/>
 	</propertys>
 	<records>
+	<record name="TestRec" cols="2" maxrows="1024" save="true" visible="true" comment="Test任务表" type="MEDIUMTEXT" scenedata="true"> 
+			<column type="string" len="64" name="ID" tag="`json:&quot;1&quot;`" comment="Test1"/>
+			<column type="int8" name="Flag" tag="`json:&quot;2&quot;`" comment="Test2"/>
+		</record>
 	</records>
 </BaseScene>

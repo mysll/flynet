@@ -91,7 +91,9 @@
 		"#globalset":"全局数据的entity名称，默认为GlobalSet",
 		"globalset":"GlobalSet",
 		"#globaldataserver":"是否开启全局数据服务器,默认不开启",
-		"globaldataserver":false
+		"globaldataserver":false,
+		"#maxglobalentry":"全局数据最大条目",
+		"maxglobalentry":10
 	}],
 	"database": [{
 		"#name": "名称,全局唯一，不能重复",

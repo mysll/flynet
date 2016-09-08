@@ -27,6 +27,10 @@ func (status *StatusApp) OnMustAppReady() {
 }
 
 func (status *StatusApp) OnShutdown() bool {
+	if server.GetAppByType("base") == nil {
+		status.Exit()
+		return false
+	}
 	status.shutdown = 1
 	return false
 }
@@ -35,6 +39,26 @@ func (status *StatusApp) OnLost(app string) {
 	if server.GetAppByType("base") == nil && status.shutdown == 1 {
 		status.Exit()
 	}
+}
+
+func (status *StatusApp) OnGlobalDataLoaded() {
+	log.LogError("create test globaldata")
+	if status.FindGlobalData("Test1") == -1 {
+		if err := status.AddGlobalData("Test1", "GlobalData"); err != nil {
+			log.LogError(err)
+			return
+		}
+
+		index := status.FindGlobalData("Test1")
+		status.GlobalDataSet(index, "Test1", "ddddddddd")
+		status.GlobalDataSet(index, "Test2", "hhhhhhh")
+
+		status.GlobalDataAddRowValues(index, "TestRec", -1, "sll", int8(1))
+		status.GlobalDataAddRowValues(index, "TestRec", -1, "sll2", int8(2))
+		status.GlobalDataSetGrid(index, "TestRec", 0, 0, "test")
+		status.GlobalDataDelRow(index, "TestRec", 1)
+	}
+
 }
 
 func (status *StatusApp) Exit() {

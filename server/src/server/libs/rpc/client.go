@@ -12,6 +12,7 @@ import (
 	"net"
 	"server/libs/log"
 	"server/util"
+	"strings"
 	"sync"
 	"time"
 )
@@ -172,7 +173,9 @@ func (client *Client) input() {
 	var err error
 	for err == nil {
 		message, err := client.codec.ReadMessage()
-		if err != nil {
+		if err != nil &&
+			!strings.Contains(err.Error(), "An existing connection was forcibly closed by the remote host") &&
+			!strings.Contains(err.Error(), "use of closed network connection") {
 			log.LogError(client.codec.GetAddress(), err)
 			break
 		}
@@ -209,6 +212,8 @@ func (client *Client) input() {
 	}
 	client.mutex.Unlock()
 
+	log.LogMessage("quit read loop")
+
 }
 
 func (client *Client) Process() {
@@ -227,7 +232,7 @@ func (client *Client) Process() {
 }
 
 func (call *Call) done() {
-	if call.CB != nil {
+	if call.CB != nil && call.Reply != nil {
 		call.CB(call.Reply)
 	}
 

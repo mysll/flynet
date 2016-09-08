@@ -48,7 +48,7 @@ func (ar *StoreArchive) Write(val interface{}) error {
 	case int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64:
 		return binary.Write(ar.buffer, binary.LittleEndian, val)
 	case int:
-		return binary.Write(ar.buffer, binary.LittleEndian, int32(val.(int)))
+		return binary.Write(ar.buffer, binary.LittleEndian, int64(val.(int)))
 	case string:
 		return ar.WriteString(val.(string))
 	case ObjectID:
@@ -126,7 +126,13 @@ func (ar *LoadArchive) Read(val interface{}) (err error) {
 	case *int8, *int16, *int32, *int64, *uint8, *uint16, *uint32, *uint64, *float32, *float64:
 		return binary.Read(ar.reader, binary.LittleEndian, val)
 	case *int:
-		return binary.Read(ar.reader, binary.LittleEndian, int32(val.(int)))
+		var out int64
+		err = binary.Read(ar.reader, binary.LittleEndian, &out)
+		if err != nil {
+			return err
+		}
+		*(val.(*int)) = int(out)
+		return nil
 	case *string:
 		inst := val.(*string)
 		*inst, err = ar.ReadString()

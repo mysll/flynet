@@ -760,6 +760,22 @@ func (obj *GlobalSet) Set(p string, v interface{}) error {
 	return nil
 }
 
+//通过属性索引设置值
+func (obj *GlobalSet) SetByIndex(index int16, v interface{}) error {
+	switch index {
+	case 0:
+		val, ok := v.(string)
+		if ok {
+			obj.SetName(val)
+		} else {
+			return ErrTypeMismatch
+		}
+	default:
+		return ErrPropertyNotFound
+	}
+	return nil
+}
+
 //通过属性名获取值
 func (obj *GlobalSet) MustGet(p string) interface{} {
 	switch p {

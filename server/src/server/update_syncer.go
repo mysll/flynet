@@ -60,7 +60,7 @@ func (ps *PropSync) UpdateAll(player Entityer) error {
 	return nil
 }
 
-func (ps *PropSync) Update(index int16, value interface{}) {
+func (ps *PropSync) Update(self Entityer, index int16, value interface{}) {
 	update := pt.Update(index, value, true, ps.objid)
 	if update == nil {
 		return

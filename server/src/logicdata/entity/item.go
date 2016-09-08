@@ -817,6 +817,43 @@ func (obj *Item) Set(p string, v interface{}) error {
 	return nil
 }
 
+//通过属性索引设置值
+func (obj *Item) SetByIndex(index int16, v interface{}) error {
+	switch index {
+	case 0:
+		val, ok := v.(string)
+		if ok {
+			obj.SetID(val)
+		} else {
+			return ErrTypeMismatch
+		}
+	case 1:
+		var dst int32
+		err := ParseNumber(v, &dst)
+		if err == nil {
+			obj.SetTime(dst)
+		}
+		return err
+	case 2:
+		var dst int16
+		err := ParseNumber(v, &dst)
+		if err == nil {
+			obj.SetAmount(dst)
+		}
+		return err
+	case 3:
+		val, ok := v.(string)
+		if ok {
+			obj.SetName(val)
+		} else {
+			return ErrTypeMismatch
+		}
+	default:
+		return ErrPropertyNotFound
+	}
+	return nil
+}
+
 //通过属性名获取值
 func (obj *Item) MustGet(p string) interface{} {
 	switch p {

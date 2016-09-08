@@ -67,6 +67,7 @@ type Server struct {
 	globalset        string
 	globaldataserver bool
 	enableglobaldata bool
+	maxglobalentry   int
 	globalHelper     *GlobalDataHelper
 }
 
@@ -274,10 +275,19 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 		}
 	}
 
+	svr.maxglobalentry = 10
+	if max, ok := args.CheckGet("maxglobalentry"); ok {
+		v, err := max.Int()
+		if err == nil {
+			svr.maxglobalentry = v
+		}
+	}
+
 	log.LogMessage("global data status is ", svr.enableglobaldata)
 
 	if svr.globaldataserver {
 		svr.globalHelper.SetServer()
+		log.LogMessage("promote to global data server")
 	}
 
 	serial := (uint64(time.Now().Unix()%0x80000000) << 32) | (uint64(svr.AppId) << 24)
@@ -306,6 +316,7 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 	return true
 }
 
+//获取频道
 func (svr *Server) GetChannel(typ string) *Channel {
 	if c, ok := svr.channel[typ]; ok {
 		return c
@@ -314,6 +325,7 @@ func (svr *Server) GetChannel(typ string) *Channel {
 	return svr.channel[typ]
 }
 
+//主循环
 func (svr *Server) Wait() {
 	go Run(svr)
 	log.LogMessage("server debug:", svr.Debug)
@@ -329,6 +341,12 @@ func (svr *Server) Wait() {
 
 	<-svr.exitChannel
 	log.TraceInfo(svr.Name, "is shutdown")
+	//保存global data
+	log.TraceInfo(svr.Name, "save global data")
+	if err := svr.SaveGlobalData(true, true); err != nil {
+		log.LogError(err)
+	}
+	log.TraceInfo(svr.Name, "save global data, ok")
 	//通知app进程即将退出
 	if svr.apper.OnShutdown() {
 		svr.Shutdown()
@@ -351,11 +369,13 @@ func (svr *Server) Wait() {
 	log.CloseLogger()
 }
 
+//关闭服务
 func (svr *Server) Shutdown() {
 	svr.quit = true
 	close(svr.shutdown)
 }
 
+//服务已经就绪
 func (svr *Server) Ready() {
 	svr.noder.Reg(svr)
 	svr.noder.Ready()
@@ -370,6 +390,7 @@ func (svr *Server) KickUser(session int64) {
 	}
 }
 
+//延迟踢人
 func (svr *Server) DelayKickUser(session int64, sec int) {
 	node := svr.clientList.FindNode(session)
 	if node != nil {
@@ -377,7 +398,7 @@ func (svr *Server) DelayKickUser(session int64, sec int) {
 	}
 }
 
-//頂號處理
+//顶号处理
 func (svr *Server) SwitchConn(oldsession, newsession int64) bool {
 	if svr.clientList.Switch(oldsession, newsession) {
 		return true
@@ -385,14 +406,17 @@ func (svr *Server) SwitchConn(oldsession, newsession int64) bool {
 	return false
 }
 
+//获取客户端列表
 func (svr *Server) GetClientList() *ClientList {
 	return svr.clientList
 }
 
+//发送消息到master
 func (svr *Server) SendToMaster(data []byte) error {
 	return svr.noder.Send(data)
 }
 
+//关键应用已经启动完成
 func (svr *Server) MustReady() {
 	if !svr.MustAppReady {
 		svr.MustAppReady = true
@@ -400,6 +424,7 @@ func (svr *Server) MustReady() {
 	}
 
 	if svr.globaldataserver {
+		log.LogMessage("start global data service")
 		err := svr.globalHelper.LoadGlobalData()
 		if err != nil {
 			log.LogError(err)
@@ -407,10 +432,12 @@ func (svr *Server) MustReady() {
 	}
 }
 
+//某个app就绪通知
 func (svr *Server) OnAppReady(app string) {
 	svr.globalHelper.OnAppReady(app)
 }
 
+//某个app关闭通知
 func (svr *Server) OnAppLost(app string) {
 	svr.globalHelper.OnAppLost(app)
 }

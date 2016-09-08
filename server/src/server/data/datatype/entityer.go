@@ -66,10 +66,17 @@ type Recorder interface {
 	Get(row, col int) (val interface{}, err error)
 	//设置一行的值
 	SetRow(row int, args ...interface{}) error
+	//通过rowdata设置一行的值
+	SetRowByBytes(row int, rowdata []byte) error
+	//通过行类型进行设置一行的值
+	SetRowInterface(row int, rowvalue interface{}) error
 	//获取一行
 	GetRowInterface(row int) (rowvalue interface{}, err error)
+
 	//增加一行数据,row插入的位置，-1表示插入在最后
 	Add(row int, args ...interface{}) int
+	//增加一行数据,row插入的位置，-1表示插入在最后
+	AddByBytes(row int, rowdata []byte) int
 	//增加一行
 	AddRow(row int) int
 	//删除一行
@@ -86,15 +93,15 @@ type Recorder interface {
 }
 
 type TableSyncer interface {
-	RecAppend(rec Recorder, row int)
-	RecDelete(rec Recorder, row int)
-	RecClear(rec Recorder)
-	RecModify(rec Recorder, row, col int)
-	RecSetRow(rec Recorder, row int)
+	RecAppend(self Entityer, rec Recorder, row int)
+	RecDelete(self Entityer, rec Recorder, row int)
+	RecClear(self Entityer, rec Recorder)
+	RecModify(self Entityer, rec Recorder, row, col int)
+	RecSetRow(self Entityer, rec Recorder, row int)
 }
 
 type PropSyncer interface {
-	Update(index int16, value interface{})
+	Update(self Entityer, index int16, value interface{})
 }
 
 type PropHooker interface {
@@ -238,6 +245,8 @@ type Entityer interface {
 	Inc(p string, v interface{}) error
 	//设置属性(通用接口)
 	Set(p string, v interface{}) error
+	//通过属性索引设置
+	SetByIndex(index int16, v interface{}) error
 	//通过属性名获取属性不抛出异常(在确定属性存在的情况下使用)
 	MustGet(p string) interface{}
 	//通过属性名获取属性
