@@ -27,7 +27,7 @@ func (tcp *tcp_server) Handle(clientconn net.Conn) {
 			clientconn.Close()
 			log.LogFatalf(err)
 		}
-		app := &app{typ: reg.Type, id: reg.Id, name: reg.Name, conn: clientconn, host: reg.Host, port: reg.Port, clienthost: reg.ClientHost, clientport: reg.ClientPort}
+		app := &app{typ: reg.Type, id: reg.Id, name: reg.Name, conn: clientconn, host: reg.Host, port: reg.Port, clienthost: reg.ClientHost, clientport: reg.ClientPort, enableglobaldata: reg.EnableGlobalData}
 		log.LogMessage(app.id, ":", app.conn.RemoteAddr().String())
 		app.SendList()
 		AddApp(app)

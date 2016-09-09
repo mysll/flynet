@@ -163,7 +163,7 @@ func (client *Client) send(call *Call) error {
 	if call.noreply {
 		call.done()
 	} else {
-		log.LogMessage("request async call:", call.ServiceMethod, ", seq:", seq)
+		log.LogDebug("request async call:", call.ServiceMethod, ", seq:", seq)
 	}
 
 	return err
@@ -192,7 +192,7 @@ func (client *Client) input() {
 		default:
 			call.Reply = message
 			client.queue <- call
-			log.LogMessage("response replyed, seq:", seq)
+			log.LogDebug("response replyed, seq:", seq)
 		}
 	}
 	// Terminate pending calls.

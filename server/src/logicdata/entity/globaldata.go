@@ -964,10 +964,6 @@ func (obj *GlobalData) SetName(v string) {
 
 	old := obj.Name
 
-	if !obj.InBase { //只有base能够修改自身的数据
-		log.LogError("can't change base data")
-	}
-
 	obj.Name = v
 	if obj.prophooker != nil && obj.IsCritical(0) && !obj.GetPropFlag(0) {
 		obj.SetPropFlag(0, true)
@@ -995,10 +991,6 @@ func (obj *GlobalData) SetTest1(v string) {
 
 	old := obj.Test1
 
-	if !obj.InBase { //只有base能够修改自身的数据
-		log.LogError("can't change base data")
-	}
-
 	obj.Test1 = v
 	if obj.prophooker != nil && obj.IsCritical(1) && !obj.GetPropFlag(1) {
 		obj.SetPropFlag(1, true)
@@ -1024,10 +1016,6 @@ func (obj *GlobalData) SetTest2(v string) {
 	}
 
 	old := obj.Test2
-
-	if !obj.InBase { //只有base能够修改自身的数据
-		log.LogError("can't change base data")
-	}
 
 	obj.Test2 = v
 	if obj.prophooker != nil && obj.IsCritical(2) && !obj.GetPropFlag(2) {
@@ -1183,9 +1171,6 @@ func (rec *GlobalDataTestRec) SerialRow(row int) ([]byte, error) {
 
 //通过行列设置值
 func (rec *GlobalDataTestRec) Set(row, col int, val interface{}) error {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the TestRec will be overwritten by scenedata")
-	}
 
 	if row < 0 || row >= len(rec.Rows) {
 		return ErrRowError
@@ -1195,7 +1180,7 @@ func (rec *GlobalDataTestRec) Set(row, col int, val interface{}) error {
 		return ErrColError
 	}
 
-	r := rec.Rows[row]
+	r := &rec.Rows[row]
 
 	switch col {
 	case 0:
@@ -1270,9 +1255,6 @@ func (rec *GlobalDataTestRec) FindNextID(v string, itr int) int {
 
 //设置Test1
 func (rec *GlobalDataTestRec) SetID(row int, v string) error {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the ID will be overwritten by scenedata")
-	}
 
 	if row < 0 || row >= len(rec.Rows) {
 		return ErrRowError
@@ -1323,9 +1305,6 @@ func (rec *GlobalDataTestRec) FindNextFlag(v int8, itr int) int {
 
 //设置Test2
 func (rec *GlobalDataTestRec) SetFlag(row int, v int8) error {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the Flag will be overwritten by scenedata")
-	}
 
 	if row < 0 || row >= len(rec.Rows) {
 		return ErrRowError
@@ -1352,9 +1331,6 @@ func (rec *GlobalDataTestRec) GetFlag(row int) (val int8, err error) {
 
 //设置一行的值
 func (rec *GlobalDataTestRec) SetRow(row int, args ...interface{}) error {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the TestRec will be overwritten by scenedata")
-	}
 
 	if _, ok := args[0].(string); !ok {
 		return ErrColTypeError
@@ -1366,9 +1342,6 @@ func (rec *GlobalDataTestRec) SetRow(row int, args ...interface{}) error {
 }
 
 func (rec *GlobalDataTestRec) SetRowInterface(row int, rowvalue interface{}) error {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the TestRec will be overwritten by scenedata")
-	}
 
 	if row < 0 || row >= len(rec.Rows) {
 		return ErrRowError
@@ -1428,9 +1401,6 @@ func (rec *GlobalDataTestRec) SetRowValue(row int, id string, flag int8) error {
 
 //增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
 func (rec *GlobalDataTestRec) Add(row int, args ...interface{}) int {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the TestRec will be overwritten by scenedata")
-	}
 
 	if len(args) != rec.Cols {
 		return -1
@@ -1468,9 +1438,7 @@ func (rec *GlobalDataTestRec) AddByBytes(row int, rowdata []byte) int {
 
 //增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
 func (rec *GlobalDataTestRec) AddRow(row int) int {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the TestRec will be overwritten by scenedata")
-	}
+
 	add := -1
 
 	if len(rec.Rows) >= rec.MaxRows {
@@ -1485,9 +1453,6 @@ func (rec *GlobalDataTestRec) AddRow(row int) int {
 
 //增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
 func (rec *GlobalDataTestRec) AddRowValue(row int, id string, flag int8) int {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the TestRec will be overwritten by scenedata")
-	}
 
 	add := -1
 
@@ -1564,9 +1529,7 @@ func (rec *GlobalDataTestRec) Scan(row int, id *string, flag *int8) bool {
 
 //删除一行
 func (rec *GlobalDataTestRec) Del(row int) {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the TestRec will be overwritten by scenedata")
-	}
+
 	if row < 0 || row >= len(rec.Rows) {
 		return
 	}
@@ -1582,9 +1545,7 @@ func (rec *GlobalDataTestRec) Del(row int) {
 
 //清空表格
 func (rec *GlobalDataTestRec) Clear() {
-	if rec.owner.InBase && rec.owner.InScene { //当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
-		log.LogError("the TestRec will be overwritten by scenedata")
-	}
+
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
 	if rec.syncer != nil {

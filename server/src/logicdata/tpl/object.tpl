@@ -2,6 +2,7 @@
 // DO NOT EDIT!
 package entity
 {{$Obj := .Name}}
+{{$nowarning := .NoWarning}}
 import (
 	. "server/data/datatype"
 	"encoding/gob"
@@ -951,11 +952,11 @@ func (obj *{{$Obj}}) Set{{$prop.Name}}(v {{$prop.Type}}) {
 
 	old := obj.{{$prop.Name}}
 
-	{{if eq $prop.SceneData "true"}}if obj.InBase && obj.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+	{{if ne $nowarning "true"}}{{if eq $prop.SceneData "true"}}if obj.InBase && obj.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the data will be overwritten by scenedata")
 	} {{else}} if !obj.InBase {//只有base能够修改自身的数据
 		log.LogError("can't change base data")
-	} {{end}}
+	} {{end}}{{end}}
 	
 	obj.{{$prop.Name}} = v	
 	if obj.prophooker != nil && obj.IsCritical({{$idx}}) && !obj.GetPropFlag({{$idx}}){
@@ -1183,11 +1184,11 @@ func (rec *{{$Obj}}{{.Name}}) SerialRow(row int)([]byte, error){
 
 //通过行列设置值
 func (rec *{{$Obj}}{{.Name}}) Set(row, col int, val interface{}) error {
-	{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+	{{if ne $nowarning "true"}}{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the {{.Name}} will be overwritten by scenedata")
 	} {{else}} if !rec.owner.InBase {//只有base能够修改自身的数据
 		log.LogError("can't change {{.Name}}")
-	} {{end}}
+	} {{end}}{{end}}
 
 	if row < 0 || row >= len(rec.Rows) {
 		return ErrRowError
@@ -1197,7 +1198,7 @@ func (rec *{{$Obj}}{{.Name}}) Set(row, col int, val interface{}) error {
 		return ErrColError
 	}
 
-	r := rec.Rows[row]
+	r := &rec.Rows[row]
 
 	switch col { {{range $idx, $ele := .Columns}}
 	case {{$idx}}:
@@ -1263,11 +1264,11 @@ func (rec *{{$Obj}}{{$rec}}) FindNext{{$col.Name}}(v {{$col.Type}}, itr int) int
 
 //设置{{$col.Comment}}
 func (rec *{{$Obj}}{{$rec}}) Set{{$col.Name}}(row int, v {{$col.Type}}) error {
-	{{if eq $Record.SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+	{{if ne $nowarning "true"}}{{if eq $Record.SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the {{.Name}} will be overwritten by scenedata")
 	} {{else}} if !rec.owner.InBase {//只有base能够修改自身的数据
 		log.LogError("can't change {{.Name}}")
-	} {{end}}
+	} {{end}}{{end}}
 
 	if row < 0 || row >= len(rec.Rows) {
 		return ErrRowError
@@ -1294,11 +1295,11 @@ func (rec *{{$Obj}}{{$rec}}) Get{{$col.Name}}(row int) (val {{$col.Type}}, err e
 
 //设置一行的值
 func (rec *{{$Obj}}{{.Name}}) SetRow(row int, args ...interface{} ) error {
-	{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+	{{if ne $nowarning "true"}}{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the {{.Name}} will be overwritten by scenedata")
 	} {{else}} if !rec.owner.InBase {//只有base能够修改自身的数据
 		log.LogError("can't change {{.Name}}")
-	} {{end}}
+	} {{end}}{{end}}
 	{{range $idx, $c := .Columns}}
 	if _, ok := args[{{$idx}}].({{$c.Type}}); !ok {
 		return ErrColTypeError
@@ -1307,11 +1308,11 @@ func (rec *{{$Obj}}{{.Name}}) SetRow(row int, args ...interface{} ) error {
 }
 
 func (rec *{{$Obj}}{{.Name}}) SetRowInterface(row int, rowvalue interface{}) error {
-	{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+	{{if ne $nowarning "true"}}{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the {{.Name}} will be overwritten by scenedata")
 	} {{else}} if !rec.owner.InBase {//只有base能够修改自身的数据
 		log.LogError("can't change {{.Name}}")
-	} {{end}}
+	} {{end}}{{end}}
 
 	if row < 0 || row >= len(rec.Rows) {
 		return ErrRowError
@@ -1368,11 +1369,11 @@ func (rec *{{$Obj}}{{.Name}}) SetRowValue(row int{{range .Columns}}, {{tolower .
 
 //增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
 func (rec *{{$Obj}}{{.Name}}) Add(row int, args ...interface{} ) int {
-	{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+	{{if ne $nowarning "true"}}{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the {{.Name}} will be overwritten by scenedata")
 	} {{else}} if !rec.owner.InBase {//只有base能够修改自身的数据
 		log.LogError("can't change {{.Name}}")
-	} {{end}}
+	} {{end}}{{end}}
 
 	if len(args) != rec.Cols {
 		return -1
@@ -1404,11 +1405,11 @@ func (rec *{{$Obj}}{{.Name}}) AddByBytes(row int, rowdata []byte) int {
 
 //增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
 func (rec *{{$Obj}}{{.Name}}) AddRow(row int) int {
-	{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+	{{if ne $nowarning "true"}}{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the {{.Name}} will be overwritten by scenedata")
 	} {{else}} if !rec.owner.InBase {//只有base能够修改自身的数据
 		log.LogError("can't change {{.Name}}")
-	} {{end}}
+	} {{end}}{{end}}
 	add := -1
 
 	if len(rec.Rows) >= rec.MaxRows {
@@ -1444,11 +1445,11 @@ func (rec *{{$Obj}}{{.Name}}) AddRow(row int) int {
 
 //增加一行,row=-1时,在表格最后面插入一行,否则在row处插入,返回-1插入失败,否则返回插入的行号
 func (rec *{{$Obj}}{{.Name}}) AddRowValue(row int {{range .Columns}}, {{tolower .Name}} {{.Type}}{{end}} ) int {
-	{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+	{{if ne $nowarning "true"}}{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the {{.Name}} will be overwritten by scenedata")
 	} {{else}} if !rec.owner.InBase {//只有base能够修改自身的数据
 		log.LogError("can't change {{.Name}}")
-	} {{end}}
+	} {{end}}{{end}}
 
 	add := -1
 
@@ -1523,11 +1524,11 @@ func (rec *{{$Obj}}{{.Name}}) Scan(row int {{range .Columns}}, {{tolower .Name}}
 
 //删除一行
 func (rec *{{$Obj}}{{.Name}}) Del(row int) {
-	{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+	{{if ne $nowarning "true"}}{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the {{.Name}} will be overwritten by scenedata") 
 	} {{else}} if !rec.owner.InBase {//只有base能够修改自身的数据
 		log.LogError("can't change {{.Name}}")
-	} {{end}}
+	} {{end}}{{end}}
 	if row < 0 || row >= len(rec.Rows) {
 		return
 	}
@@ -1543,11 +1544,11 @@ func (rec *{{$Obj}}{{.Name}}) Del(row int) {
 
 //清空表格
 func (rec *{{$Obj}}{{.Name}}) Clear() {
-	{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
+	{{if ne $nowarning "true"}}{{if eq .SceneData "true"}}if rec.owner.InBase && rec.owner.InScene {//当玩家在场景中时，在base中修改scenedata，在同步时会被覆盖.
 		log.LogError("the {{.Name}} will be overwritten by scenedata")
 	} {{else}} if !rec.owner.InBase {//只有base能够修改自身的数据
 		log.LogError("can't change {{.Name}}")
-	} {{end}}
+	} {{end}}{{end}}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
 	if rec.syncer != nil {

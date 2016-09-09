@@ -22,13 +22,14 @@ const (
 )
 
 type RegisterApp struct {
-	Type       string
-	Id         int32
-	Name       string
-	Host       string
-	Port       int
-	ClientHost string
-	ClientPort int
+	Type             string
+	Id               int32
+	Name             string
+	Host             string
+	Port             int
+	ClientHost       string
+	ClientPort       int
+	EnableGlobalData bool
 }
 
 type RegisterAgent struct {
@@ -37,14 +38,15 @@ type RegisterAgent struct {
 }
 
 type AddApp struct {
-	Type       string
-	Id         int32
-	Name       string
-	Host       string
-	Port       int
-	ClientHost string
-	ClientPort int
-	Ready      bool
+	Type             string
+	Id               int32
+	Name             string
+	Host             string
+	Port             int
+	ClientHost       string
+	ClientPort       int
+	Ready            bool
+	EnableGlobalData bool
 }
 
 type RemoveApp struct {
@@ -142,8 +144,8 @@ func CreateReadyMsg(id int32) (data []byte, err error) {
 	return util.CreateMsg(nil, out, M_READY)
 }
 
-func CreateRegisterAppMsg(typ string, id int32, name string, host string, port int, clienthost string, clientport int) (data []byte, err error) {
-	si := &RegisterApp{typ, id, name, host, port, clienthost, clientport}
+func CreateRegisterAppMsg(typ string, id int32, name string, host string, port int, clienthost string, clientport int, enableglobaldata bool) (data []byte, err error) {
+	si := &RegisterApp{typ, id, name, host, port, clienthost, clientport, enableglobaldata}
 	out, e := EncodeMsg(si)
 	if e != nil {
 		err = e
@@ -164,8 +166,8 @@ func CreateServerListMsg(slist []AddApp) (data []byte, err error) {
 	return util.CreateMsg(nil, out, M_SERVER_LIST)
 }
 
-func CreateAddServerMsg(typ string, id int32, name string, host string, port int, clienthost string, clientport int, ready bool) (data []byte, err error) {
-	as := &AddApp{typ, id, name, host, port, clienthost, clientport, ready}
+func CreateAddServerMsg(typ string, id int32, name string, host string, port int, clienthost string, clientport int, ready bool, enableglobaldata bool) (data []byte, err error) {
+	as := &AddApp{typ, id, name, host, port, clienthost, clientport, ready, enableglobaldata}
 	out, e := EncodeMsg(as)
 	if e != nil {
 		err = e

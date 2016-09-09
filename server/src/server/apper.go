@@ -52,6 +52,8 @@ type Apper interface {
 	OnBaseTeleported(mailbox rpc.Mailbox, result bool)
 	//全局数据加载完成
 	OnGlobalDataLoaded()
+	//全局数据创建完成(client通知)
+	OnGlobalDataCreated()
 	//全局数据保存前(0:退出前保存,1:定时保存)
 	OnPerSaveGlobalData(quit bool)
 }
@@ -162,5 +164,9 @@ func (svr *Server) OnGlobalDataLoaded() {
 }
 
 func (svr *Server) OnPerSaveGlobalData(quit bool) {
+
+}
+
+func (svr *Server) OnGlobalDataCreated() {
 
 }

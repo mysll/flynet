@@ -282,7 +282,6 @@ func (gd *GlobalDataHelper) OnLoadGlobalData(msg *rpc.Message) {
 	if err != nil {
 		log.LogError("create global data set failed, err:", err)
 	}
-	ent.SetInBase(true)
 	if gd.dataset != nil {
 		core.Destroy(gd.dataset.GetObjId())
 	}
@@ -358,7 +357,6 @@ func (gd *GlobalDataHelper) createDataSet() error {
 			return fmt.Errorf("create global data failed, %s", err.Error())
 		}
 
-		ent.SetInBase(true)
 		ent.SetDbId(core.GetUid())
 		ent.Set("Name", "GlobalData")
 		gd.dataset = ent
@@ -459,6 +457,7 @@ func (gd *GlobalDataHelper) OnAppReady(appname string) {
 		}
 		gc := &globalClient{}
 		gc.appid = app.Id
+		gc.disable = !app.EnableGlobalData
 		gd.globalclients[appname] = gc
 	}
 }
@@ -526,7 +525,6 @@ func (gd *GlobalDataHelper) Update(self datatype.Entityer, index int16, value in
 	if !gd.isServer {
 		return
 	}
-	log.LogMessage("Update")
 	v := gd.dataChange()
 
 	for _, client := range gd.globalclients {
@@ -549,7 +547,6 @@ func (gd *GlobalDataHelper) RecAppend(self datatype.Entityer, rec datatype.Recor
 		return
 	}
 
-	log.LogMessage("RecAppend")
 	v := gd.dataChange()
 
 	for _, client := range gd.globalclients {
@@ -572,8 +569,6 @@ func (gd *GlobalDataHelper) RecDelete(self datatype.Entityer, rec datatype.Recor
 		return
 	}
 
-	log.LogMessage("RecDelete")
-
 	v := gd.dataChange()
 
 	for _, client := range gd.globalclients {
@@ -594,7 +589,6 @@ func (gd *GlobalDataHelper) RecClear(self datatype.Entityer, rec datatype.Record
 	if !gd.isServer {
 		return
 	}
-	log.LogMessage("RecClear")
 	v := gd.dataChange()
 
 	for _, client := range gd.globalclients {
@@ -615,7 +609,6 @@ func (gd *GlobalDataHelper) RecModify(self datatype.Entityer, rec datatype.Recor
 	if !gd.isServer {
 		return
 	}
-	log.LogMessage("RecModify")
 	v := gd.dataChange()
 
 	for _, client := range gd.globalclients {
@@ -638,7 +631,6 @@ func (gd *GlobalDataHelper) RecSetRow(self datatype.Entityer, rec datatype.Recor
 		return
 	}
 
-	log.LogMessage("RecSetRow")
 	v := gd.dataChange()
 
 	for _, client := range gd.globalclients {
@@ -663,7 +655,6 @@ func (gd *GlobalDataHelper) OnAfterAdd(self datatype.Entityer, sender datatype.E
 		return 1
 	}
 
-	log.LogMessage("hook prop sync")
 	sender.SetPropSyncer(gd)
 	recs := sender.GetRecNames()
 	for _, v := range recs {

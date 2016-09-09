@@ -1,6 +1,7 @@
 <BaseScene>
 	<name>GlobalSet</name>
 	<type>HELPER</type>
+	<nowarning>true</nowarning>
 	<persistent>true</persistent>
 	<propertys>
 		<property name="Name" type="string" len="32" save="true" public="" comment="名称" scenedata="false"/>

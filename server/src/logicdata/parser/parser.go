@@ -44,6 +44,7 @@ type Object struct {
 	Type       string     `xml:"type"`
 	Base       string     `xml:"base"`
 	Persistent string     `xml:"persistent"`
+	NoWarning  string     `xml:"nowarning"`
 	Include    string     `xml:"include"`
 	Interfaces []string   `xml:"interfaces>interface"`
 	Propertys  []Property `xml:"propertys>property"`

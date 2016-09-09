@@ -1,6 +1,7 @@
 <object_name>  <!-- object_name 首字母大写-->
 	<name>object_name</name>
 	<type>object_type:see@datatype.go</type>
+	<nowarning>false</nowarning><!-- 修改权限提示 -->
 	<persistent>true</persistent><!--是否需要存档 -->
 	<include/>
 	<interfaces><!--接口-->

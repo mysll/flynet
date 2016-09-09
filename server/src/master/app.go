@@ -13,18 +13,19 @@ const (
 )
 
 type app struct {
-	typ        string
-	id         int32
-	name       string
-	conn       net.Conn
-	host       string
-	port       int
-	clienthost string
-	clientport int
-	exit       chan int
-	lastcheck  time.Time
-	ready      bool
-	Shutdown   bool
+	typ              string
+	id               int32
+	name             string
+	conn             net.Conn
+	host             string
+	port             int
+	clienthost       string
+	clientport       int
+	exit             chan int
+	lastcheck        time.Time
+	ready            bool
+	Shutdown         bool
+	enableglobaldata bool
 }
 
 func (app *app) Close() {
@@ -61,7 +62,7 @@ func (app *app) SendList() {
 
 	rs := make([]share.AddApp, 0, size)
 	for _, v := range context.app {
-		rs = append(rs, share.AddApp{v.typ, v.id, v.name, v.host, v.port, v.clienthost, v.clientport, v.ready})
+		rs = append(rs, share.AddApp{v.typ, v.id, v.name, v.host, v.port, v.clienthost, v.clientport, v.ready, v.enableglobaldata})
 	}
 
 	outmsg, err := share.CreateServerListMsg(rs)

@@ -866,10 +866,6 @@ func (obj *GlobalSet) SetName(v string) {
 
 	old := obj.Name
 
-	if !obj.InBase { //只有base能够修改自身的数据
-		log.LogError("can't change base data")
-	}
-
 	obj.Name = v
 	if obj.prophooker != nil && obj.IsCritical(0) && !obj.GetPropFlag(0) {
 		obj.SetPropFlag(0, true)

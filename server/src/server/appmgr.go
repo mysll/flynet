@@ -153,7 +153,7 @@ func GetAppIdsByType(typ string) []string {
 }
 
 //增加一个远程进程
-func AddApp(typ string, id int32, name string, host string, port int, clienthost string, clientport int, ready bool) {
+func AddApp(typ string, id int32, name string, host string, port int, clienthost string, clientport int, ready bool, enableglobaldata bool) {
 	if core.Name == name {
 		return
 	}
@@ -174,7 +174,7 @@ func AddApp(typ string, id int32, name string, host string, port int, clienthost
 		delete(RemoteApps, appid)
 	}
 
-	RemoteApps[id] = &RemoteApp{Id: id, Type: typ, Name: name, Host: host, Port: port, ClientHost: clienthost, ClientPort: clientport, Ready: ready}
+	RemoteApps[id] = &RemoteApp{Id: id, Type: typ, Name: name, Host: host, Port: port, ClientHost: clienthost, ClientPort: clientport, Ready: ready, EnableGlobalData: enableglobaldata}
 	RemoteAppName[name] = id
 	log.LogInfo(core.Name, "> add server:", *RemoteApps[id])
 	if ready {

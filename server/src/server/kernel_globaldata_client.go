@@ -35,6 +35,7 @@ func (gd *GlobalDataHelper) CreateGlobalData(sender rpc.Mailbox, msg *rpc.Messag
 	}
 	gd.dataset = ent
 	log.LogMessage("create global data succeed, version:", gd.dataversion)
+	core.apper.OnGlobalDataCreated()
 	return share.ERR_REPLY_SUCCEED, reply
 }
 

@@ -12,8 +12,6 @@ func GetType(name string) int {
 	switch name {
 	case "GlobalData":
 		return HELPER
-	case "Item":
-		return ITEM
 	case "Player":
 		return PLAYER
 	case "BaseScene":
@@ -22,6 +20,8 @@ func GetType(name string) int {
 		return ITEM
 	case "GlobalSet":
 		return HELPER
+	case "Item":
+		return ITEM
 	default:
 		return NONE
 	}
@@ -31,8 +31,6 @@ func CreateSaveLoader(typ string) DBSaveLoader {
 	switch typ {
 	case "GlobalData":
 		return &GlobalData_Save{}
-	case "Item":
-		return &Item_Save{}
 	case "Player":
 		return &Player_Save{}
 	case "BaseScene":
@@ -41,6 +39,8 @@ func CreateSaveLoader(typ string) DBSaveLoader {
 		return &Container_Save{}
 	case "GlobalSet":
 		return &GlobalSet_Save{}
+	case "Item":
+		return &Item_Save{}
 	default:
 		return nil
 	}
@@ -59,10 +59,6 @@ func IsGlobalData(ent Entityer) bool {
 	return ent.ObjTypeName() == "GlobalData"
 }
 
-func IsItem(ent Entityer) bool {
-	return ent.ObjTypeName() == "Item"
-}
-
 func IsPlayer(ent Entityer) bool {
 	return ent.ObjTypeName() == "Player"
 }
@@ -79,6 +75,10 @@ func IsGlobalSet(ent Entityer) bool {
 	return ent.ObjTypeName() == "GlobalSet"
 }
 
+func IsItem(ent Entityer) bool {
+	return ent.ObjTypeName() == "Item"
+}
+
 //初始化函数
 func init() {
 
@@ -86,11 +86,6 @@ func init() {
 		return CreateGlobalData()
 	})
 	GlobalDataInit()
-
-	Register("Item", func() Entityer {
-		return CreateItem()
-	})
-	ItemInit()
 
 	Register("Player", func() Entityer {
 		return CreatePlayer()
@@ -111,6 +106,11 @@ func init() {
 		return CreateGlobalSet()
 	})
 	GlobalSetInit()
+
+	Register("Item", func() Entityer {
+		return CreateItem()
+	})
+	ItemInit()
 
 	gob.Register(&EntityInfo{})
 }

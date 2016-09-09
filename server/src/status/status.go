@@ -57,6 +57,7 @@ func (status *StatusApp) OnGlobalDataLoaded() {
 		status.GlobalDataAddRowValues(index, "TestRec", -1, "sll2", int8(2))
 		status.GlobalDataSetGrid(index, "TestRec", 0, 0, "test")
 		status.GlobalDataDelRow(index, "TestRec", 1)
+		status.SaveGlobalData(false, false)
 	}
 
 }

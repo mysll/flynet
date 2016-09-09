@@ -65,7 +65,7 @@ func AddApp(app *app) {
 	applock.Lock()
 	defer applock.Unlock()
 
-	out, err := share.CreateAddServerMsg(app.typ, app.id, app.name, app.host, app.port, app.clienthost, app.clientport, app.ready)
+	out, err := share.CreateAddServerMsg(app.typ, app.id, app.name, app.host, app.port, app.clienthost, app.clientport, app.ready, app.enableglobaldata)
 	if err != nil {
 		log.LogFatalf(err)
 	}

@@ -13,16 +13,17 @@ import (
 //远程进程
 type RemoteApp struct {
 	sync.Mutex
-	Id         int32
-	Type       string
-	Name       string
-	Host       string
-	Port       int
-	ClientHost string
-	ClientPort int
-	Ready      bool
-	Conn       net.Conn
-	RpcClient  *rpc.Client
+	Id               int32
+	Type             string
+	Name             string
+	Host             string
+	Port             int
+	ClientHost       string
+	ClientPort       int
+	Ready            bool
+	EnableGlobalData bool
+	Conn             net.Conn
+	RpcClient        *rpc.Client
 }
 
 //进程就绪

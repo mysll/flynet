@@ -2080,7 +2080,7 @@ func (rec *PlayerMailBox) Set(row, col int, val interface{}) error {
 		return ErrColError
 	}
 
-	r := rec.Rows[row]
+	r := &rec.Rows[row]
 
 	switch col {
 	case 0:
@@ -3196,7 +3196,7 @@ func (rec *PlayerTaskAccepted) Set(row, col int, val interface{}) error {
 		return ErrColError
 	}
 
-	r := rec.Rows[row]
+	r := &rec.Rows[row]
 
 	switch col {
 	case 0:
@@ -3767,7 +3767,7 @@ func (rec *PlayerTaskRecord) Set(row, col int, val interface{}) error {
 		return ErrColError
 	}
 
-	r := rec.Rows[row]
+	r := &rec.Rows[row]
 
 	switch col {
 	case 0:
@@ -4644,7 +4644,7 @@ func (rec *PlayerTaskCanAccept) Set(row, col int, val interface{}) error {
 		return ErrColError
 	}
 
-	r := rec.Rows[row]
+	r := &rec.Rows[row]
 
 	switch col {
 	case 0:
@@ -5130,7 +5130,7 @@ func (rec *PlayerTaskTimeLimit) Set(row, col int, val interface{}) error {
 		return ErrColError
 	}
 
-	r := rec.Rows[row]
+	r := &rec.Rows[row]
 
 	switch col {
 	case 0:
@@ -5774,7 +5774,7 @@ func (rec *PlayerTaskGlobalRecord) Set(row, col int, val interface{}) error {
 		return ErrColError
 	}
 
-	r := rec.Rows[row]
+	r := &rec.Rows[row]
 
 	switch col {
 	case 0:
@@ -6418,7 +6418,7 @@ func (rec *PlayerTaskPropRecord) Set(row, col int, val interface{}) error {
 		return ErrColError
 	}
 
-	r := rec.Rows[row]
+	r := &rec.Rows[row]
 
 	switch col {
 	case 0:
