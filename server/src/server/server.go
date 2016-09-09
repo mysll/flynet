@@ -341,12 +341,15 @@ func (svr *Server) Wait() {
 
 	<-svr.exitChannel
 	log.TraceInfo(svr.Name, "is shutdown")
-	//保存global data
-	log.TraceInfo(svr.Name, "save global data")
-	if err := svr.SaveGlobalData(true, true); err != nil {
-		log.LogError(err)
+	if svr.globaldataserver {
+		//保存global data
+		log.TraceInfo(svr.Name, "save global data")
+		if err := svr.SaveGlobalData(true, true); err != nil {
+			log.LogError(err)
+		}
+		log.TraceInfo(svr.Name, "save global data, ok")
 	}
-	log.TraceInfo(svr.Name, "save global data, ok")
+
 	//通知app进程即将退出
 	if svr.apper.OnShutdown() {
 		svr.Shutdown()

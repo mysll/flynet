@@ -190,6 +190,19 @@ func Run(s *Server) {
 			s.clientList.Check()
 		}
 
+	coroutineL:
+		for {
+			select {
+			case id := <-coroutinecomplete:
+				if c, has := coroutinepending[id]; has {
+					c.submit(c.reply)
+					delete(coroutinepending, id)
+				}
+			default:
+				break coroutineL
+			}
+		}
+
 		//删除对象
 		s.ObjectFactory.ClearDelete()
 		s.apper.OnFrame()
