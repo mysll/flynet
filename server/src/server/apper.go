@@ -54,7 +54,7 @@ type Apper interface {
 	OnGlobalDataLoaded()
 	//全局数据创建完成(client通知)
 	OnGlobalDataCreated()
-	//全局数据保存前(0:退出前保存,1:定时保存)
+	//全局数据保存前(quit是不是退出前的最后一次保存)
 	OnPerSaveGlobalData(quit bool)
 }
 

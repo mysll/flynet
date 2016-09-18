@@ -10,14 +10,16 @@ var (
 
 type Coroutines struct {
 	workid int64
-	submit func(int)
-	reply  int
+	submit func(int, interface{})
+	result int
+	reply  interface{}
 }
 
-func (c *Coroutines) Run(job func() int) {
+func (c *Coroutines) Run(job func(interface{}, interface{}) int, args interface{}, reply interface{}) {
 	log.LogMessage("coroutine ", c.workid, " is started")
-	ret := job()
-	c.reply = ret
+	ret := job(args, reply)
+	c.result = ret
+	c.reply = reply
 	coroutinecomplete <- c.workid
 	log.LogMessage("coroutine ", c.workid, " is complete")
 }
@@ -30,12 +32,12 @@ func (kernel *Kernel) CancelCoroutine(id int64) {
 }
 
 //运行一个异步过程,job要完成的工作,submit完成后回调函数
-func (kernel *Kernel) StartCoroutine(job func() int, submit func(int)) int64 {
+func (kernel *Kernel) StartCoroutine(job func(interface{}, interface{}) int, args interface{}, reply interface{}, submit func(int, interface{})) int64 {
 	workid++
 	c := &Coroutines{}
 	c.workid = workid
 	c.submit = submit
 	coroutinepending[workid] = c
-	go c.Run(job)
+	go c.Run(job, args, reply)
 	return workid
 }

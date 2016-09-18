@@ -195,7 +195,7 @@ func Run(s *Server) {
 			select {
 			case id := <-coroutinecomplete:
 				if c, has := coroutinepending[id]; has {
-					c.submit(c.reply)
+					c.submit(c.result, c.reply)
 					delete(coroutinepending, id)
 				}
 			default:
