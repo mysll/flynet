@@ -1,4 +1,4 @@
-package base
+package task
 
 import (
 	"fmt"
@@ -9,6 +9,10 @@ import (
 	"server/libs/log"
 	"strings"
 	"time"
+)
+
+var (
+	TaskInst = NewTaskSystem()
 )
 
 const (

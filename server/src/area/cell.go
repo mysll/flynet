@@ -11,6 +11,21 @@ import (
 	"server/libs/rpc"
 )
 
+type CellInfo struct {
+	Id           int
+	Name         string
+	Path         string  //地图信息路径
+	X            float32 //地图左上角X坐标
+	Y            float32 //地图左上角Y坐标
+	Width        float32 //地图宽度
+	Height       float32 //地图高度
+	TileW        float32 //格子宽
+	TileH        float32 //格子高
+	MaxViewRange float32 //最大视野
+	MaxPlayers   int32   //最大玩家数
+	MaxVisual    int32   //最大可视人数
+}
+
 type cell struct {
 	server.Dispatch
 	aoi       *aoi.AOI

@@ -1,6 +1,7 @@
 package base
 
 import (
+	"game/module/task"
 	"math/rand"
 	_ "pb"
 	"server"
@@ -26,7 +27,7 @@ type BaseApp struct {
 	Sync       *Sync
 	config     *Config
 	Letter     *LetterSystem
-	tasksystem *TaskSystem
+	tasksystem *task.TaskSystem
 	taskLogic  *TaskLogic
 }
 
@@ -108,7 +109,7 @@ func init() {
 		Sync:       NewSync(),
 		config:     NewConfig(),
 		Letter:     NewLetterSystem(),
-		tasksystem: NewTaskSystem(),
+		tasksystem: task.TaskInst,
 		taskLogic:  NewTaskLogic(),
 	}
 

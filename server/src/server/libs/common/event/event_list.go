@@ -1,8 +1,9 @@
 package event
 
+type EventArgs map[string]interface{}
 type Event struct {
 	Typ  string
-	Args map[string]interface{}
+	Args EventArgs
 }
 
 type EventList struct {
@@ -11,7 +12,7 @@ type EventList struct {
 	eventCache chan *Event //缓存
 }
 
-func (e *EventList) Push(t string, args map[string]interface{}, priority bool) {
+func (e *EventList) Push(t string, args EventArgs, priority bool) {
 	var event *Event
 	select {
 	case event = <-e.eventCache:

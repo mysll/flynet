@@ -1,4 +1,4 @@
-package base
+package task
 
 type DailyTask struct {
 	TaskBase

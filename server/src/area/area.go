@@ -38,6 +38,13 @@ func (a *AreaApp) GetCell(id int) *cell {
 	return cell
 }
 
+func (a *AreaApp) FindCell(id int) *cell {
+	if cell, ok := a.cells[id]; ok {
+		return cell
+	}
+	return nil
+}
+
 func (a *AreaApp) RemoveCell(id int) {
 	if cell, ok := a.cells[id]; ok {
 		a.RemoveDispatch(cell.GetDispatchID())

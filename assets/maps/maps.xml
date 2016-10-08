@@ -1,0 +1,16 @@
+<Maps>
+    <Map>
+        <ID>1000</ID>
+        <Name>新手村</Name>
+        <Path>maps/1000</Path>
+        <X>0</X>
+        <Y>0</Y>
+        <Width>10000</Width>
+        <Height>10000</Height>
+        <TileX>50</TileX>
+        <TileY>50</TileY>
+        <MaxViewRange>500</MaxView>
+        <MaxPlayers>500</MaxPlayers>
+        <MaxVisual>20</MaxVisual>
+    </Map>
+</Maps>
