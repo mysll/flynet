@@ -1,8 +1,23 @@
+// Server是整个服务器的核心，所以扩展的服务都继承于Server,每个服务是一个独立的进程，这个服务可以是单独运行在一台服务器上，
+// 也可以将多个服务启动在同一台电脑上，这主要取决于你的服务器配置。
+// Server提供的基础功能包含：
+//		对外提供连接服务(主要是面向客户端的连接服务)
+//		服务之间的通讯和RPC，包含服务之间的相互发现，服务结点的自动管理
+//		服务主循环处理
+//		游戏性相关处理(包含对象管理，游戏回调，事件回调等，参见Kernel的接品)
+// 如何开发一个新的服务：
+//		type NewApp struct {
+//			*Server
+//		}
+//		NewApp.Server = server.NewServer(NewApp, appid)
+// 启动这个服务:
+//		if NewApp.Start(...) {
+//			NewApp.Wait()
+//		}
 package server
 
 import (
 	"fmt"
-	"math"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
@@ -76,10 +91,12 @@ type StartStoper interface {
 	Stop()
 }
 
+//获取程序启动到现在的毫秒数
 func (svr *Server) GetTickCount() int32 {
-	return int32(time.Now().Sub(svr.startTime) % math.MaxInt32)
+	return int32(time.Now().Sub(svr.startTime) / 1000000)
 }
 
+//启动服务,master是master的监听地址,localip是服务的rpc启动地址,outerip是对外的服务地址,typ是服务类型,argstr启动参数
 func (svr *Server) Start(master string, localip string, outerip string, typ string, argstr string) bool {
 	svr.startTime = time.Now()
 	defer func() {
@@ -104,9 +121,6 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 		panic("app id not defined")
 	}
 	svr.MailBox = rpc.NewMailBox(0, 0, svr.AppId)
-
-	//now := time.Now()
-	//log.WriteToFile(fmt.Sprintf("log/%s_%d_%d_%d_%d_%d_%d.log", svr.Name, now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second()))
 
 	log.LogMessage("id:", svr.AppId, ", name:", svr.Name)
 

@@ -14,6 +14,15 @@ import (
 	"server/share"
 )
 
+// Kernel是一个核心API集合，所有游戏性相关的操作都封装在这里
+// 主要功能：
+// 		对象管理
+//		异步IO处理
+//		全局数据管理
+//		场景心跳处理
+//		对象跨服务切换
+//		通用定时器处理
+//		对象的事件回调管理
 type Kernel struct {
 	factory   *Factory
 	uidSerial uint64
@@ -65,7 +74,8 @@ func (k *Kernel) Create(typ string) (ent Entityer, err error) {
 	return
 }
 
-//创建角色
+//创建角色，将触发role.OnCreateRole回调，在OnCreateRole回调中，可以对这个角色的数据进行初始化处理
+//其中args为创建角色的参数，由客户端提供，其中要包含角色的名称以及创建角色的索引位置，这个参数直接回调给OnCreateRole处理
 func (k *Kernel) CreateRole(typ string, args interface{}) (ent Entityer, err error) {
 	ent, err = k.factory.Create(typ)
 	if err != nil {
@@ -90,7 +100,7 @@ func (k *Kernel) CreateRole(typ string, args interface{}) (ent Entityer, err err
 	return
 }
 
-//创建一个容器
+//创建一个容器,将回调Callee.OnCreate。
 func (k *Kernel) CreateContainer(typ string, caps int) (ent Entityer, err error) {
 	ent, err = k.factory.Create(typ)
 	if err != nil {
@@ -114,13 +124,13 @@ func (k *Kernel) CreateContainer(typ string, caps int) (ent Entityer, err error)
 	return
 }
 
-//创建一个子对象
+//创建一个子对象,将回调Callee.OnCreate。
 func (k *Kernel) CreateChild(parent ObjectID, typ string, index int) (ent Entityer, err error) {
 	ent, err = k.CreateChildContainer(parent, typ, -1, index)
 	return
 }
 
-//创建一个子容器
+//创建一个子容器,将回调Callee.OnCreate。
 func (k *Kernel) CreateChildContainer(parent ObjectID, typ string, caps int, index int) (ent Entityer, err error) {
 	p := k.factory.Find(parent)
 	if p == nil {
@@ -154,7 +164,11 @@ func (k *Kernel) CreateChildContainer(parent ObjectID, typ string, caps int, ind
 	return
 }
 
-//增加一个子对象
+//增加一个子对象，处理流程：
+//		1.首先回调Callee.OnTestAdd,如果逻辑返回值为0，则你对象不允许增加，流程结束，插入失败
+//		2.如果子对象是由另一个容器移动过来的，则会先触发父对象的删除当前对象操作
+//		3.父对象将回调Callee.OnAdd,OnAfterAdd,当前子对象将回调Callee.OnEntry
+//		4.如果当前你对象是一个视图，则会自动同步操作到客户端
 func (k *Kernel) AddChild(parent ObjectID, child ObjectID, index int) (destindex int, err error) {
 	p := k.factory.Find(parent)
 	c := k.factory.Find(child)
@@ -264,7 +278,7 @@ func (k *Kernel) Exchange(src Entityer, dest Entityer) bool {
 	return true
 }
 
-//移除一个子对象
+//移除一个子对象，父对象将回调Callee.OnBeforeRemove,Callee.OnRemove。子对象将回调Callee.OnLeave
 func (k *Kernel) RemoveChild(parent Entityer, child Entityer) error {
 	if parent != nil && child != nil && !child.GetParent().GetObjId().Equal(parent.GetObjId()) {
 		return errors.New("parent not equal")
@@ -383,7 +397,7 @@ func (k *Kernel) loadArchive(data *EntityInfo) (ent Entityer, err error) {
 	return
 }
 
-//通过数据创建对象
+//通过数据创建对象,对象将回调Callee.OnLoad
 func (k *Kernel) CreateFromArchive(data *EntityInfo, extra map[string]interface{}) (ent Entityer, err error) {
 	ent, err = k.loadArchive(data)
 	if err != nil {
@@ -497,7 +511,7 @@ func (k *Kernel) loadBase(object Entityer, data *share.SaveEntity) error {
 	return nil
 }
 
-//通过存档创建
+//通过存档创建,对象将回调Callee.OnCreate,Callee.OnLoad
 func (k *Kernel) CreateFromDb(data *share.DbSave) (ent Entityer, err error) {
 	if data == nil || data.Data == nil {
 		err = errors.New("data is nil")
@@ -517,7 +531,7 @@ func (k *Kernel) CreateFromDb(data *share.DbSave) (ent Entityer, err error) {
 	return
 }
 
-//通过配置文件加载
+//通过配置文件加载,对象将回调Callee.OnLoad
 func (k *Kernel) LoadFromConfig(object Entityer, configid string) error {
 	err := helper.LoadFromConfig(configid, object)
 	res := 0
@@ -534,7 +548,7 @@ func (k *Kernel) LoadFromConfig(object Entityer, configid string) error {
 	return err
 }
 
-//通过配置文件创建对象
+//通过配置文件创建对象Callee.OnCreate,Callee.OnLoad
 func (k *Kernel) CreateFromConfig(configid string) (ent Entityer, err error) {
 	typ, err := helper.GetEntityByConfig(configid)
 	if err != nil {
@@ -560,7 +574,7 @@ func (k *Kernel) CreateFromConfig(configid string) (ent Entityer, err error) {
 	return ent, err
 }
 
-//销毁一个对象
+//销毁一个对象,将收到回调Callee.OnDestroy
 func (k *Kernel) Destroy(obj ObjectID) (err error) {
 	object := k.factory.Find(obj)
 	if object == nil {
@@ -631,10 +645,12 @@ type Transform struct {
 	Dir   float32
 }
 
+//设置地图登录点
 func (k *Kernel) SetLandpos(object Entityer, trans Transform) {
 	object.SetExtraData("landpos", trans)
 }
 
+//获取地图登录点
 func (k *Kernel) GetLandpos(object Entityer) Transform {
 	if trans := object.GetExtraData("landpos"); trans != nil {
 		if tr, ok := trans.(Transform); ok {
@@ -644,10 +660,12 @@ func (k *Kernel) GetLandpos(object Entityer) Transform {
 	return Transform{}
 }
 
+//设置角色信息,对应数据库中的roleinfo
 func (k *Kernel) SetRoleInfo(object Entityer, info string) {
 	object.SetExtraData("roleinfo", info)
 }
 
+//预保存，设置唯一ID
 func (k *Kernel) PreSave(object Entityer, ignore bool) {
 	if object.GetDbId() == 0 && !ignore && object.IsSave() {
 		object.SetDbId(k.GetUid())
@@ -662,7 +680,7 @@ func (k *Kernel) PreSave(object Entityer, ignore bool) {
 	}
 }
 
-//对象保存
+//对象保存，将回调Callee.OnStore
 func (k *Kernel) Save(object Entityer, typ int) (err error) {
 	if object == nil {
 		err = ErrObjNotFound
@@ -685,16 +703,18 @@ func (k *Kernel) setSerial(serial uint64) {
 	k.uidSerial = serial
 }
 
+//获取一个唯一序列号
 func (k *Kernel) GetSerial() uint64 {
 	return k.uidSerial
 }
 
+//获取一个UID
 func (k *Kernel) GetUid() uint64 {
 	k.uidSerial++
 	return k.uidSerial
 }
 
-//玩家断开
+//玩家断开，收到Callee.OnDisconnect
 func (k *Kernel) Disconnect(object Entityer) {
 	if object == nil {
 		return
@@ -709,7 +729,7 @@ func (k *Kernel) Disconnect(object Entityer) {
 	}
 }
 
-//玩家进入场景前
+//玩家进入场景前,收到Callee.OnEnterScene
 func (k *Kernel) EntryScene(object Entityer) {
 	if object == nil {
 		return
@@ -724,7 +744,7 @@ func (k *Kernel) EntryScene(object Entityer) {
 	}
 }
 
-//玩家进入场景
+//玩家进入场景,收到Callee.OnEnterScene
 func (k *Kernel) EnterScene(object Entityer) {
 	if object == nil {
 		return
@@ -762,7 +782,7 @@ func (k *Kernel) PlaceObj(scene Entityer, object Entityer, pos Vector3, orient f
 	return true
 }
 
-//sender给target发送消息
+//sender给target发送消息，接收方回调Callee.OnCommand
 func (k *Kernel) Command(src, dest ObjectID, msgid int, msg interface{}) bool {
 	sender := k.factory.Find(src)
 	target := k.factory.Find(dest)
@@ -782,7 +802,7 @@ func (k *Kernel) Command(src, dest ObjectID, msgid int, msg interface{}) bool {
 	return true
 }
 
-//self对target使用item
+//self对target使用item.物品对象回调Callee.OnUseTo
 func (k *Kernel) UseTo(self, target, item ObjectID) bool {
 	sender := k.factory.Find(self)
 	if sender == nil {
@@ -808,7 +828,7 @@ func (k *Kernel) UseTo(self, target, item ObjectID) bool {
 	return true
 }
 
-//self使用item
+//self使用item，物品对象回调Callee.OnUse
 func (k *Kernel) Use(self, item ObjectID) bool {
 	sender := k.factory.Find(self)
 	if sender == nil {
@@ -830,7 +850,7 @@ func (k *Kernel) Use(self, item ObjectID) bool {
 	return true
 }
 
-//self装备equip
+//self装备equip，物品对象回调Callee.OnEquip
 func (k *Kernel) Equip(self, equip ObjectID, idx int) bool {
 	sender := k.factory.Find(self)
 	if sender == nil {
@@ -852,7 +872,7 @@ func (k *Kernel) Equip(self, equip ObjectID, idx int) bool {
 	return true
 }
 
-//self卸下equip
+//self卸下equip，物品对象回调Callee.OnUnEquip
 func (k *Kernel) UnEquip(self, equip ObjectID, idx int) bool {
 	sender := k.factory.Find(self)
 	if sender == nil {
@@ -873,6 +893,7 @@ func (k *Kernel) UnEquip(self, equip ObjectID, idx int) bool {
 	return true
 }
 
+//对象属性变动，对象回调Callee.OnPropertyChange
 func (k *Kernel) OnPropChange(object Entityer, prop string, value interface{}) {
 	callee := GetCallee(object.ObjTypeName())
 	var res int
@@ -884,6 +905,7 @@ func (k *Kernel) OnPropChange(object Entityer, prop string, value interface{}) {
 	}
 }
 
+//玩家已经就绪,玩家对象将回调Callee.OnReady
 func (k *Kernel) PlayerReady(player Entityer, first bool) {
 	if player.ObjType() != PLAYER {
 		return
@@ -941,6 +963,7 @@ func (k *Kernel) CallScript(object Entityer, id string, prop string, revert bool
 	return nil
 }
 
+//查找一个对象的视图
 func (k *Kernel) FindViewport(player Entityer) *Viewport {
 	if data := player.GetExtraData("viewportlinkid"); data != nil {
 		sid := data.(int32)
@@ -955,6 +978,7 @@ func (k *Kernel) FindViewport(player Entityer) *Viewport {
 	return nil
 }
 
+//Player增加一个视图
 func (k *Kernel) AddViewport(player Entityer, mailbox rpc.Mailbox, viewid int32, container Entityer) error {
 	if player == nil || player.ObjType() != PLAYER || container == nil {
 		return fmt.Errorf("type is illegality")
@@ -969,6 +993,7 @@ func (k *Kernel) AddViewport(player Entityer, mailbox rpc.Mailbox, viewid int32,
 	return vp.AddViewport(viewid, container)
 }
 
+//Player删除一个视图
 func (k *Kernel) DeleteViewport(player Entityer, viewid int32) {
 	if player == nil {
 		return
@@ -1022,4 +1047,9 @@ func (k *Kernel) DetachPlayer(player Entityer) {
 		rec := player.GetRec(r)
 		rec.SetSyncer(nil)
 	}
+}
+
+//获取玩家管理器
+func (k *Kernel) GetPlayers() *PlayerManager {
+	return Players
 }
