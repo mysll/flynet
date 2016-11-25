@@ -1,7 +1,3 @@
-// 定时器组件,采用时间轮的方法
-// 需要注意的地方:
-//     如果一个定时器是一直重复的,在不需要的时候,需要把定时器取消掉,不然会造成"泄漏".
-// 对于有次数限制的定时器,不需要做这个操作.但是可以中途取消.
 package server
 
 import (
@@ -72,6 +68,10 @@ type tickIndex struct {
 	elem *timerTick
 }
 
+// 定时器组件,采用时间轮的方法
+// 需要注意的地方:
+//     如果一个定时器是一直重复的,在不需要的时候,需要把定时器取消掉,不然会造成"泄漏".
+// 对于有次数限制的定时器,不需要做这个操作.但是可以中途取消.
 type Timer struct {
 	freeHeart  *timerTick
 	heartbeats map[int64]*tickSlot

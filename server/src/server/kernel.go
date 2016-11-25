@@ -68,7 +68,7 @@ func (k *Kernel) GetEntity(obj ObjectID) Entityer {
 	return k.factory.Find(obj)
 }
 
-//通过类型创建对象
+//通过类型创建对象,将回调Callee.OnCreate。
 func (k *Kernel) Create(typ string) (ent Entityer, err error) {
 	ent, err = k.CreateContainer(typ, -1)
 	return
