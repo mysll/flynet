@@ -36,7 +36,7 @@ func Hash(str string) int32 {
 }
 
 {{range .}}
-func Is{{.Name}}(ent Entityer) bool {
+func Is{{.Name}}(ent Entity) bool {
 		return ent.ObjTypeName()=="{{.Name}}"
 }
 {{end}}
@@ -44,7 +44,7 @@ func Is{{.Name}}(ent Entityer) bool {
 //初始化函数
 func init() {
 	{{range .}}
-	Register("{{.Name}}", func() Entityer {
+	Register("{{.Name}}", func() Entity {
 		return Create{{.Name}}()
 	})
 	{{.Name}}Init()

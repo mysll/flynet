@@ -18,10 +18,10 @@ type Pool struct {
 }
 
 //创建一个对象，如果池中有空闲的，则激活使用，否则新建一个对象
-func (p *Pool) Create(typ string) datatype.Entityer {
+func (p *Pool) Create(typ string) datatype.Entity {
 	if l, exist := p.pool[typ]; exist {
 		if e := l.Front(); e != nil {
-			ele := e.Value.(datatype.Entityer)
+			ele := e.Value.(datatype.Entity)
 			l.Remove(e)
 			return ele
 		}
@@ -37,7 +37,7 @@ func (p *Pool) Create(typ string) datatype.Entityer {
 }
 
 //释放一个具体对象，如果池中有空间，则回收，如果空闲的超过一定数量，则不回收，直接删除
-func (p *Pool) Free(e datatype.Entityer) {
+func (p *Pool) Free(e datatype.Entity) {
 	if l, exist := p.pool[e.ObjTypeName()]; exist {
 		if l.Len() <= MAX_POOL_FREE {
 			e.Reset()
@@ -52,7 +52,7 @@ func (p *Pool) Free(e datatype.Entityer) {
 }
 
 //释放对象，如果有子对象一并释放
-func (p *Pool) FreeObj(e datatype.Entityer) {
+func (p *Pool) FreeObj(e datatype.Entity) {
 	chds := e.GetChilds()
 	for _, ch := range chds {
 		if ch != nil {

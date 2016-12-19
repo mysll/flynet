@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	objects                     = make(map[string]func() Entityer)
+	objects                     = make(map[string]func() Entity)
 	ErrRowError                 = errors.New("row index out of range")
 	ErrColError                 = errors.New("col index out of range")
 	ErrTypeMismatch             = errors.New("val type mismatch")
@@ -93,19 +93,19 @@ type Recorder interface {
 }
 
 type TableSyncer interface {
-	RecAppend(self Entityer, rec Recorder, row int)
-	RecDelete(self Entityer, rec Recorder, row int)
-	RecClear(self Entityer, rec Recorder)
-	RecModify(self Entityer, rec Recorder, row, col int)
-	RecSetRow(self Entityer, rec Recorder, row int)
+	RecAppend(self Entity, rec Recorder, row int)
+	RecDelete(self Entity, rec Recorder, row int)
+	RecClear(self Entity, rec Recorder)
+	RecModify(self Entity, rec Recorder, row, col int)
+	RecSetRow(self Entity, rec Recorder, row int)
 }
 
 type PropSyncer interface {
-	Update(self Entityer, index int16, value interface{})
+	Update(self Entity, index int16, value interface{})
 }
 
 type PropHooker interface {
-	OnPropChange(object Entityer, prop string, value interface{})
+	OnPropChange(object Entity, prop string, value interface{})
 }
 
 type EntityInfo struct {
@@ -118,7 +118,10 @@ type EntityInfo struct {
 	Childs []*EntityInfo
 }
 
-type Entityer interface {
+type Entity interface {
+	//唯一标识，也就是mailbox
+	UID() uint64
+	SetUID(v uint64)
 	//是否在base中
 	SetInBase(v bool)
 	IsInBase() bool
@@ -152,11 +155,11 @@ type Entityer interface {
 	//是否需要保存
 	NeedSave() bool
 	//获取根对象
-	GetRoot() Entityer
+	GetRoot() Entity
 	//设置父对象
-	SetParent(p Entityer)
+	SetParent(p Entity)
 	//获取父对象
-	GetParent() Entityer
+	GetParent() Entity
 	//删除标志
 	SetDeleted(d bool)
 	GetDeleted() bool
@@ -183,7 +186,7 @@ type Entityer interface {
 	//子对象数量
 	ChildCount() int
 	//获取所有的子对象
-	GetChilds() []Entityer
+	GetChilds() []Entity
 	//获取在父对象中的索引
 	GetIndex() int
 	//设置索引(由引擎自己设置，不要手动设置)
@@ -191,23 +194,23 @@ type Entityer interface {
 	//清除所有子对象
 	ClearChilds()
 	//增加一个子对象
-	AddChild(idx int, e Entityer) (index int, err error)
+	AddChild(idx int, e Entity) (index int, err error)
 	//删除一个子对象
-	RemoveChild(e Entityer) error
+	RemoveChild(e Entity) error
 	//通过索引获取一个子对象
-	GetChild(idx int) Entityer
+	GetChild(idx int) Entity
 	//通过配置ID获取一个子对象
-	GetChildByConfigId(id string) Entityer
+	GetChildByConfigId(id string) Entity
 	//通过配置ID获取第一个子对象
-	GetFirstChildByConfigId(id string) (int, Entityer)
+	GetFirstChildByConfigId(id string) (int, Entity)
 	//通过配置ID获取从start开始的下一个子对象
-	GetNextChildByConfigId(start int, id string) (int, Entityer)
+	GetNextChildByConfigId(start int, id string) (int, Entity)
 	//获取名字获取子对象
-	GetChildByName(name string) Entityer
+	GetChildByName(name string) Entity
 	//通过名字获取第一个子对象
-	GetFirstChild(name string) (int, Entityer)
+	GetFirstChild(name string) (int, Entity)
 	//通过名字获取从start开始的下一下子对象
-	GetNextChild(start int, name string) (int, Entityer)
+	GetNextChild(start int, name string) (int, Entity)
 	//交换两个子对象的位置
 	SwapChild(src int, dest int) error
 	//设置data
@@ -225,7 +228,7 @@ type Entityer interface {
 	//对象类型字符串
 	ObjTypeName() string
 	//父类型(暂时未用)
-	Base() Entityer
+	Base() Entity
 	//数据库ID
 	GetDbId() uint64
 	//设置数据库ID(!!!不要手动设置)
@@ -272,7 +275,7 @@ type Entityer interface {
 	//清空对象所有数据
 	Reset()
 	//复制另一个对象数据
-	Copy(other Entityer) error
+	Copy(other Entity) error
 	//DB
 	SyncToDb()
 	//获取保存对象的配置ID
@@ -294,7 +297,7 @@ type Entityer interface {
 }
 
 //注册函数
-func Register(name string, createfunc func() Entityer) {
+func Register(name string, createfunc func() Entity) {
 	if _, dup := objects[name]; dup {
 		panic("entity: Register called twice for object " + name)
 	}
@@ -303,7 +306,7 @@ func Register(name string, createfunc func() Entityer) {
 }
 
 //创建数据对象
-func Create(name string) Entityer {
+func Create(name string) Entity {
 	if create, exist := objects[name]; exist {
 		return create()
 	}

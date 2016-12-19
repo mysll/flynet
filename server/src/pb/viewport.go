@@ -15,7 +15,7 @@ func (vt *PBViewportCodec) GetCodecInfo() string {
 }
 
 //容器创建
-func (vt *PBViewportCodec) ViewportCreate(id int32, container Entityer) interface{} {
+func (vt *PBViewportCodec) ViewportCreate(id int32, container Entity) interface{} {
 	msg := &s2c.CreateView{}
 	msg.Entity = proto.String(container.ObjTypeName())
 	msg.ViewId = proto.Int32(id)
@@ -31,7 +31,7 @@ func (vp *PBViewportCodec) ViewportDelete(id int32) interface{} {
 }
 
 //容器里增加对象
-func (vp *PBViewportCodec) ViewportNotifyAdd(id int32, index int32, object Entityer) interface{} {
+func (vp *PBViewportCodec) ViewportNotifyAdd(id int32, index int32, object Entity) interface{} {
 	msg := &s2c.ViewAdd{}
 	msg.ViewId = proto.Int32(id)
 	msg.Entity = proto.String(object.ObjTypeName())
@@ -58,7 +58,7 @@ func (vp *PBViewportCodec) ViewportNotifyExchange(srcid int32, src int32, destid
 	return msg
 }
 
-func (vp *PBViewportCodec) OnUpdate(id int32, child Entityer) interface{} {
+func (vp *PBViewportCodec) OnUpdate(id int32, child Entity) interface{} {
 
 	data, _ := child.SerialModify()
 	if data == nil {

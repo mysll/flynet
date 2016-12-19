@@ -10,7 +10,7 @@ var pt PropCodec
 
 type PropCodec interface {
 	GetCodecInfo() string
-	UpdateAll(object Entityer, self bool) interface{}
+	UpdateAll(object Entity, self bool) interface{}
 	Update(index int16, value interface{}, self bool, objid ObjectID) interface{}
 }
 
@@ -41,7 +41,7 @@ func (ps *PropSync) OnUpdate() {
 	ps.UpdateAll(player)
 }
 
-func (ps *PropSync) UpdateAll(player Entityer) error {
+func (ps *PropSync) UpdateAll(player Entity) error {
 	data, _ := player.SerialModify()
 	if data == nil {
 		return nil
@@ -60,7 +60,7 @@ func (ps *PropSync) UpdateAll(player Entityer) error {
 	return nil
 }
 
-func (ps *PropSync) Update(self Entityer, index int16, value interface{}) {
+func (ps *PropSync) Update(self Entity, index int16, value interface{}) {
 	update := pt.Update(index, value, true, ps.objid)
 	if update == nil {
 		return

@@ -2,6 +2,7 @@ package base
 
 import (
 	"errors"
+	l "game/module/letter"
 	"logicdata/entity"
 	"server"
 	"server/data/datatype"
@@ -35,13 +36,13 @@ func (d *DbBridge) LookLetterBack(mailbox rpc.Mailbox, msg *rpc.Message) (errcod
 	}
 
 	mailbox = params["mailbox"].(rpc.Mailbox)
-	p := App.Players.GetPlayer(mailbox.Id)
+	p := App.Players.FindPlayer(mailbox.Uid)
 	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
 		//角色没有找到
 		return 0, nil
 	}
-	player := p.Entity.(*entity.Player)
+	player := p.(*BasePlayer).Entity.(*entity.Player)
 
 	db := server.GetAppByType("database")
 	if db == nil {
@@ -55,7 +56,7 @@ func (d *DbBridge) LookLetterBack(mailbox rpc.Mailbox, msg *rpc.Message) (errcod
 		idx := player.MailBox_r.AddRowValue(-1, letter.Source, letter.Source_name, util.UTC2Loc(letter.Send_time.Time.UTC()).Unix(), letter.Title, letter.Content, letter.Appendix, 0, letter.Serial_no, letter.Msg_type)
 		if idx == -1 {
 			//邮箱满了
-			server.Error(nil, &mailbox, "Letter.Error", ERR_MAILBOX_FULL)
+			server.Error(nil, &mailbox, "Letter.Error", l.ERR_MAILBOX_FULL)
 			break
 		}
 		//删信
@@ -65,7 +66,7 @@ func (d *DbBridge) LookLetterBack(mailbox rpc.Mailbox, msg *rpc.Message) (errcod
 	return 0, nil
 }
 
-func (d *DbBridge) createRole(mailbox rpc.Mailbox, obj datatype.Entityer, account string, name string, index int, save *share.DbSave) error {
+func (d *DbBridge) createRole(mailbox rpc.Mailbox, obj datatype.Entity, account string, name string, index int, save *share.DbSave) error {
 	db := server.GetAppByType("database")
 	if db != nil {
 		trans := App.GetLandpos(obj)
@@ -92,12 +93,13 @@ func (d *DbBridge) CreateRoleBack(mailbox rpc.Mailbox, msg *rpc.Message) (errcod
 		return 0, nil
 	}
 
-	player := App.Players.GetPlayer(mailbox.Id)
-	if player == nil {
+	p := App.Players.FindPlayer(mailbox.Uid)
+	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
 		//角色没有找到
 		return 0, nil
 	}
+	player := p.(*BasePlayer)
 
 	if player.State != STATE_LOGGED {
 		log.LogError("player state not logged")
@@ -138,10 +140,12 @@ func (d *DbBridge) RoleInUse(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int
 	if server.Check(err) {
 		return 0, nil
 	}
-	player := App.Players.GetPlayer(mailbox.Id)
-	if player == nil {
+	p := App.Players.FindPlayer(mailbox.Uid)
+	if p == nil {
 		return 0, nil
 	}
+
+	player := p.(*BasePlayer)
 
 	if serverid == App.Name {
 		server.Check(App.Players.SwitchPlayer(player))
@@ -166,14 +170,15 @@ func (d *DbBridge) SelectUserBak(mailbox rpc.Mailbox, msg *rpc.Message) (errcode
 	}
 	db := server.GetAppByType("database")
 	info := share.ClearUser{save.Account, save.Name}
-	player := App.Players.GetPlayer(mailbox.Id)
-	if player == nil {
+	p := App.Players.FindPlayer(mailbox.Uid)
+	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
 		db.Call(&mailbox, "Account.ClearPlayerStatus", info)
 		//角色没有找到
 		return 0, nil
 	}
 
+	player := p.(*BasePlayer)
 	if player.State != STATE_LOGGED {
 		log.LogError("player state not logged")
 		db.Call(&mailbox, "Account.ClearPlayerStatus", info)
@@ -207,14 +212,20 @@ func (d *DbBridge) SavePlayerBak(mailbox rpc.Mailbox, msg *rpc.Message) (errcode
 	if server.Check(e) {
 		return 0, nil
 	}
-	player := App.Players.GetPlayer(mailbox.Id)
-	if player == nil || player.State != STATE_SAVING {
+	p := App.Players.FindPlayer(mailbox.Uid)
+	if p == nil {
 		log.LogError(errors.New("player not found"))
 		return 0, nil
 	}
 
+	player := p.(*BasePlayer)
+	if player.State != STATE_SAVING {
+		log.LogError(errors.New("player state not match"))
+		return 0, nil
+	}
+
 	if err == "ok" {
-		App.Players.RemovePlayer(mailbox.Id)
+		App.Players.RemovePlayer(mailbox.Uid)
 	} else {
 		player.Entity.SetSaveFlag()
 		player.SaveFailed()

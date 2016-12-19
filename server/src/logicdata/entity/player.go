@@ -367,14 +367,14 @@ type Player_t struct {
 	dirty           bool
 	ObjectType      int
 	DbId            uint64
-	parent          Entityer
+	parent          Entity
 	ObjId           ObjectID
 	Deleted         bool
 	NameHash        int32
 	IDHash          int32
 	ContainerInited bool
 	Index           int //在容器中的位置
-	Childs          []Entityer
+	Childs          []Entity
 	ChildNum        int
 
 	Save bool //是否保存
@@ -384,8 +384,9 @@ type Player struct {
 	*Moveable
 	*AOI
 
-	InScene      bool //是否在场景中
-	InBase       bool //是否在base中
+	uid          uint64 //全局ID
+	InScene      bool   //是否在场景中
+	InBase       bool   //是否在base中
 	Mdirty       map[string]interface{}
 	Mmodify      map[string]interface{}
 	ExtraData    map[string]interface{}
@@ -401,6 +402,14 @@ type Player struct {
 	Player_Propertys
 
 	//表格定义
+}
+
+func (obj *Player) SetUID(v uint64) {
+	obj.uid = v
+}
+
+func (obj *Player) UID() uint64 {
+	return obj.uid
 }
 
 func (obj *Player) SetInBase(v bool) {
@@ -486,7 +495,7 @@ func (obj *Player) ChangeCapacity(capacity int32) error {
 		return ErrContainerCapacity
 	}
 
-	newchilds := make([]Entityer, capacity)
+	newchilds := make([]Entity, capacity)
 	if capacity < obj.Capacity { //缩容，位置将进行重排
 		idx := 0
 		for _, c := range obj.Childs {
@@ -516,9 +525,9 @@ func (obj *Player) SetCapacity(capacity int32, initcap int32) {
 	}
 
 	if capacity == -1 {
-		obj.Childs = make([]Entityer, 0, initcap)
+		obj.Childs = make([]Entity, 0, initcap)
 	} else if capacity > 0 {
-		obj.Childs = make([]Entityer, capacity)
+		obj.Childs = make([]Entity, capacity)
 	} else {
 		obj.Childs = nil
 	}
@@ -539,8 +548,8 @@ func (obj *Player) GetRealCap() int32 {
 	return int32(len(obj.Childs))
 }
 
-func (obj *Player) GetRoot() Entityer {
-	var ent Entityer
+func (obj *Player) GetRoot() Entity {
+	var ent Entity
 	if obj.GetParent() == nil {
 		return nil
 	}
@@ -566,11 +575,11 @@ func (obj *Player) SetDbId(id uint64) {
 	obj.DbId = id
 }
 
-func (obj *Player) SetParent(p Entityer) {
+func (obj *Player) SetParent(p Entity) {
 	obj.parent = p
 }
 
-func (obj *Player) GetParent() Entityer {
+func (obj *Player) GetParent() Entity {
 	return obj.parent
 }
 
@@ -620,7 +629,7 @@ func (obj *Player) ChildCount() int {
 }
 
 //移除对象
-func (obj *Player) RemoveChild(de Entityer) error {
+func (obj *Player) RemoveChild(de Entity) error {
 	idx := de.GetIndex()
 	e := obj.GetChild(idx)
 
@@ -635,7 +644,7 @@ func (obj *Player) RemoveChild(de Entityer) error {
 }
 
 //获取子对象
-func (obj *Player) GetChilds() []Entityer {
+func (obj *Player) GetChilds() []Entity {
 	return obj.Childs
 }
 
@@ -664,7 +673,7 @@ func (obj *Player) ClearChilds() {
 }
 
 //增加子对象
-func (obj *Player) AddChild(idx int, e Entityer) (index int, err error) {
+func (obj *Player) AddChild(idx int, e Entity) (index int, err error) {
 	if !obj.ContainerInited {
 		err = ErrContainerNotInit
 		return
@@ -722,7 +731,7 @@ func (obj *Player) AddChild(idx int, e Entityer) (index int, err error) {
 }
 
 //获取子对象
-func (obj *Player) GetChild(idx int) Entityer {
+func (obj *Player) GetChild(idx int) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
@@ -733,7 +742,7 @@ func (obj *Player) GetChild(idx int) Entityer {
 }
 
 //通过ID获取子对象
-func (obj *Player) GetChildByConfigId(id string) Entityer {
+func (obj *Player) GetChildByConfigId(id string) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
@@ -745,7 +754,7 @@ func (obj *Player) GetChildByConfigId(id string) Entityer {
 	}
 	return nil
 }
-func (obj *Player) GetFirstChildByConfigId(id string) (int, Entityer) {
+func (obj *Player) GetFirstChildByConfigId(id string) (int, Entity) {
 	if !obj.ContainerInited {
 		return -1, nil
 	}
@@ -757,7 +766,7 @@ func (obj *Player) GetFirstChildByConfigId(id string) (int, Entityer) {
 	}
 	return -1, nil
 }
-func (obj *Player) GetNextChildByConfigId(start int, id string) (int, Entityer) {
+func (obj *Player) GetNextChildByConfigId(start int, id string) (int, Entity) {
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
@@ -772,7 +781,7 @@ func (obj *Player) GetNextChildByConfigId(start int, id string) (int, Entityer) 
 }
 
 //通过名称获取子对象
-func (obj *Player) GetChildByName(name string) Entityer {
+func (obj *Player) GetChildByName(name string) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
@@ -784,7 +793,7 @@ func (obj *Player) GetChildByName(name string) Entityer {
 	}
 	return nil
 }
-func (obj *Player) GetFirstChild(name string) (int, Entityer) {
+func (obj *Player) GetFirstChild(name string) (int, Entity) {
 	if !obj.ContainerInited {
 		return -1, nil
 	}
@@ -796,7 +805,7 @@ func (obj *Player) GetFirstChild(name string) (int, Entityer) {
 	}
 	return -1, nil
 }
-func (obj *Player) GetNextChild(start int, name string) (int, Entityer) {
+func (obj *Player) GetNextChild(start int, name string) (int, Entity) {
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
@@ -830,7 +839,7 @@ func (obj *Player) SwapChild(src int, dest int) error {
 }
 
 //获取基类
-func (obj *Player) Base() Entityer {
+func (obj *Player) Base() Entity {
 	return nil
 }
 
@@ -6957,6 +6966,7 @@ func (obj *Player) PlayerInit() {
 	obj.ObjectType = PLAYER
 	obj.InBase = false
 	obj.InScene = false
+	obj.uid = 0
 }
 
 //重置
@@ -6996,12 +7006,13 @@ func (obj *Player) Reset() {
 }
 
 //对象拷贝
-func (obj *Player) Copy(other Entityer) error {
+func (obj *Player) Copy(other Entity) error {
 	if t, ok := other.(*Player); ok {
 		//属性复制
 		obj.DbId = t.DbId
 		obj.NameHash = t.NameHash
 		obj.IDHash = t.IDHash
+		obj.uid = t.uid
 
 		*obj.Moveable = *t.Moveable
 		*obj.AOI = *t.AOI
@@ -7145,6 +7156,10 @@ func (obj *Player) GobEncode() ([]byte, error) {
 	encoder := gob.NewEncoder(w)
 	var err error
 
+	err = encoder.Encode(obj.uid)
+	if err != nil {
+		return nil, err
+	}
 	err = encoder.Encode(obj.Save)
 	if err != nil {
 		return nil, err
@@ -7191,6 +7206,10 @@ func (obj *Player) GobDecode(buf []byte) error {
 	decoder := gob.NewDecoder(r)
 	var err error
 
+	err = decoder.Decode(&obj.uid)
+	if err != nil {
+		return err
+	}
 	err = decoder.Decode(&obj.Save)
 	if err != nil {
 		return err

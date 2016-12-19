@@ -7,9 +7,7 @@ import (
 	"server"
 	. "server/data/datatype"
 	"server/libs/log"
-	"server/libs/rpc"
 	"server/share"
-	"server/util"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -28,23 +26,23 @@ const (
 )
 
 type BasePlayer struct {
-	Mailbox     rpc.Mailbox
-	Session     int64
-	Account     string
+	server.PlayerInfo
+
 	ChooseRole  string
-	Entity      Entityer
-	State       int
 	trans       server.Transform
 	RoleInfo    string
 	Offline     bool
-	Deleted     bool
 	AreaId      string
 	LandTimes   int32
 	propsyncer  *server.PropSync
 	tablesyncer *server.TableSync
 	lastupdate  time.Time
 	saveid      server.TimerID
-	updateid    server.TimerID
+}
+
+func NewBasePlayer() server.PlayerHandler {
+	bp := &BasePlayer{}
+	return bp
 }
 
 //客户端断开连接
@@ -60,7 +58,7 @@ func (p *BasePlayer) Disconnect() {
 }
 
 func TimeToDel(intervalid server.TimerID, count int32, args interface{}) {
-	App.Players.RemovePlayer(args.(int64))
+	App.Players.RemovePlayer(args.(uint64))
 }
 
 func (p *BasePlayer) TimeToSave(intervalid server.TimerID, count int32, args interface{}) {
@@ -70,7 +68,7 @@ func (p *BasePlayer) TimeToSave(intervalid server.TimerID, count int32, args int
 func (p *BasePlayer) Leave() {
 
 	if p.State < STATE_READY { //还没有创建角色
-		App.Players.RemovePlayer(p.Session)
+		App.Players.RemovePlayer(p.Mailbox.Uid)
 		return
 	}
 
@@ -129,7 +127,7 @@ func (p *BasePlayer) SaveFailed() {
 
 		log.LogError("save player failed, dump info into:", f)
 		go App.DumpInfo(*p, f)
-		App.Timeout(time.Second*5, TimeToDel, p.Session)
+		App.Timeout(time.Second*5, TimeToDel, p.Mailbox.Uid)
 	}
 }
 
@@ -148,7 +146,7 @@ func (p *BasePlayer) LoadPlayer(data share.LoadUserBak) error {
 	App.SetRoleInfo(p.Entity, p.RoleInfo)
 	App.SetLandpos(p.Entity, p.trans)
 	p.Entity.SetExtraData("account", p.Account)
-	p.Entity.SetExtraData("mailbox", p.Mailbox)
+	p.Entity.SetUID(p.Mailbox.Uid)
 	log.LogInfo("load player succeed,", player.GetName())
 	p.saveid = App.AddTimer(time.Minute*5, -1, p.TimeToSave, nil)
 
@@ -173,45 +171,15 @@ func (p *BasePlayer) DeletePlayer() {
 		log.LogInfo("player destroy:", p.ChooseRole, " session:", p.Session)
 	}
 	App.CancelTimer(p.saveid)
-	App.CancelTimer(p.updateid)
 }
 
 func (p *BasePlayer) PlayerReady() {
-	//同步用户信息
-	player := p.Entity.(*entity.Player)
 
-	p.CheckNewDay()
-	App.tasksystem.CheckTaskInfo(player)
-	//检查邮件心跳
-	p.updateid = App.AddTimer(time.Minute, -1, p.updatemin, nil)
-	//清理过期的邮件
-	DeleteExpiredLetter(player)
 	if p.LandTimes == 0 {
 		App.Command(p.Entity.GetObjId(), p.Entity.GetObjId(), share.PLAYER_FIRST_LAND, nil)
 	}
 
 	server.MailTo(nil, &p.Mailbox, "Role.Ready", &s2c.Void{})
-}
-
-func (p *BasePlayer) CheckNewDay() {
-	if !util.IsSameDay(time.Now(), p.lastupdate) {
-		p.lastupdate = time.Now()
-		p.Entity.(*entity.Player).SetLastUpdateTime(time.Now().Unix())
-		App.tasksystem.NewDay(p.Entity.(*entity.Player)) //新一天
-	}
-}
-
-func (p *BasePlayer) updatemin(intervalid server.TimerID, count int32, args interface{}) {
-	p.CheckNewDay()
-	//任务更新
-	App.tasksystem.OnUpdate(p.Entity.(*entity.Player))
-	//清理过期的邮件
-	DeleteExpiredLetter(p.Entity.(*entity.Player))
-	db := server.GetAppByType("database")
-	if db != nil {
-		server.NewDBWarp(db).LookLetter(nil, p.Entity.GetDbId(), "DbBridge.LookLetterBack", share.DBParams{"mailbox": p.Mailbox})
-	}
-
 }
 
 func (p *BasePlayer) EnterScene() error {

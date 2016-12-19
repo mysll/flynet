@@ -45,8 +45,9 @@ func (a *AreaBridge) GetAreaBak(mailbox rpc.Mailbox, msg *rpc.Message) (errcode 
 		log.LogError("enter area failed")
 		return 0, nil
 	}
-	player := App.Players.GetPlayer(mailbox.Id)
-	if player != nil {
+	p := App.Players.FindPlayer(mailbox.Uid)
+	if p != nil {
+		player := p.(*BasePlayer)
 		player.AreaId = areaid
 		player.State = STATE_ENTERAREA
 		//player.EnterScene(areaid)
@@ -86,11 +87,12 @@ func (a *AreaBridge) checkPending(appid string) {
 			next = e.Next()
 			mb := e.Value.(rpc.Mailbox)
 			l.Remove(e)
-			player := App.Players.GetPlayer(mb.Id)
-			if player == nil {
+			p := App.Players.FindPlayer(mb.Uid)
+			if p == nil {
 				continue
 			}
 
+			player := p.(*BasePlayer)
 			err := a.areaAddPlayer(ap, player)
 			if err != nil {
 				log.LogError(err)
@@ -120,12 +122,13 @@ func (a *AreaBridge) AddPlayerBak(mailbox rpc.Mailbox, msg *rpc.Message) (errcod
 		return 0, nil
 	}
 	if res == "ok" {
-		player := App.Players.GetPlayer(mailbox.Id)
-		if player == nil {
-			log.LogFatalf("can not be nil")
+		p := App.Players.FindPlayer(mailbox.Uid)
+		if p == nil {
+			log.LogFatalf("can not be nil", mailbox)
 			return 0, nil
 		}
 
+		player := p.(*BasePlayer)
 		if player.State != STATE_ENTERAREA { //可能客户端已经断开了，则让玩家下线
 			player.Leave()
 			return 0, nil
@@ -158,11 +161,13 @@ func (a *AreaBridge) areaRemovePlayer(player *BasePlayer, typ int) {
 }
 
 func (a *AreaBridge) RemovePlayerBak(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
-	player := App.Players.GetPlayer(mailbox.Id)
-	if player == nil {
+	p := App.Players.FindPlayer(mailbox.Uid)
+	if p == nil {
 		log.LogFatalf("can not be nil", mailbox)
 		return 0, nil
 	}
+
+	player := p.(*BasePlayer)
 	player.LeaveArea()
 	return 0, nil
 }

@@ -18,7 +18,7 @@ type AreaMgr struct {
 }
 
 func (app *AreaMgr) OnPrepare() bool {
-	log.LogMessage(app.Id, " prepared")
+	log.LogMessage(app.AppId, " prepared")
 	return true
 }
 

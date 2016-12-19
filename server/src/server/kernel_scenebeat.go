@@ -11,7 +11,7 @@ type objectTick struct {
 	serial   int64
 	Name     string
 	Oid      ObjectID
-	ent      Entityer
+	ent      Entity
 	Params   interface{}
 	Last     time.Time
 	Interval time.Duration
@@ -63,7 +63,7 @@ func (slot *beatSlot) Run(t time.Time) {
 				} else {
 					callee := GetCallee(tick.ent.ObjTypeName())
 					for _, cl := range callee {
-						res := cl.OnTimer(tick.ent, tick.Count, tick.Params)
+						res := cl.OnTimer(tick.ent, tick.Name, tick.Count, tick.Params)
 						if res == 0 {
 							break
 						}
@@ -173,7 +173,7 @@ func (this *SceneBeat) Find(oid ObjectID, beat string) bool {
 	return false
 }
 
-func (this *SceneBeat) Add(obj Entityer, beat string, t time.Duration, count int32, param interface{}) bool {
+func (this *SceneBeat) Add(obj Entity, beat string, t time.Duration, count int32, param interface{}) bool {
 	oid := obj.GetObjId()
 	if this.find(oid, beat) != nil {
 		log.LogError("heartbeat already add", beat)
@@ -248,7 +248,7 @@ func (this *SceneBeat) RemoveObjectBeat(oid ObjectID) {
 	}
 }
 
-func (this *SceneBeat) Deatch(object Entityer) bool {
+func (this *SceneBeat) Deatch(object Entity) bool {
 	if object == nil {
 		return false
 	}
@@ -288,29 +288,27 @@ func NewSceneBeat() *SceneBeat {
 	return beat
 }
 
-var sceneBeat = NewSceneBeat()
-
 //增加一个心跳
-func (k *Kernel) AddHeartbeat(object Entityer, beat string, t time.Duration, count int32, args interface{}) bool {
-	return sceneBeat.Add(object, beat, t, count, args)
+func (k *Kernel) AddHeartbeat(object Entity, beat string, t time.Duration, count int32, args interface{}) bool {
+	return k.sceneBeat.Add(object, beat, t, count, args)
 }
 
 //移除某个心跳
 func (k *Kernel) RemoveHeartbeat(obj ObjectID, beat string) bool {
-	return sceneBeat.Remove(obj, beat)
+	return k.sceneBeat.Remove(obj, beat)
 }
 
 //移除某个对象所有心跳
 func (k *Kernel) RemoveObjectHeartbeat(obj ObjectID) {
-	sceneBeat.RemoveObjectBeat(obj)
+	k.sceneBeat.RemoveObjectBeat(obj)
 }
 
 //重置心跳的次数
 func (k *Kernel) ResetBeatCount(obj ObjectID, beat string, count int32) bool {
-	return sceneBeat.ResetCount(obj, beat, count)
+	return k.sceneBeat.ResetCount(obj, beat, count)
 }
 
 //保存当前所有的心跳，并且从场景中分离出来
-func (k *Kernel) DeatchBeat(object Entityer) bool {
-	return sceneBeat.Deatch(object)
+func (k *Kernel) DeatchBeat(object Entity) bool {
+	return k.sceneBeat.Deatch(object)
 }

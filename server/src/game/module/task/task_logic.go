@@ -1,4 +1,4 @@
-package base
+package task
 
 import (
 	"logicdata/entity"
@@ -25,15 +25,15 @@ func (t *TaskLogic) Submit(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32
 	if server.Check(server.ParseProto(msg, args)) {
 		return 0, nil
 	}
-	p := App.Players.GetPlayer(mailbox.Id)
-	if p == nil || p.Entity == nil {
+	p := Module.GetCore().Players.FindPlayer(mailbox.Uid)
+	if p == nil || p.GetEntity() == nil {
 		log.LogError("player not found")
 		return 0, nil
 	}
-	player := p.Entity.(*entity.Player)
+	player := p.GetEntity().(*entity.Player)
 
 	taskid := args.GetTaskid()
 
-	server.Check(App.tasksystem.Submit(player, taskid))
+	server.Check(Module.TaskSystem.Submit(player, taskid))
 	return 0, nil
 }

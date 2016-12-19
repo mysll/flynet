@@ -43,7 +43,7 @@ type Apper interface {
 	OnClientLost(id int64)
 
 	//Base请求在当前服务器创建角色(被场景回调)
-	OnTeleportFromBase(args []interface{}, player datatype.Entityer) bool
+	OnTeleportFromBase(args []interface{}, player datatype.Entity) bool
 	//传送到场景完成回调(Base回调)
 	OnSceneTeleported(mailbox rpc.Mailbox, result bool)
 	//从场景传送回Base(Base回调)
@@ -140,7 +140,7 @@ func (svr *Server) OnClientLost(id int64) {
 }
 
 //Base请求在当前服务器创建角色(被场景回调)
-func (svr *Server) OnTeleportFromBase(args []interface{}, player datatype.Entityer) bool {
+func (svr *Server) OnTeleportFromBase(args []interface{}, player datatype.Entity) bool {
 	return false
 }
 

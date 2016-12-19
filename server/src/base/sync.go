@@ -11,7 +11,7 @@ import (
 )
 
 type Sync struct {
-	childs map[ObjectID]Entityer
+	childs map[ObjectID]Entity
 	newobj map[ObjectID]ObjectID
 }
 
@@ -19,7 +19,7 @@ func (t *Sync) RegisterCallback(s rpc.Servicer) {
 	s.RegisterCallback("SyncPlayer", t.SyncPlayer)
 }
 
-func (s *Sync) getAllChilds(obj Entityer) {
+func (s *Sync) getAllChilds(obj Entity) {
 	s.childs[obj.GetObjId()] = obj
 	cs := obj.GetChilds()
 	for _, c := range cs {
@@ -28,7 +28,7 @@ func (s *Sync) getAllChilds(obj Entityer) {
 		}
 	}
 }
-func (s *Sync) sync(info *EntityInfo) (obj Entityer, err error) {
+func (s *Sync) sync(info *EntityInfo) (obj Entity, err error) {
 	if info.ObjId.IsNil() {
 		obj, err = App.CreateContainer(info.Type, int(info.Caps))
 		if err == nil {
@@ -54,7 +54,7 @@ func (s *Sync) sync(info *EntityInfo) (obj Entityer, err error) {
 
 	obj.ClearChilds()
 	for _, c := range info.Childs {
-		var cobj Entityer
+		var cobj Entity
 		cobj, err = s.sync(c)
 		if err != nil {
 			return
@@ -97,7 +97,7 @@ func (s *Sync) SyncPlayer(src rpc.Mailbox, msg *rpc.Message) (errcode int32, rep
 
 func NewSync() *Sync {
 	s := &Sync{}
-	s.childs = make(map[ObjectID]Entityer, 1024)
+	s.childs = make(map[ObjectID]Entity, 1024)
 	s.newobj = make(map[ObjectID]ObjectID, 1024)
 	return s
 }

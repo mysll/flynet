@@ -31,7 +31,7 @@ type globalClient struct {
 type GlobalDataHelper struct {
 	Callee
 	Dispatch
-	dataset       datatype.Entityer
+	dataset       datatype.Entity
 	dataCenter    string
 	isServer      bool
 	globalclients map[string]*globalClient
@@ -433,7 +433,7 @@ func (gd *GlobalDataHelper) addData(name string, datatype string) error {
 }
 
 //获取全局数据
-func (gd *GlobalDataHelper) getData(name string) datatype.Entityer {
+func (gd *GlobalDataHelper) getData(name string) datatype.Entity {
 	if gd.dataset == nil {
 		return nil
 	}
@@ -521,7 +521,7 @@ func (gd *GlobalDataHelper) dataChange() int64 {
 }
 
 //数据属性变动同步
-func (gd *GlobalDataHelper) Update(self datatype.Entityer, index int16, value interface{}) {
+func (gd *GlobalDataHelper) Update(self datatype.Entity, index int16, value interface{}) {
 	if !gd.isServer {
 		return
 	}
@@ -542,7 +542,7 @@ func (gd *GlobalDataHelper) Update(self datatype.Entityer, index int16, value in
 }
 
 //表格变动同步
-func (gd *GlobalDataHelper) RecAppend(self datatype.Entityer, rec datatype.Recorder, row int) {
+func (gd *GlobalDataHelper) RecAppend(self datatype.Entity, rec datatype.Recorder, row int) {
 	if !gd.isServer {
 		return
 	}
@@ -564,7 +564,7 @@ func (gd *GlobalDataHelper) RecAppend(self datatype.Entityer, rec datatype.Recor
 	}
 }
 
-func (gd *GlobalDataHelper) RecDelete(self datatype.Entityer, rec datatype.Recorder, row int) {
+func (gd *GlobalDataHelper) RecDelete(self datatype.Entity, rec datatype.Recorder, row int) {
 	if !gd.isServer {
 		return
 	}
@@ -585,7 +585,7 @@ func (gd *GlobalDataHelper) RecDelete(self datatype.Entityer, rec datatype.Recor
 	}
 }
 
-func (gd *GlobalDataHelper) RecClear(self datatype.Entityer, rec datatype.Recorder) {
+func (gd *GlobalDataHelper) RecClear(self datatype.Entity, rec datatype.Recorder) {
 	if !gd.isServer {
 		return
 	}
@@ -605,7 +605,7 @@ func (gd *GlobalDataHelper) RecClear(self datatype.Entityer, rec datatype.Record
 	}
 }
 
-func (gd *GlobalDataHelper) RecModify(self datatype.Entityer, rec datatype.Recorder, row, col int) {
+func (gd *GlobalDataHelper) RecModify(self datatype.Entity, rec datatype.Recorder, row, col int) {
 	if !gd.isServer {
 		return
 	}
@@ -626,7 +626,7 @@ func (gd *GlobalDataHelper) RecModify(self datatype.Entityer, rec datatype.Recor
 	}
 }
 
-func (gd *GlobalDataHelper) RecSetRow(self datatype.Entityer, rec datatype.Recorder, row int) {
+func (gd *GlobalDataHelper) RecSetRow(self datatype.Entity, rec datatype.Recorder, row int) {
 	if !gd.isServer {
 		return
 	}
@@ -650,7 +650,7 @@ func (gd *GlobalDataHelper) RecSetRow(self datatype.Entityer, rec datatype.Recor
 
 }
 
-func (gd *GlobalDataHelper) OnAfterAdd(self datatype.Entityer, sender datatype.Entityer, index int) int {
+func (gd *GlobalDataHelper) OnAfterAdd(self datatype.Entity, sender datatype.Entity, index int) int {
 	if !gd.isServer {
 		return 1
 	}
@@ -666,7 +666,7 @@ func (gd *GlobalDataHelper) OnAfterAdd(self datatype.Entityer, sender datatype.E
 	return 1
 }
 
-func (gd *GlobalDataHelper) OnRemove(self datatype.Entityer, sender datatype.Entityer, index int) int {
+func (gd *GlobalDataHelper) OnRemove(self datatype.Entity, sender datatype.Entity, index int) int {
 	if !gd.isServer {
 		return 1
 	}
@@ -836,7 +836,7 @@ func (kernel *Kernel) AddGlobalData(name string, datatype string) error {
 }
 
 //获取全局数据
-func (kernel *Kernel) GetGlobalData(name string) datatype.Entityer {
+func (kernel *Kernel) GetGlobalData(name string) datatype.Entity {
 	if !core.globalHelper.isServer && !core.enableglobaldata {
 		log.LogError("global data is disable, please enable `enableglobaldata`")
 		return nil

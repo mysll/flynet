@@ -16,9 +16,7 @@ const (
 )
 
 var (
-	dispatcherList = map[int]*DispatchSlot{DP_BEAT: nil, DP_BEGINUPDATE: nil, DP_UPDATE: nil, DP_LASTUPDATE: nil, DP_FRAME: nil, DP_FLUSH: nil}
-	alltypes       = []int{DP_BEAT, DP_BEGINUPDATE, DP_UPDATE, DP_LASTUPDATE, DP_FRAME, DP_FLUSH}
-	serials        = 1
+	alltypes = []int{DP_BEAT, DP_BEGINUPDATE, DP_UPDATE, DP_LASTUPDATE, DP_FRAME, DP_FLUSH}
 )
 
 type Dispatcher interface {
@@ -93,10 +91,10 @@ func (d *Dispatch) GetDispatchID() string {
 func (kernel *Kernel) AddDispatch(name string, d Dispatcher, dtyp int) bool {
 	for _, t := range alltypes {
 		if dtyp&t != 0 {
-			ds := dispatcherList[t]
+			ds := kernel.dispatcherList[t]
 			if ds == nil {
 				ds = NewDispatchSlot()
-				dispatcherList[t] = ds
+				kernel.dispatcherList[t] = ds
 			}
 			d.SetDispatchID(name)
 			if ds.Add(name, d) {
@@ -110,12 +108,12 @@ func (kernel *Kernel) AddDispatch(name string, d Dispatcher, dtyp int) bool {
 }
 
 func (kernel *Kernel) AddDispatchNoName(d Dispatcher, dtyp int) bool {
-	serials++
-	return kernel.AddDispatch(fmt.Sprintf("dispatch%d", serials), d, dtyp)
+	kernel.dispatchserial++
+	return kernel.AddDispatch(fmt.Sprintf("dispatch%d", kernel.dispatchserial), d, dtyp)
 }
 
 func (kernel *Kernel) RemoveDispatch(name string) {
-	for t, ds := range dispatcherList {
+	for t, ds := range kernel.dispatcherList {
 		if ds != nil {
 			ds.Remove(name)
 			log.LogMessage("remove dispatch:", name, " type:", t)

@@ -1,8 +1,8 @@
 {
 	"master": {
-		"host": "172.30.9.101",
-		"localip": "172.30.9.101",
-		"outerip": "172.30.9.101",
+		"host": "172.30.9.102",
+		"localip": "172.30.9.102",
+		"outerip": "172.30.9.102",
 		"port": 5100,
 		"consoleport": 8700,
 		"consoleroot": "../console",
@@ -20,7 +20,7 @@
 		"name": "loginmgr",
 		"host": "127.0.0.1",
 		"port": 0,
-		"clienthost": "172.30.9.101",
+		"clienthost": "172.30.9.102",
 		"clientport": 5391,
 		"fronted": true,
 		"sockettype": "native"
@@ -29,7 +29,7 @@
 		"name": "base_1",
 		"host": "127.0.0.1",
 		"port": 0,
-		"clienthost": "172.30.9.101",
+		"clienthost": "172.30.9.102",
 		"clientport": 0,
 		"fronted": true,
 		"sockettype": "native",

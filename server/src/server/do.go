@@ -135,11 +135,11 @@ func Run(s *Server) {
 
 		if now.Sub(s.Time.LastBeatTime) >= BeatTime {
 			//处理心跳
-			timer.Pump()
+			s.Kernel.timer.Pump()
 			s.apper.OnBeatRun()
 			//场景心跳
-			sceneBeat.Pump()
-			ds = dispatcherList[DP_BEAT]
+			s.Kernel.sceneBeat.Pump()
+			ds = s.Kernel.dispatcherList[DP_BEAT]
 			if ds != nil {
 				for _, dispatch := range ds.Dispatchs {
 					dispatch.OnBeatRun()
@@ -151,7 +151,7 @@ func Run(s *Server) {
 		if s.Time.DeltaTime = now.Sub(s.Time.LastUpdateTime); s.Time.DeltaTime >= Updatetime {
 			//准备更新回调
 			s.apper.OnBeginUpdate()
-			ds = dispatcherList[DP_BEGINUPDATE]
+			ds = s.Kernel.dispatcherList[DP_BEGINUPDATE]
 			if ds != nil {
 				for _, dispatch := range ds.Dispatchs {
 					dispatch.OnBeginUpdate()
@@ -160,8 +160,8 @@ func Run(s *Server) {
 			//更新回调
 			s.apper.OnUpdate()
 			//更新kernel调度器
-			s.OnUpdate()
-			ds = dispatcherList[DP_UPDATE]
+			s.Kernel.OnUpdate()
+			ds = s.Kernel.dispatcherList[DP_UPDATE]
 			if ds != nil {
 				for _, dispatch := range ds.Dispatchs {
 					dispatch.OnUpdate()
@@ -169,7 +169,7 @@ func Run(s *Server) {
 			}
 			//更新完成后回调
 			s.apper.OnLastUpdate()
-			ds = dispatcherList[DP_LASTUPDATE]
+			ds = s.Kernel.dispatcherList[DP_LASTUPDATE]
 			if ds != nil {
 				for _, dispatch := range ds.Dispatchs {
 					dispatch.OnLastUpdate()
@@ -180,7 +180,7 @@ func Run(s *Server) {
 
 		if now.Sub(s.Time.LastFreshTime) >= Freshtime {
 			s.apper.OnFlush()
-			ds = dispatcherList[DP_FLUSH]
+			ds = s.Kernel.dispatcherList[DP_FLUSH]
 			if ds != nil {
 				for _, dispatch := range ds.Dispatchs {
 					dispatch.OnFlush()
@@ -193,10 +193,10 @@ func Run(s *Server) {
 	coroutineL:
 		for {
 			select {
-			case id := <-coroutinecomplete:
-				if c, has := coroutinepending[id]; has {
+			case id := <-s.Kernel.coroutinecomplete:
+				if c, has := s.Kernel.coroutinepending[id]; has {
 					c.submit(c.result, c.reply)
-					delete(coroutinepending, id)
+					delete(s.Kernel.coroutinepending, id)
 				}
 			default:
 				break coroutineL
@@ -206,7 +206,7 @@ func Run(s *Server) {
 		//删除对象
 		s.ObjectFactory.ClearDelete()
 		s.apper.OnFrame()
-		ds = dispatcherList[DP_FRAME]
+		ds = s.Kernel.dispatcherList[DP_FRAME]
 		if ds != nil {
 			for _, dispatch := range ds.Dispatchs {
 				dispatch.OnFrame()

@@ -75,6 +75,10 @@ func LogDebug(args ...interface{}) {
 	log.Debug(fmt.Sprint(args...))
 }
 
+func LogDebugf(format string, args ...interface{}) {
+	log.Debug(fmt.Sprintf(format, args...))
+}
+
 func TraceInfo(module string, args ...interface{}) {
 	log.Trace(fmt.Sprintf("%s> %s", module, fmt.Sprint(args...)))
 }

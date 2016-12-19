@@ -20,7 +20,7 @@ type PlayerInfo struct {
 	Entity       *datatype.EntityInfo
 }
 
-func GetPlayerInfo(acc string, name string, scene string, x, y, z, dir float32, obj datatype.Entityer) (*PlayerInfo, error) {
+func GetPlayerInfo(acc string, name string, scene string, x, y, z, dir float32, obj datatype.Entity) (*PlayerInfo, error) {
 	info, err := GetItemInfo(obj, true)
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func GetPlayerInfo(acc string, name string, scene string, x, y, z, dir float32, 
 	return p, nil
 }
 
-func GetItemInfo(obj datatype.Entityer, syncchild bool) (*datatype.EntityInfo, error) {
+func GetItemInfo(obj datatype.Entity, syncchild bool) (*datatype.EntityInfo, error) {
 	item := &datatype.EntityInfo{}
 	buffer := new(bytes.Buffer)
 	enc := gob.NewEncoder(buffer)

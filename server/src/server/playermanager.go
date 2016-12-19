@@ -5,8 +5,8 @@ import (
 	"server/data/datatype"
 	"server/libs/log"
 	"server/libs/rpc"
+	"server/share"
 	"server/util"
-	"time"
 )
 
 const (
@@ -20,13 +20,15 @@ const (
 )
 
 type PlayerInfo struct {
-	Mailbox rpc.Mailbox
-	Account string
-	Name    string
-	Session int64
-	Entity  datatype.Entityer
-	State   int
-	Deleted bool
+	Mailbox  rpc.Mailbox
+	Account  string
+	acchash  int32
+	Name     string
+	namehash int32
+	Session  int64
+	Entity   datatype.Entity
+	State    int
+	Deleted  bool
 }
 
 func (pi *PlayerInfo) GetMailbox() rpc.Mailbox {
@@ -41,12 +43,20 @@ func (pi *PlayerInfo) GetAccount() string {
 	return pi.Account
 }
 
+func (pi *PlayerInfo) GetAccountHash() int32 {
+	return pi.acchash
+}
+
 func (pi *PlayerInfo) SetAccount(acc string) {
 	pi.Account = acc
 }
 
 func (pi *PlayerInfo) GetName() string {
 	return pi.Name
+}
+
+func (pi *PlayerInfo) GetNameHash() int32 {
+	return pi.namehash
 }
 
 func (pi *PlayerInfo) SetName(name string) {
@@ -61,11 +71,11 @@ func (pi *PlayerInfo) SetSession(s int64) {
 	pi.Session = s
 }
 
-func (pi *PlayerInfo) GetEntityer() datatype.Entityer {
+func (pi *PlayerInfo) GetEntity() datatype.Entity {
 	return pi.Entity
 }
 
-func (pi *PlayerInfo) SetEntityer(ent datatype.Entityer) {
+func (pi *PlayerInfo) SetEntity(ent datatype.Entity) {
 	pi.Entity = ent
 }
 
@@ -98,20 +108,27 @@ func (pi *PlayerInfo) OnClear() {
 }
 
 func (pi *PlayerInfo) OnEvent(event string) {
-
+	core.Kernel.Emit(pi.Entity, event, nil)
 }
 
-type PlayerInfoer interface {
+func (pi *PlayerInfo) UpdateHash() {
+	pi.acchash = util.DJBHash(pi.Account)
+	pi.namehash = util.DJBHash(pi.Name)
+}
+
+type PlayerHandler interface {
 	GetMailbox() rpc.Mailbox
 	SetMailbox(mb rpc.Mailbox)
 	GetAccount() string
+	GetAccountHash() int32
 	SetAccount(acc string)
 	GetName() string
+	GetNameHash() int32
 	SetName(name string)
 	GetSession() int64
 	SetSession(s int64)
-	GetEntityer() datatype.Entityer
-	SetEntityer(ent datatype.Entityer)
+	GetEntity() datatype.Entity
+	SetEntity(ent datatype.Entity)
 	GetState() int
 	SetState(s int)
 	GetDeleted() bool
@@ -120,35 +137,30 @@ type PlayerInfoer interface {
 	OnDelete()
 	OnClear()
 	OnEvent(event string)
+	UpdateHash()
 }
 
-type InitFunc func() PlayerInfoer
+type InitFunc func() PlayerHandler
 
 type PlayerManager struct {
 	Dispatch
 	UniqueType int
-	Players    map[uint64]PlayerInfoer
-	namemap    map[string]uint64
+	Players    map[uint64]PlayerHandler
 	serial     uint64
 	initfunc   InitFunc
-	lasttime   time.Time
 }
 
-var Players *PlayerManager
-
 func NewPlayerManager(typ int, f InitFunc) *PlayerManager {
-	if Players != nil {
-		return Players
+	if core.Players != nil {
+		return core.Players
 	}
 	pm := &PlayerManager{}
-	pm.Players = make(map[uint64]PlayerInfoer, 512)
-	pm.namemap = make(map[string]uint64, 512)
+	pm.Players = make(map[uint64]PlayerHandler, 512)
 	pm.UniqueType = typ
 	pm.initfunc = f
-	pm.lasttime = time.Now()
-	core.AddDispatchNoName(pm, DP_UPDATE|DP_FLUSH)
-	Players = pm
-	return Players
+	core.AddDispatchNoName(pm, DP_FRAME)
+	core.Players = pm
+	return pm
 }
 
 func (pm *PlayerManager) GetNewSerial() uint64 {
@@ -156,54 +168,90 @@ func (pm *PlayerManager) GetNewSerial() uint64 {
 	return pm.serial
 }
 
-func (pm *PlayerManager) AddNewPlayer(uid uint64) (PlayerInfoer, error) {
+func (pm *PlayerManager) AddNewPlayer(uid uint64) (PlayerHandler, error) {
 	if _, dup := pm.Players[uid]; dup {
 		return nil, fmt.Errorf("add player uid is exist")
 	}
 
 	player := pm.initfunc()
+	player.UpdateHash()
 	pm.Players[uid] = player
 	return player, nil
 }
 
-func (pm *PlayerManager) AddPlayer(uid uint64, player PlayerInfoer) error {
+func (pm *PlayerManager) AddPlayer(uid uint64, player PlayerHandler) error {
 
 	if _, dup := pm.Players[uid]; dup {
 		return fmt.Errorf("add player uid is exist")
 	}
-
+	player.UpdateHash()
 	pm.Players[uid] = player
 	return nil
 }
 
-func (pm *PlayerManager) UpdateName(uid uint64) {
-	if player, dup := pm.Players[uid]; dup && !player.GetDeleted() {
-		name := player.GetName()
-		if name != "" {
-			if _, dup := pm.namemap[name]; dup {
-				log.LogError("name dup")
-				return
-			}
-			pm.namemap[name] = uid
-		}
-	}
-}
-
-func (pm *PlayerManager) FindPlayer(uid uint64) PlayerInfoer {
-	if player, dup := pm.Players[uid]; dup && !player.GetDeleted() {
+func (pm *PlayerManager) FindPlayer(uid uint64) PlayerHandler {
+	if player, dup := pm.Players[uid]; dup {
 		return player
 	}
 	return nil
 }
 
-func (pm *PlayerManager) FindPlayerByName(name string) PlayerInfoer {
-	if uid, dup := pm.namemap[name]; dup {
-		player := pm.Players[uid]
-		if !player.GetDeleted() {
-			return player
+func (pm *PlayerManager) FindPlayerBySession(session int64) PlayerHandler {
+	for _, v := range pm.Players {
+		if v.GetSession() == session {
+			return v
 		}
 	}
 
+	return nil
+}
+
+func (pm *PlayerManager) FindPlayerByName(name string) PlayerHandler {
+	hash := util.DJBHash(name)
+	for _, v := range pm.Players {
+		if hash == v.GetNameHash() && v.GetName() == name {
+			return v
+		}
+	}
+
+	return nil
+}
+
+func (pm *PlayerManager) FindPlayerByAccountAndName(acc string, name string, exclude uint64) PlayerHandler {
+	hash1 := util.DJBHash(acc)
+	hash2 := util.DJBHash(name)
+	for k, v := range pm.Players {
+		if k == exclude {
+			continue
+		}
+		if hash1 == v.GetAccountHash() && hash2 == v.GetNameHash() && v.GetAccount() == acc && v.GetName() == name {
+			return v
+		}
+	}
+	return nil
+}
+
+func (pm *PlayerManager) SwitchPlayer(player PlayerHandler) error {
+	oldsession := player.GetSession()
+	//被顶替的玩家
+	replace := pm.FindPlayerByAccountAndName(player.GetAccount(), player.GetName(), uint64(player.GetSession()))
+	if replace == nil {
+		log.LogError("old player not found")
+		return nil
+	}
+
+	//交换连接
+	core.SwitchConn(replace.GetSession(), player.GetSession())
+	//把原来的玩家踢下线
+	mb := player.GetMailbox()
+	Error(nil, &mb, "Login.Error", share.ERROR_ROLE_REPLACE)
+	core.DelayKickUser(oldsession, 5)
+	//同步玩家数据
+	core.AttachPlayer(replace.GetEntity(), replace.GetMailbox())
+
+	player.SetAccount(player.GetAccount() + "*replace*")
+	player.SetName(player.GetName() + "*replace*")
+	log.LogInfo("switch player: old:", oldsession, " new:", replace.GetSession())
 	return nil
 }
 
@@ -226,27 +274,12 @@ func (pm *PlayerManager) Emit(event string) {
 	}
 }
 
-func (pm *PlayerManager) OnFlush() {
-	if util.IsSameDay(pm.lasttime, time.Now()) {
-		return
-	}
-
-	for _, pl := range pm.Players {
-		if !pl.GetDeleted() {
-			pl.OnEvent(E_NEWDAY)
-		}
-	}
-
-	pm.lasttime = time.Now()
-}
-
-func (pm *PlayerManager) OnUpdate() {
+func (pm *PlayerManager) OnFrame() {
 	//check delete
 	for uid, pl := range pm.Players {
 		if pl.GetDeleted() {
 			pl.OnDelete()
 			delete(pm.Players, uid)
-			delete(pm.namemap, pl.GetName())
 			pl.OnClear()
 			log.LogDebug("delete player:", uid)
 			log.LogDebug("remain players:", pm.Count())

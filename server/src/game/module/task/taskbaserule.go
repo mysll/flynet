@@ -54,7 +54,7 @@ func (tb *TaskBaseRule) OnTaskAccept(player *entity.Player, task *Task) bool {
 	player.TaskAccepted_r.AddRowValue(-1, task.ID, 0)
 
 	if task.PropConditionID != "" && task.PropConditionID != "0" {
-		pinfo := TaskInst.GetPropInfo(task.PropConditionID)
+		pinfo := Module.TaskSystem.GetPropInfo(task.PropConditionID)
 		if pinfo != nil {
 			tb.AddPropRecord(player, task.ID, pinfo.Prop1, pinfo.PropValue1)
 			tb.AddPropRecord(player, task.ID, pinfo.Prop2, pinfo.PropValue2)
@@ -71,7 +71,7 @@ func (tb *TaskBaseRule) OnTaskAccept(player *entity.Player, task *Task) bool {
 	}
 
 	if task.HuntID != "" && task.HuntID != "0" {
-		hinfo := TaskInst.GetHuntinfo(task.HuntID)
+		hinfo := Module.TaskSystem.GetHuntinfo(task.HuntID)
 		if hinfo != nil {
 			tb.AddTaskRecord(player, task.ID, TYPE_HUNT, hinfo.MonsterID1, hinfo.MonsterNum1)
 			tb.AddTaskRecord(player, task.ID, TYPE_HUNT, hinfo.MonsterID2, hinfo.MonsterNum2)
@@ -88,7 +88,7 @@ func (tb *TaskBaseRule) OnTaskAccept(player *entity.Player, task *Task) bool {
 	}
 
 	if task.CollectID != "" && task.CollectID != "0" {
-		cinfo := TaskInst.GetCollection(task.CollectID)
+		cinfo := Module.TaskSystem.GetCollection(task.CollectID)
 		if cinfo != nil {
 			tb.AddTaskRecord(player, task.ID, TYPE_COL, cinfo.ItemID1, cinfo.ItemCount1)
 			tb.AddTaskRecord(player, task.ID, TYPE_COL, cinfo.ItemID2, cinfo.ItemCount2)
@@ -105,7 +105,7 @@ func (tb *TaskBaseRule) OnTaskAccept(player *entity.Player, task *Task) bool {
 	}
 
 	if task.EventID != "" && task.EventID != "0" {
-		einfo := TaskInst.GetEventInfo(task.EventID)
+		einfo := Module.TaskSystem.GetEventInfo(task.EventID)
 		if einfo != nil {
 			tb.AddTaskRecord(player, task.ID, TYPE_EVENT, einfo.Event1, einfo.Count1)
 			tb.AddTaskRecord(player, task.ID, TYPE_EVENT, einfo.Event2, einfo.Count2)
@@ -130,7 +130,7 @@ task_id: 任务编号
 false:失败 true:成功
 */
 func (tb *TaskBaseRule) OnAffterTaskAccept(player *entity.Player, task *Task) bool {
-	TaskInst.TestComplete(player, task)
+	Module.TaskSystem.TestComplete(player, task)
 	return true
 }
 
@@ -155,7 +155,7 @@ func (tb *TaskBaseRule) OnTaskComplete(player *entity.Player, task *Task) bool {
 		return false
 	}
 
-	raward := TaskInst.GetReward(task.AwardID) //获取奖励
+	raward := Module.TaskSystem.GetReward(task.AwardID) //获取奖励
 	if raward != nil {
 		if raward.Reward1 != "" {
 			tb.GetReward(player, raward.Reward1, raward.Num1)
@@ -180,13 +180,13 @@ func (tb *TaskBaseRule) OnTaskComplete(player *entity.Player, task *Task) bool {
 
 func (tb *TaskBaseRule) OnAffterTaskComplete(player *entity.Player, task *Task) bool {
 	nextid := task.NextTaskId
-	nexttask := TaskInst.GetTask(nextid)
+	nexttask := Module.TaskSystem.GetTask(nextid)
 	if nexttask == nil {
 		return true
 	}
 
 	if nexttask.AutoAccept == 1 {
-		TaskInst.TryAcceptTask(player, nexttask)
+		Module.TaskSystem.TryAcceptTask(player, nexttask)
 	}
 	return true
 }

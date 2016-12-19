@@ -177,7 +177,7 @@ type LoadUserBak struct {
 	Data      *DbSave
 }
 
-func GetSaveData(ent datatype.Entityer) *DbSave {
+func GetSaveData(ent datatype.Entity) *DbSave {
 	data := &DbSave{}
 	data.Data = GetEntityData(ent, false, 0)
 	roleinfo := ent.GetExtraData("roleinfo")
@@ -187,7 +187,7 @@ func GetSaveData(ent datatype.Entityer) *DbSave {
 	return data
 }
 
-func GetEntityData(ent datatype.Entityer, base bool, depth int) *SaveEntity {
+func GetEntityData(ent datatype.Entity, base bool, depth int) *SaveEntity {
 	if !base && !ent.IsSave() {
 		return nil
 	}

@@ -11,7 +11,7 @@ var (
 
 type ProtoCodec interface {
 	GetCodecInfo() string
-	CreateObjectMessage(obj datatype.Entityer, self bool, mailbox rpc.Mailbox) interface{}
+	CreateObjectMessage(obj datatype.Entity, self bool, mailbox rpc.Mailbox) interface{}
 	ErrorMsg(errno int32) interface{}
 	CreateRpcMessage(svr, method string, args interface{}) (data []byte, err error)
 	DecodeRpcMessage(msg *rpc.Message) (node, Servicemethod string, data []byte, err error)

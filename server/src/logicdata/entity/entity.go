@@ -10,18 +10,18 @@ import (
 //获取类型
 func GetType(name string) int {
 	switch name {
-	case "GlobalData":
-		return HELPER
-	case "Player":
-		return PLAYER
 	case "BaseScene":
 		return SCENE
 	case "Container":
 		return ITEM
-	case "GlobalSet":
-		return HELPER
+	case "Player":
+		return PLAYER
 	case "Item":
 		return ITEM
+	case "GlobalData":
+		return HELPER
+	case "GlobalSet":
+		return HELPER
 	default:
 		return NONE
 	}
@@ -29,18 +29,18 @@ func GetType(name string) int {
 
 func CreateSaveLoader(typ string) DBSaveLoader {
 	switch typ {
-	case "GlobalData":
-		return &GlobalData_Save{}
-	case "Player":
-		return &Player_Save{}
 	case "BaseScene":
 		return &BaseScene_Save{}
 	case "Container":
 		return &Container_Save{}
-	case "GlobalSet":
-		return &GlobalSet_Save{}
+	case "Player":
+		return &Player_Save{}
 	case "Item":
 		return &Item_Save{}
+	case "GlobalData":
+		return &GlobalData_Save{}
+	case "GlobalSet":
+		return &GlobalSet_Save{}
 	default:
 		return nil
 	}
@@ -55,62 +55,62 @@ func Hash(str string) int32 {
 	return int32(hash & 0x7FFFFFFF)
 }
 
-func IsGlobalData(ent Entityer) bool {
-	return ent.ObjTypeName() == "GlobalData"
-}
-
-func IsPlayer(ent Entityer) bool {
-	return ent.ObjTypeName() == "Player"
-}
-
-func IsBaseScene(ent Entityer) bool {
+func IsBaseScene(ent Entity) bool {
 	return ent.ObjTypeName() == "BaseScene"
 }
 
-func IsContainer(ent Entityer) bool {
+func IsContainer(ent Entity) bool {
 	return ent.ObjTypeName() == "Container"
 }
 
-func IsGlobalSet(ent Entityer) bool {
-	return ent.ObjTypeName() == "GlobalSet"
+func IsPlayer(ent Entity) bool {
+	return ent.ObjTypeName() == "Player"
 }
 
-func IsItem(ent Entityer) bool {
+func IsItem(ent Entity) bool {
 	return ent.ObjTypeName() == "Item"
+}
+
+func IsGlobalData(ent Entity) bool {
+	return ent.ObjTypeName() == "GlobalData"
+}
+
+func IsGlobalSet(ent Entity) bool {
+	return ent.ObjTypeName() == "GlobalSet"
 }
 
 //初始化函数
 func init() {
 
-	Register("GlobalData", func() Entityer {
-		return CreateGlobalData()
-	})
-	GlobalDataInit()
-
-	Register("Player", func() Entityer {
-		return CreatePlayer()
-	})
-	PlayerInit()
-
-	Register("BaseScene", func() Entityer {
+	Register("BaseScene", func() Entity {
 		return CreateBaseScene()
 	})
 	BaseSceneInit()
 
-	Register("Container", func() Entityer {
+	Register("Container", func() Entity {
 		return CreateContainer()
 	})
 	ContainerInit()
 
-	Register("GlobalSet", func() Entityer {
-		return CreateGlobalSet()
+	Register("Player", func() Entity {
+		return CreatePlayer()
 	})
-	GlobalSetInit()
+	PlayerInit()
 
-	Register("Item", func() Entityer {
+	Register("Item", func() Entity {
 		return CreateItem()
 	})
 	ItemInit()
+
+	Register("GlobalData", func() Entity {
+		return CreateGlobalData()
+	})
+	GlobalDataInit()
+
+	Register("GlobalSet", func() Entity {
+		return CreateGlobalSet()
+	})
+	GlobalSetInit()
 
 	gob.Register(&EntityInfo{})
 }

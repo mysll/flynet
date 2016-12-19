@@ -12,13 +12,13 @@ import (
 type Factory struct {
 	index   int32
 	pool    *Pool
-	objects map[int32]Entityer
+	objects map[int32]Entity
 	deletes *list.List
 	inBase  bool
 }
 
 //创建一个对象
-func (f *Factory) Create(typ string) (ent Entityer, err error) {
+func (f *Factory) Create(typ string) (ent Entity, err error) {
 	id := ObjectID{}
 	for i := 0; i < 100; i++ {
 		f.index++
@@ -46,7 +46,7 @@ func (f *Factory) Create(typ string) (ent Entityer, err error) {
 }
 
 //通过id获取一个对象
-func (f *Factory) Find(id ObjectID) Entityer {
+func (f *Factory) Find(id ObjectID) Entity {
 	if e, ok := f.objects[id.Index]; ok {
 		if e.GetDeleted() || !e.GetObjId().Equal(id) {
 			return nil
@@ -67,7 +67,7 @@ func (f *Factory) Destroy(id ObjectID) {
 	}
 }
 
-func (f *Factory) destroyObj(obj Entityer) {
+func (f *Factory) destroyObj(obj Entity) {
 	//查找是否有子对象，一并删除
 	chs := obj.GetChilds()
 	for _, c := range chs {
@@ -84,7 +84,7 @@ func (f *Factory) destroyObj(obj Entityer) {
 	f.deletes.PushBack(obj.GetObjId().Index)
 }
 
-func (f *Factory) destroySelf(obj Entityer) {
+func (f *Factory) destroySelf(obj Entity) {
 	obj.SetDeleted(true)
 	f.deletes.PushBack(obj.GetObjId().Index)
 }
@@ -115,7 +115,7 @@ func (f *Factory) ClearDelete() {
 func NewFactory() *Factory {
 	f := &Factory{}
 	f.pool = NewEntityPool()
-	f.objects = make(map[int32]Entityer)
+	f.objects = make(map[int32]Entity)
 	f.deletes = list.New()
 	return f
 }

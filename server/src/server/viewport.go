@@ -13,27 +13,27 @@ var (
 
 type ViewportCodec interface {
 	GetCodecInfo() string
-	ViewportCreate(id int32, container Entityer) interface{}
+	ViewportCreate(id int32, container Entity) interface{}
 	ViewportDelete(id int32) interface{}
-	ViewportNotifyAdd(id int32, index int32, object Entityer) interface{}
+	ViewportNotifyAdd(id int32, index int32, object Entity) interface{}
 	ViewportNotifyRemove(id int32, index int32) interface{}
 	ViewportNotifyExchange(srcid int32, src int32, destid int32, dest int32) interface{}
-	OnUpdate(id int32, child Entityer) interface{}
+	OnUpdate(id int32, child Entity) interface{}
 }
 
 type ViewportData struct {
 	Id        int32
-	Container Entityer
+	Container Entity
 }
 
 type Viewport struct {
 	SchedulerBase
 	Views   map[int32]*ViewportData
-	Owner   Entityer
+	Owner   Entity
 	mailbox rpc.Mailbox
 }
 
-func NewViewport(p Entityer, mailbox rpc.Mailbox) *Viewport {
+func NewViewport(p Entity, mailbox rpc.Mailbox) *Viewport {
 	if vt == nil {
 		panic("viewport transport not set")
 	}
@@ -51,7 +51,7 @@ func (vp *Viewport) ClearAll() {
 	}
 }
 
-func (vp *Viewport) AddViewport(id int32, container Entityer) error {
+func (vp *Viewport) AddViewport(id int32, container Entity) error {
 	if _, exist := vp.Views[id]; exist {
 		return fmt.Errorf("viewport is already open")
 	}

@@ -95,7 +95,7 @@ func (t *TeleportHelper) OnSyncBaseWithSceneData(msg *rpc.Message) {
 }
 
 //传送到场景
-func (t *TeleportHelper) teleport(app *RemoteApp, player datatype.Entityer, mailbox rpc.Mailbox, args ...interface{}) error {
+func (t *TeleportHelper) teleport(app *RemoteApp, player datatype.Entity, mailbox rpc.Mailbox, args ...interface{}) error {
 	playerinfo, err := share.GetItemInfo(player, false)
 	if err != nil {
 		return err
@@ -107,7 +107,7 @@ func (t *TeleportHelper) teleport(app *RemoteApp, player datatype.Entityer, mail
 }
 
 //传送回base
-func (t *TeleportHelper) teleportToBase(app *RemoteApp, object datatype.Entityer, mailbox rpc.Mailbox, args ...interface{}) error {
+func (t *TeleportHelper) teleportToBase(app *RemoteApp, object datatype.Entity, mailbox rpc.Mailbox, args ...interface{}) error {
 	sd := object.GetSceneData()
 	infos := make([]interface{}, 0, len(args)+1)
 	infos = append(infos, sd)
@@ -116,7 +116,7 @@ func (t *TeleportHelper) teleportToBase(app *RemoteApp, object datatype.Entityer
 }
 
 //从base传送到场景
-func (k *Kernel) TeleportToAppByName(appname string, player datatype.Entityer, mailbox rpc.Mailbox, args ...interface{}) error {
+func (k *Kernel) TeleportToAppByName(appname string, player datatype.Entity, mailbox rpc.Mailbox, args ...interface{}) error {
 	if player == nil {
 		return fmt.Errorf("player is nil")
 	}
@@ -129,7 +129,7 @@ func (k *Kernel) TeleportToAppByName(appname string, player datatype.Entityer, m
 }
 
 //从base传送到场景
-func (k *Kernel) TeleportToApp(appid int32, player datatype.Entityer, mailbox rpc.Mailbox, args ...interface{}) error {
+func (k *Kernel) TeleportToApp(appid int32, player datatype.Entity, mailbox rpc.Mailbox, args ...interface{}) error {
 	if player == nil {
 		return fmt.Errorf("player is nil")
 	}
@@ -142,7 +142,7 @@ func (k *Kernel) TeleportToApp(appid int32, player datatype.Entityer, mailbox rp
 }
 
 //从场景返回base
-func (k *Kernel) TeleportToBaseByName(basename string, player datatype.Entityer, mailbox rpc.Mailbox, args ...interface{}) error {
+func (k *Kernel) TeleportToBaseByName(basename string, player datatype.Entity, mailbox rpc.Mailbox, args ...interface{}) error {
 	if player == nil {
 		return fmt.Errorf("player is nil")
 	}
@@ -155,7 +155,7 @@ func (k *Kernel) TeleportToBaseByName(basename string, player datatype.Entityer,
 }
 
 //从场景返回base
-func (k *Kernel) TeleportToBaseById(baseid int32, player datatype.Entityer, mailbox rpc.Mailbox, args ...interface{}) error {
+func (k *Kernel) TeleportToBaseById(baseid int32, player datatype.Entity, mailbox rpc.Mailbox, args ...interface{}) error {
 	if player == nil {
 		return fmt.Errorf("player is nil")
 	}

@@ -1,7 +1,7 @@
 package area
 
 import (
-	_ "logicdata/entity"
+	"logicdata/entity"
 	_ "pb"
 	"server"
 	"server/data/datatype"
@@ -14,18 +14,14 @@ var (
 
 type AreaApp struct {
 	*server.Server
-	players   *PlayerList
 	baseProxy *BaseProxy
 	cells     map[int]*cell
 }
 
 func (a *AreaApp) OnPrepare() bool {
 	log.LogMessage(a.AppId, " prepared")
+	server.NewPlayerManager(entity.GetType("Player"), NewAreaPlayer)
 	return true
-}
-
-func (a *AreaApp) OnFrame() {
-	a.players.ClearDeleted()
 }
 
 func (a *AreaApp) GetCell(id int) *cell {
@@ -53,7 +49,7 @@ func (a *AreaApp) RemoveCell(id int) {
 	}
 }
 
-func (a *AreaApp) OnTeleportFromBase(args []interface{}, player datatype.Entityer) bool {
+func (a *AreaApp) OnTeleportFromBase(args []interface{}, player datatype.Entity) bool {
 	log.LogMessage(args)
 	return true
 }
@@ -64,7 +60,6 @@ func GetAllHandler() map[string]interface{} {
 
 func init() {
 	App = &AreaApp{
-		players:   NewPlayerList(),
 		baseProxy: NewBaseProxy(),
 		cells:     make(map[int]*cell),
 	}

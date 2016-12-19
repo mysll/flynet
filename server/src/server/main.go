@@ -29,6 +29,7 @@ func NewServer(app Apper, id int32) *Server {
 	s.c2shelper = &C2SHelper{}
 	s.teleport = &TeleportHelper{}
 	s.globalHelper = NewGlobalDataHelper()
+	s.modules = make(map[string]Moduler)
 	RegisterRemote("S2CHelper", s.s2chelper)
 	RegisterRemote("Teleport", s.teleport)
 	RegisterRemote("GlobalHelper", s.globalHelper)

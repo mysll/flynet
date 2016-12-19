@@ -136,22 +136,23 @@ type GlobalSet_t struct {
 	dirty           bool
 	ObjectType      int
 	DbId            uint64
-	parent          Entityer
+	parent          Entity
 	ObjId           ObjectID
 	Deleted         bool
 	NameHash        int32
 	IDHash          int32
 	ContainerInited bool
 	Index           int //在容器中的位置
-	Childs          []Entityer
+	Childs          []Entity
 	ChildNum        int
 
 	Save bool //是否保存
 }
 
 type GlobalSet struct {
-	InScene      bool //是否在场景中
-	InBase       bool //是否在base中
+	uid          uint64 //全局ID
+	InScene      bool   //是否在场景中
+	InBase       bool   //是否在base中
 	Mdirty       map[string]interface{}
 	Mmodify      map[string]interface{}
 	ExtraData    map[string]interface{}
@@ -165,6 +166,14 @@ type GlobalSet struct {
 	GlobalSet_t
 	GlobalSet_Save
 	GlobalSet_Propertys
+}
+
+func (obj *GlobalSet) SetUID(v uint64) {
+	obj.uid = v
+}
+
+func (obj *GlobalSet) UID() uint64 {
+	return obj.uid
 }
 
 func (obj *GlobalSet) SetInBase(v bool) {
@@ -243,7 +252,7 @@ func (obj *GlobalSet) ChangeCapacity(capacity int32) error {
 		return ErrContainerCapacity
 	}
 
-	newchilds := make([]Entityer, capacity)
+	newchilds := make([]Entity, capacity)
 	if capacity < obj.Capacity { //缩容，位置将进行重排
 		idx := 0
 		for _, c := range obj.Childs {
@@ -273,9 +282,9 @@ func (obj *GlobalSet) SetCapacity(capacity int32, initcap int32) {
 	}
 
 	if capacity == -1 {
-		obj.Childs = make([]Entityer, 0, initcap)
+		obj.Childs = make([]Entity, 0, initcap)
 	} else if capacity > 0 {
-		obj.Childs = make([]Entityer, capacity)
+		obj.Childs = make([]Entity, capacity)
 	} else {
 		obj.Childs = nil
 	}
@@ -296,8 +305,8 @@ func (obj *GlobalSet) GetRealCap() int32 {
 	return int32(len(obj.Childs))
 }
 
-func (obj *GlobalSet) GetRoot() Entityer {
-	var ent Entityer
+func (obj *GlobalSet) GetRoot() Entity {
+	var ent Entity
 	if obj.GetParent() == nil {
 		return nil
 	}
@@ -323,11 +332,11 @@ func (obj *GlobalSet) SetDbId(id uint64) {
 	obj.DbId = id
 }
 
-func (obj *GlobalSet) SetParent(p Entityer) {
+func (obj *GlobalSet) SetParent(p Entity) {
 	obj.parent = p
 }
 
-func (obj *GlobalSet) GetParent() Entityer {
+func (obj *GlobalSet) GetParent() Entity {
 	return obj.parent
 }
 
@@ -377,7 +386,7 @@ func (obj *GlobalSet) ChildCount() int {
 }
 
 //移除对象
-func (obj *GlobalSet) RemoveChild(de Entityer) error {
+func (obj *GlobalSet) RemoveChild(de Entity) error {
 	idx := de.GetIndex()
 	e := obj.GetChild(idx)
 
@@ -392,7 +401,7 @@ func (obj *GlobalSet) RemoveChild(de Entityer) error {
 }
 
 //获取子对象
-func (obj *GlobalSet) GetChilds() []Entityer {
+func (obj *GlobalSet) GetChilds() []Entity {
 	return obj.Childs
 }
 
@@ -421,7 +430,7 @@ func (obj *GlobalSet) ClearChilds() {
 }
 
 //增加子对象
-func (obj *GlobalSet) AddChild(idx int, e Entityer) (index int, err error) {
+func (obj *GlobalSet) AddChild(idx int, e Entity) (index int, err error) {
 	if !obj.ContainerInited {
 		err = ErrContainerNotInit
 		return
@@ -479,7 +488,7 @@ func (obj *GlobalSet) AddChild(idx int, e Entityer) (index int, err error) {
 }
 
 //获取子对象
-func (obj *GlobalSet) GetChild(idx int) Entityer {
+func (obj *GlobalSet) GetChild(idx int) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
@@ -490,7 +499,7 @@ func (obj *GlobalSet) GetChild(idx int) Entityer {
 }
 
 //通过ID获取子对象
-func (obj *GlobalSet) GetChildByConfigId(id string) Entityer {
+func (obj *GlobalSet) GetChildByConfigId(id string) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
@@ -502,7 +511,7 @@ func (obj *GlobalSet) GetChildByConfigId(id string) Entityer {
 	}
 	return nil
 }
-func (obj *GlobalSet) GetFirstChildByConfigId(id string) (int, Entityer) {
+func (obj *GlobalSet) GetFirstChildByConfigId(id string) (int, Entity) {
 	if !obj.ContainerInited {
 		return -1, nil
 	}
@@ -514,7 +523,7 @@ func (obj *GlobalSet) GetFirstChildByConfigId(id string) (int, Entityer) {
 	}
 	return -1, nil
 }
-func (obj *GlobalSet) GetNextChildByConfigId(start int, id string) (int, Entityer) {
+func (obj *GlobalSet) GetNextChildByConfigId(start int, id string) (int, Entity) {
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
@@ -529,7 +538,7 @@ func (obj *GlobalSet) GetNextChildByConfigId(start int, id string) (int, Entitye
 }
 
 //通过名称获取子对象
-func (obj *GlobalSet) GetChildByName(name string) Entityer {
+func (obj *GlobalSet) GetChildByName(name string) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
@@ -541,7 +550,7 @@ func (obj *GlobalSet) GetChildByName(name string) Entityer {
 	}
 	return nil
 }
-func (obj *GlobalSet) GetFirstChild(name string) (int, Entityer) {
+func (obj *GlobalSet) GetFirstChild(name string) (int, Entity) {
 	if !obj.ContainerInited {
 		return -1, nil
 	}
@@ -553,7 +562,7 @@ func (obj *GlobalSet) GetFirstChild(name string) (int, Entityer) {
 	}
 	return -1, nil
 }
-func (obj *GlobalSet) GetNextChild(start int, name string) (int, Entityer) {
+func (obj *GlobalSet) GetNextChild(start int, name string) (int, Entity) {
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
@@ -587,7 +596,7 @@ func (obj *GlobalSet) SwapChild(src int, dest int) error {
 }
 
 //获取基类
-func (obj *GlobalSet) Base() Entityer {
+func (obj *GlobalSet) Base() Entity {
 	return nil
 }
 
@@ -904,6 +913,7 @@ func (obj *GlobalSet) GlobalSetInit() {
 	obj.ObjectType = HELPER
 	obj.InBase = false
 	obj.InScene = false
+	obj.uid = 0
 }
 
 //重置
@@ -927,12 +937,13 @@ func (obj *GlobalSet) Reset() {
 }
 
 //对象拷贝
-func (obj *GlobalSet) Copy(other Entityer) error {
+func (obj *GlobalSet) Copy(other Entity) error {
 	if t, ok := other.(*GlobalSet); ok {
 		//属性复制
 		obj.DbId = t.DbId
 		obj.NameHash = t.NameHash
 		obj.IDHash = t.IDHash
+		obj.uid = t.uid
 
 		obj.GlobalSet_t = t.GlobalSet_t
 		obj.GlobalSet_Save.GlobalSet_Save_Property = t.GlobalSet_Save_Property
@@ -983,6 +994,10 @@ func (obj *GlobalSet) GobEncode() ([]byte, error) {
 	encoder := gob.NewEncoder(w)
 	var err error
 
+	err = encoder.Encode(obj.uid)
+	if err != nil {
+		return nil, err
+	}
 	err = encoder.Encode(obj.Save)
 	if err != nil {
 		return nil, err
@@ -1021,6 +1036,10 @@ func (obj *GlobalSet) GobDecode(buf []byte) error {
 	decoder := gob.NewDecoder(r)
 	var err error
 
+	err = decoder.Decode(&obj.uid)
+	if err != nil {
+		return err
+	}
 	err = decoder.Decode(&obj.Save)
 	if err != nil {
 		return err

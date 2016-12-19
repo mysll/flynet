@@ -26,7 +26,7 @@ func (pb *PBProtoCodec) GetCodecInfo() string {
 	return "use protobuf"
 }
 
-func (pb *PBProtoCodec) CreateObjectMessage(obj datatype.Entityer, self bool, mailbox rpc.Mailbox) interface{} {
+func (pb *PBProtoCodec) CreateObjectMessage(obj datatype.Entity, self bool, mailbox rpc.Mailbox) interface{} {
 	data, _ := obj.Serial()
 	create := &s2c.CreateObject{}
 	create.Entity = proto.String(obj.ObjTypeName())

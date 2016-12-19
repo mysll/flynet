@@ -1,4 +1,4 @@
-package base
+package letter
 
 import (
 	"encoding/json"
@@ -51,13 +51,13 @@ func DeleteExpiredLetter(player *entity.Player) {
 
 //删除所有信件
 func (l *LetterSystem) DeleteAllLetter(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, reply *rpc.Message) {
-	p := App.Players.GetPlayer(mailbox.Id)
+	p := Module.GetCore().Players.FindPlayer(mailbox.Uid)
 	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
 		//角色没有找到
 		return 0, nil
 	}
-	player := p.Entity.(*entity.Player)
+	player := p.GetEntity().(*entity.Player)
 	player.MailBox_r.Clear()
 	return 0, nil
 }
@@ -68,13 +68,13 @@ func (l *LetterSystem) DeleteLetter(mailbox rpc.Mailbox, msg *rpc.Message) (errc
 	if server.Check(server.ParseProto(msg, args)) {
 		return 0, nil
 	}
-	p := App.Players.GetPlayer(mailbox.Id)
+	p := Module.GetCore().Players.FindPlayer(mailbox.Uid)
 	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
 		//角色没有找到
 		return 0, nil
 	}
-	player := p.Entity.(*entity.Player)
+	player := p.GetEntity().(*entity.Player)
 
 	if len(args.Mails) == 0 {
 		return 0, nil
@@ -96,13 +96,13 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) (errc
 	if server.Check(server.ParseProto(msg, args)) {
 		return 0, nil
 	}
-	p := App.Players.GetPlayer(mailbox.Id)
+	p := Module.GetCore().Players.FindPlayer(mailbox.Uid)
 	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
 		//角色没有找到
 		return 0, nil
 	}
-	player := p.Entity.(*entity.Player)
+	player := p.GetEntity().(*entity.Player)
 
 	if player.MailBox_r.GetRows() == 0 {
 		return 0, nil
@@ -140,7 +140,7 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) (errc
 		index := -1
 		var res int32
 		for k, appendix := range appendixs {
-			item, err := App.CreateFromConfig(appendix.Configid)
+			item, err := Module.GetCore().CreateFromConfig(appendix.Configid)
 			if err != nil { //物品不存在
 				log.LogError("appendix not found ", appendix.Configid)
 				continue
@@ -153,17 +153,24 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) (errc
 				inst.SetTime(appendix.RemainTime)
 			}
 
-			container := GetContainer(player, item)
-			if container == nil {
-				App.Destroy(item.GetObjId())
+			if Module.fc == nil {
+				Module.GetCore().Destroy(item.GetObjId())
 				flag = true
 				res = share.ERROR_SYSTEMERROR
 				break
 			}
 
-			_, err = App.AddChild(container.GetObjId(), item.GetObjId(), -1)
+			container := Module.fc(player, item)
+			if container == nil {
+				Module.GetCore().Destroy(item.GetObjId())
+				flag = true
+				res = share.ERROR_SYSTEMERROR
+				break
+			}
+
+			_, err = Module.GetCore().AddChild(container.GetObjId(), item.GetObjId(), -1)
 			if err != nil {
-				App.Destroy(item.GetObjId())
+				Module.GetCore().Destroy(item.GetObjId())
 				flag = true
 				res = share.ERROR_CONTAINER_FULL
 				break
@@ -191,13 +198,13 @@ func (l *LetterSystem) ReadLetter(mailbox rpc.Mailbox, msg *rpc.Message) (errcod
 	if server.Check(server.ParseProto(msg, args)) {
 		return 0, nil
 	}
-	p := App.Players.GetPlayer(mailbox.Id)
+	p := Module.GetCore().Players.FindPlayer(mailbox.Uid)
 	if p == nil {
 		log.LogError("player not found, id:", mailbox.Id)
 		//角色没有找到
 		return 0, nil
 	}
-	player := p.Entity.(*entity.Player)
+	player := p.GetEntity().(*entity.Player)
 
 	if len(args.Mails) == 0 {
 		return 0, nil

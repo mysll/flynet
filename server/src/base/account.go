@@ -26,17 +26,20 @@ func (a *Account) SelectUser(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int
 	if server.Check(server.ParseProto(msg, args)) {
 		return 0, nil
 	}
-	player := App.Players.GetPlayer(mailbox.Id)
-	if player == nil {
+	p := App.Players.FindPlayer(mailbox.Uid)
+	if p == nil {
 		//角色没有找到
 		return 0, nil
 	}
+	player := p.(*BasePlayer)
 	if player.State != STATE_LOGGED {
 		log.LogWarning("player state not logged")
 		return 0, nil
 	}
 
 	player.ChooseRole = args.GetRolename()
+	player.Name = player.ChooseRole
+	player.UpdateHash()
 	err := App.DbBridge.selectUser(mailbox, player.Account, args.GetRolename(), int(args.GetRoleindex()))
 	if err != nil {
 		log.LogError(err)
@@ -51,11 +54,12 @@ func (a *Account) CreatePlayer(mailbox rpc.Mailbox, msg *rpc.Message) (errcode i
 		return 0, nil
 	}
 
-	player := App.Players.GetPlayer(mailbox.Id)
-	if player == nil {
+	p := App.Players.FindPlayer(mailbox.Uid)
+	if p == nil {
 		//角色没有找到
 		return 0, nil
 	}
+	player := p.(*BasePlayer)
 	if player.State != STATE_LOGGED {
 		log.LogWarning("player state not logged")
 		return 0, nil
@@ -78,10 +82,12 @@ func (a *Account) Login(mailbox rpc.Mailbox, msg *rpc.Message) (errcode int32, r
 		return 0, nil
 	}
 	if App.Login.checkClient(args.GetUser(), args.GetKey()) {
-		if pl := App.Players.AddPlayer(mailbox.Id); pl != nil {
+		if p, err := App.Players.AddNewPlayer(mailbox.Uid); err == nil {
+			pl := p.(*BasePlayer)
 			log.LogMessage("add player:", mailbox)
 			pl.Account = args.GetUser()
 			pl.State = STATE_LOGGED
+			pl.UpdateHash()
 			if args.GetRolename() != "" {
 				pl.ChooseRole = args.GetRolename()
 				server.Check(App.DbBridge.selectUser(mailbox, pl.Account, args.GetRolename(), int(args.GetRoleindex())))

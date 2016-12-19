@@ -137,22 +137,23 @@ type Container_t struct {
 	dirty           bool
 	ObjectType      int
 	DbId            uint64
-	parent          Entityer
+	parent          Entity
 	ObjId           ObjectID
 	Deleted         bool
 	NameHash        int32
 	IDHash          int32
 	ContainerInited bool
 	Index           int //在容器中的位置
-	Childs          []Entityer
+	Childs          []Entity
 	ChildNum        int
 
 	Save bool //是否保存
 }
 
 type Container struct {
-	InScene      bool //是否在场景中
-	InBase       bool //是否在base中
+	uid          uint64 //全局ID
+	InScene      bool   //是否在场景中
+	InBase       bool   //是否在base中
 	Mdirty       map[string]interface{}
 	Mmodify      map[string]interface{}
 	ExtraData    map[string]interface{}
@@ -166,6 +167,14 @@ type Container struct {
 	Container_t
 	Container_Save
 	Container_Propertys
+}
+
+func (obj *Container) SetUID(v uint64) {
+	obj.uid = v
+}
+
+func (obj *Container) UID() uint64 {
+	return obj.uid
 }
 
 func (obj *Container) SetInBase(v bool) {
@@ -244,7 +253,7 @@ func (obj *Container) ChangeCapacity(capacity int32) error {
 		return ErrContainerCapacity
 	}
 
-	newchilds := make([]Entityer, capacity)
+	newchilds := make([]Entity, capacity)
 	if capacity < obj.Capacity { //缩容，位置将进行重排
 		idx := 0
 		for _, c := range obj.Childs {
@@ -274,9 +283,9 @@ func (obj *Container) SetCapacity(capacity int32, initcap int32) {
 	}
 
 	if capacity == -1 {
-		obj.Childs = make([]Entityer, 0, initcap)
+		obj.Childs = make([]Entity, 0, initcap)
 	} else if capacity > 0 {
-		obj.Childs = make([]Entityer, capacity)
+		obj.Childs = make([]Entity, capacity)
 	} else {
 		obj.Childs = nil
 	}
@@ -297,8 +306,8 @@ func (obj *Container) GetRealCap() int32 {
 	return int32(len(obj.Childs))
 }
 
-func (obj *Container) GetRoot() Entityer {
-	var ent Entityer
+func (obj *Container) GetRoot() Entity {
+	var ent Entity
 	if obj.GetParent() == nil {
 		return nil
 	}
@@ -324,11 +333,11 @@ func (obj *Container) SetDbId(id uint64) {
 	obj.DbId = id
 }
 
-func (obj *Container) SetParent(p Entityer) {
+func (obj *Container) SetParent(p Entity) {
 	obj.parent = p
 }
 
-func (obj *Container) GetParent() Entityer {
+func (obj *Container) GetParent() Entity {
 	return obj.parent
 }
 
@@ -378,7 +387,7 @@ func (obj *Container) ChildCount() int {
 }
 
 //移除对象
-func (obj *Container) RemoveChild(de Entityer) error {
+func (obj *Container) RemoveChild(de Entity) error {
 	idx := de.GetIndex()
 	e := obj.GetChild(idx)
 
@@ -393,7 +402,7 @@ func (obj *Container) RemoveChild(de Entityer) error {
 }
 
 //获取子对象
-func (obj *Container) GetChilds() []Entityer {
+func (obj *Container) GetChilds() []Entity {
 	return obj.Childs
 }
 
@@ -422,7 +431,7 @@ func (obj *Container) ClearChilds() {
 }
 
 //增加子对象
-func (obj *Container) AddChild(idx int, e Entityer) (index int, err error) {
+func (obj *Container) AddChild(idx int, e Entity) (index int, err error) {
 	if !obj.ContainerInited {
 		err = ErrContainerNotInit
 		return
@@ -480,7 +489,7 @@ func (obj *Container) AddChild(idx int, e Entityer) (index int, err error) {
 }
 
 //获取子对象
-func (obj *Container) GetChild(idx int) Entityer {
+func (obj *Container) GetChild(idx int) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
@@ -491,7 +500,7 @@ func (obj *Container) GetChild(idx int) Entityer {
 }
 
 //通过ID获取子对象
-func (obj *Container) GetChildByConfigId(id string) Entityer {
+func (obj *Container) GetChildByConfigId(id string) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
@@ -503,7 +512,7 @@ func (obj *Container) GetChildByConfigId(id string) Entityer {
 	}
 	return nil
 }
-func (obj *Container) GetFirstChildByConfigId(id string) (int, Entityer) {
+func (obj *Container) GetFirstChildByConfigId(id string) (int, Entity) {
 	if !obj.ContainerInited {
 		return -1, nil
 	}
@@ -515,7 +524,7 @@ func (obj *Container) GetFirstChildByConfigId(id string) (int, Entityer) {
 	}
 	return -1, nil
 }
-func (obj *Container) GetNextChildByConfigId(start int, id string) (int, Entityer) {
+func (obj *Container) GetNextChildByConfigId(start int, id string) (int, Entity) {
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
@@ -530,7 +539,7 @@ func (obj *Container) GetNextChildByConfigId(start int, id string) (int, Entitye
 }
 
 //通过名称获取子对象
-func (obj *Container) GetChildByName(name string) Entityer {
+func (obj *Container) GetChildByName(name string) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
@@ -542,7 +551,7 @@ func (obj *Container) GetChildByName(name string) Entityer {
 	}
 	return nil
 }
-func (obj *Container) GetFirstChild(name string) (int, Entityer) {
+func (obj *Container) GetFirstChild(name string) (int, Entity) {
 	if !obj.ContainerInited {
 		return -1, nil
 	}
@@ -554,7 +563,7 @@ func (obj *Container) GetFirstChild(name string) (int, Entityer) {
 	}
 	return -1, nil
 }
-func (obj *Container) GetNextChild(start int, name string) (int, Entityer) {
+func (obj *Container) GetNextChild(start int, name string) (int, Entity) {
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
@@ -588,7 +597,7 @@ func (obj *Container) SwapChild(src int, dest int) error {
 }
 
 //获取基类
-func (obj *Container) Base() Entityer {
+func (obj *Container) Base() Entity {
 	return nil
 }
 
@@ -973,6 +982,7 @@ func (obj *Container) ContainerInit() {
 	obj.ObjectType = ITEM
 	obj.InBase = false
 	obj.InScene = false
+	obj.uid = 0
 }
 
 //重置
@@ -996,12 +1006,13 @@ func (obj *Container) Reset() {
 }
 
 //对象拷贝
-func (obj *Container) Copy(other Entityer) error {
+func (obj *Container) Copy(other Entity) error {
 	if t, ok := other.(*Container); ok {
 		//属性复制
 		obj.DbId = t.DbId
 		obj.NameHash = t.NameHash
 		obj.IDHash = t.IDHash
+		obj.uid = t.uid
 
 		obj.Container_t = t.Container_t
 		obj.Container_Save.Container_Save_Property = t.Container_Save_Property
@@ -1052,6 +1063,10 @@ func (obj *Container) GobEncode() ([]byte, error) {
 	encoder := gob.NewEncoder(w)
 	var err error
 
+	err = encoder.Encode(obj.uid)
+	if err != nil {
+		return nil, err
+	}
 	err = encoder.Encode(obj.Save)
 	if err != nil {
 		return nil, err
@@ -1090,6 +1105,10 @@ func (obj *Container) GobDecode(buf []byte) error {
 	decoder := gob.NewDecoder(r)
 	var err error
 
+	err = decoder.Decode(&obj.uid)
+	if err != nil {
+		return err
+	}
 	err = decoder.Decode(&obj.Save)
 	if err != nil {
 		return err

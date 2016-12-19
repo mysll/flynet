@@ -62,6 +62,7 @@ type Server struct {
 	Time             TimeInfo
 	AssetPath        string
 	Closing          bool
+	Players          *PlayerManager
 	channel          map[string]*Channel
 	noder            *peer
 	clientListener   net.Listener
@@ -84,6 +85,7 @@ type Server struct {
 	enableglobaldata bool
 	maxglobalentry   int
 	globalHelper     *GlobalDataHelper
+	modules          map[string]Moduler
 }
 
 type StartStoper interface {
@@ -315,6 +317,8 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 		helper.LoadAllConfig(svr.AssetPath)
 	}
 
+	initAllModules()
+
 	//内部rpc注册
 	svr.rpcCh = make(chan *rpc.RpcCall, RPCBUFFER)
 	svr.rpcServer = createRpc(svr.rpcCh)
@@ -325,6 +329,9 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 		panic("proto not set")
 	}
 	log.LogMessage("client proto:", svr.rpcProto.GetCodecInfo())
+
+	loadAllModules()
+
 	svr.Ready()
 
 	return true
@@ -381,6 +388,8 @@ func (svr *Server) Wait() {
 	}
 	svr.WaitGroup.Wait()
 	log.TraceInfo(svr.Name, " stopped")
+
+	unloadAllModules()
 	//等待日志写入完毕
 	<-time.After(time.Second)
 	log.CloseLogger()

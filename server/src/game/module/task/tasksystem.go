@@ -11,10 +11,6 @@ import (
 	"time"
 )
 
-var (
-	TaskInst = NewTaskSystem()
-)
-
 const (
 	TASK_INFO   = "conf_taskinfo.csv"
 	TASK_COLL   = "conf_task_collect.csv"
@@ -48,8 +44,6 @@ func NewTaskSystem() *TaskSystem {
 	ts.collcods = make(map[string]*CollCondition)
 	ts.eventcods = make(map[string]*EventConditon)
 	ts.rewardinfos = make(map[string]*RewardInfo)
-	server.RegisterCalleePriority("Player", ts, server.PRIORITY_LOWEST)
-	server.RegisterCalleePriority("Container", ts, server.PRIORITY_LOWEST)
 	return ts
 }
 
@@ -171,7 +165,7 @@ func (ts *TaskSystem) GetEventInfo(id string) *EventConditon {
 	return nil
 }
 
-func (ts *TaskSystem) OnCommand(self datatype.Entityer, sender datatype.Entityer, msgid int, msg interface{}) int {
+func (ts *TaskSystem) OnCommand(self datatype.Entity, sender datatype.Entity, msgid int, msg interface{}) int {
 	if !entity.IsPlayer(self) {
 		return 1
 	}
@@ -184,7 +178,7 @@ func (ts *TaskSystem) OnCommand(self datatype.Entityer, sender datatype.Entityer
 }
 
 //玩家属性变化
-func (ts *TaskSystem) OnPropertyChange(self datatype.Entityer, prop string, old interface{}) int {
+func (ts *TaskSystem) OnPropertyChange(self datatype.Entity, prop string, old interface{}) int {
 	if !entity.IsPlayer(self) {
 		return 1
 	}
@@ -218,7 +212,7 @@ func (ts *TaskSystem) OnPropertyChange(self datatype.Entityer, prop string, old 
 }
 
 //容器里增加物品
-func (ts *TaskSystem) OnAfterAdd(self datatype.Entityer, sender datatype.Entityer, index int) int {
+func (ts *TaskSystem) OnAfterAdd(self datatype.Entity, sender datatype.Entity, index int) int {
 	if !entity.IsContainer(self) {
 		return 1
 	}

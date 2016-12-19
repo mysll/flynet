@@ -175,14 +175,14 @@ type {{.Name}}_t struct {
 	dirty bool
 	ObjectType int
 	DbId uint64
-	parent Entityer
+	parent Entity
 	ObjId ObjectID
 	Deleted bool
 	NameHash int32
 	IDHash int32
 	ContainerInited bool 
 	Index int //在容器中的位置
-	Childs []Entityer
+	Childs []Entity
 	ChildNum int
 	{{end}}
 
@@ -195,6 +195,7 @@ type {{.Name}} struct {
 	*{{$v}}{{end}}
 	
 	{{if not .Base}}
+	uid uint64 //全局ID
 	InScene bool //是否在场景中
 	InBase bool	//是否在base中
 	Mdirty  map[string]interface{}
@@ -215,6 +216,14 @@ type {{.Name}} struct {
 	{{if .Records}}
 	//表格定义{{range .Records}}{{ if not (eq .Save "true")}}
 	{{.Name}}_r {{$Obj}}{{.Name}} //{{.Comment}}{{end}}{{end}} {{end}}
+}
+
+func (obj *{{.Name}}) SetUID(v uint64) {
+	obj.uid = v
+} 
+
+func (obj *{{.Name}}) UID() uint64 {
+	return obj.uid
 }
 
 func (obj *{{.Name}}) SetInBase(v bool) {
@@ -294,7 +303,7 @@ func (obj *{{.Name}}) ChangeCapacity(capacity int32) error {
 		return ErrContainerCapacity
 	}
 
-	newchilds := make([]Entityer, capacity)
+	newchilds := make([]Entity, capacity)
 	if capacity < obj.Capacity { //缩容，位置将进行重排
 		idx := 0
 		for _, c := range obj.Childs {
@@ -326,9 +335,9 @@ func (obj *{{.Name}}) SetCapacity(capacity int32, initcap int32) {
 	}
 
 	if capacity == -1 {
-		obj.Childs = make([]Entityer, 0, initcap)
+		obj.Childs = make([]Entity, 0, initcap)
 	} else if capacity > 0 {
-		obj.Childs = make([]Entityer, capacity)
+		obj.Childs = make([]Entity, capacity)
 	} else {
 		obj.Childs = nil
 	}
@@ -350,8 +359,8 @@ func (obj *{{.Name}}) GetRealCap() int32 {
 }
 
 {{if not .Base}}
-func (obj *{{$Obj}}) GetRoot() Entityer {
-	var ent Entityer
+func (obj *{{$Obj}}) GetRoot() Entity {
+	var ent Entity
 	if obj.GetParent() == nil {
 		return nil
 	}
@@ -377,11 +386,11 @@ func (obj *{{$Obj}}) SetDbId(id uint64) {
 	obj.DbId = id
 }
 
-func (obj *{{.Name}}) SetParent(p Entityer) {
+func (obj *{{.Name}}) SetParent(p Entity) {
 	obj.parent = p
 }
 
-func (obj *{{.Name}}) GetParent() Entityer {
+func (obj *{{.Name}}) GetParent() Entity {
 	return obj.parent
 }
 
@@ -432,7 +441,7 @@ func (obj *{{.Name}}) ChildCount() int {
 }
 
 //移除对象
-func (obj *{{.Name}}) RemoveChild(de Entityer) error {
+func (obj *{{.Name}}) RemoveChild(de Entity) error {
 	idx := de.GetIndex()
 	e := obj.GetChild(idx)
 
@@ -447,7 +456,7 @@ func (obj *{{.Name}}) RemoveChild(de Entityer) error {
 }
 
 //获取子对象
-func (obj *{{.Name}}) GetChilds() []Entityer {
+func (obj *{{.Name}}) GetChilds() []Entity {
 	return obj.Childs
 }
 
@@ -476,7 +485,7 @@ func (obj *{{.Name}}) ClearChilds() {
 }
 
 //增加子对象
-func (obj *{{.Name}}) AddChild(idx int, e Entityer) (index int, err error){
+func (obj *{{.Name}}) AddChild(idx int, e Entity) (index int, err error){
 	if !obj.ContainerInited {
 		err = ErrContainerNotInit
 		return
@@ -534,7 +543,7 @@ func (obj *{{.Name}}) AddChild(idx int, e Entityer) (index int, err error){
 }
 
 //获取子对象
-func (obj *{{.Name}}) GetChild(idx int) Entityer{
+func (obj *{{.Name}}) GetChild(idx int) Entity{
 	if !obj.ContainerInited {
 		return nil
 	}
@@ -545,7 +554,7 @@ func (obj *{{.Name}}) GetChild(idx int) Entityer{
 }
 
 //通过ID获取子对象
-func (obj *{{.Name}}) GetChildByConfigId(id string) Entityer{
+func (obj *{{.Name}}) GetChildByConfigId(id string) Entity{
 	if !obj.ContainerInited {
 		return nil
 	}
@@ -557,7 +566,7 @@ func (obj *{{.Name}}) GetChildByConfigId(id string) Entityer{
 	}
 	return nil
 }
-func (obj *{{.Name}}) GetFirstChildByConfigId(id string) (int, Entityer){
+func (obj *{{.Name}}) GetFirstChildByConfigId(id string) (int, Entity){
 	if !obj.ContainerInited {
 		return -1, nil
 	}
@@ -569,7 +578,7 @@ func (obj *{{.Name}}) GetFirstChildByConfigId(id string) (int, Entityer){
 	}
 	return -1, nil
 }
-func (obj *{{.Name}}) GetNextChildByConfigId(start int, id string) (int, Entityer){
+func (obj *{{.Name}}) GetNextChildByConfigId(start int, id string) (int, Entity){
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
@@ -584,7 +593,7 @@ func (obj *{{.Name}}) GetNextChildByConfigId(start int, id string) (int, Entitye
 }
 
 //通过名称获取子对象
-func (obj *{{.Name}}) GetChildByName(name string) Entityer{
+func (obj *{{.Name}}) GetChildByName(name string) Entity{
 	if !obj.ContainerInited {
 		return nil
 	}
@@ -596,7 +605,7 @@ func (obj *{{.Name}}) GetChildByName(name string) Entityer{
 	}
 	return nil
 }
-func (obj *{{.Name}}) GetFirstChild(name string) (int, Entityer){
+func (obj *{{.Name}}) GetFirstChild(name string) (int, Entity){
 	if !obj.ContainerInited {
 		return -1, nil
 	}
@@ -608,7 +617,7 @@ func (obj *{{.Name}}) GetFirstChild(name string) (int, Entityer){
 	}
 	return -1, nil
 }
-func (obj *{{.Name}}) GetNextChild(start int, name string) (int, Entityer){
+func (obj *{{.Name}}) GetNextChild(start int, name string) (int, Entity){
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
@@ -644,7 +653,7 @@ func (obj *{{.Name}}) SwapChild(src int, dest int) error{
 
 
 //获取基类
-func (obj *{{.Name}}) Base () Entityer {	 
+func (obj *{{.Name}}) Base () Entity {	 
 	 return nil
 }
 
@@ -684,7 +693,7 @@ func (obj *{{.Name}}) ClearExtraData() {
 
 {{else}}
 //获取基类
-func (obj *{{.Name}}) Base () Entityer {	 
+func (obj *{{.Name}}) Base () Entity {	 
 	 return &obj.{{.Base}}
 }
 {{end}}
@@ -1602,6 +1611,7 @@ func (obj *{{$Obj}}){{$Obj}}Init() {
 	obj.ObjectType = {{.Type}}
 	obj.InBase = false
 	obj.InScene = false
+	obj.uid = 0
 }
 
 //重置
@@ -1631,13 +1641,14 @@ func (obj *{{$Obj}}) Reset() {
 }
 
 //对象拷贝
-func (obj *{{$Obj}}) Copy(other Entityer) error {
+func (obj *{{$Obj}}) Copy(other Entity) error {
 	if t, ok := other.(*{{$Obj}}); ok {
 		//属性复制{{if not .Base}}
 		obj.DbId = t.DbId
 		obj.NameHash = t.NameHash
-		obj.IDHash = t.IDHash{{end}}
-
+		obj.IDHash = t.IDHash
+		obj.uid = t.uid{{end}}
+		
 		{{range $k, $v := .Interfaces}}
 		*obj.{{$v}} = *t.{{$v}}{{end}}
 		obj.{{$Obj}}_t = t.{{$Obj}}_t
@@ -1713,6 +1724,10 @@ func (obj *{{$Obj}}) GobEncode() ([]byte, error) {
 		return nil, err
 	}{{end}}
 	{{if not .Base}}	
+	err = encoder.Encode(obj.uid)
+	if err != nil {
+		return nil, err
+	}
 	err = encoder.Encode(obj.Save)
 	if err != nil {
 		return nil, err
@@ -1765,6 +1780,10 @@ func (obj *{{$Obj}}) GobDecode(buf []byte) error {
 		return err
 	}{{end}}
 	{{if not .Base}}
+	err = decoder.Decode(&obj.uid)
+	if err != nil {
+		return err
+	}
 	err = decoder.Decode(&obj.Save)
 	if err != nil {
 		return err

@@ -33,7 +33,7 @@ func NewTableSync(mb rpc.Mailbox) *TableSync {
 	return ts
 }
 
-func (ts *TableSync) SyncTable(player datatype.Entityer) {
+func (ts *TableSync) SyncTable(player datatype.Entity) {
 
 	recs := player.GetRecNames()
 	for _, r := range recs {
@@ -53,7 +53,7 @@ func (ts *TableSync) SyncTable(player datatype.Entityer) {
 	}
 }
 
-func (ts *TableSync) RecAppend(self datatype.Entityer, rec datatype.Recorder, row int) {
+func (ts *TableSync) RecAppend(self datatype.Entity, rec datatype.Recorder, row int) {
 	out := tt.RecAppend(rec, row)
 	if out == nil {
 		return
@@ -64,7 +64,7 @@ func (ts *TableSync) RecAppend(self datatype.Entityer, rec datatype.Recorder, ro
 	}
 }
 
-func (ts *TableSync) RecDelete(self datatype.Entityer, rec datatype.Recorder, row int) {
+func (ts *TableSync) RecDelete(self datatype.Entity, rec datatype.Recorder, row int) {
 	out := tt.RecDelete(rec, row)
 	if out == nil {
 		return
@@ -75,7 +75,7 @@ func (ts *TableSync) RecDelete(self datatype.Entityer, rec datatype.Recorder, ro
 	}
 }
 
-func (ts *TableSync) RecClear(self datatype.Entityer, rec datatype.Recorder) {
+func (ts *TableSync) RecClear(self datatype.Entity, rec datatype.Recorder) {
 	out := tt.RecClear(rec)
 	if out == nil {
 		return
@@ -86,7 +86,7 @@ func (ts *TableSync) RecClear(self datatype.Entityer, rec datatype.Recorder) {
 	}
 }
 
-func (ts *TableSync) RecModify(self datatype.Entityer, rec datatype.Recorder, row, col int) {
+func (ts *TableSync) RecModify(self datatype.Entity, rec datatype.Recorder, row, col int) {
 	out := tt.RecModify(rec, row, col)
 	if out == nil {
 		return
@@ -97,7 +97,7 @@ func (ts *TableSync) RecModify(self datatype.Entityer, rec datatype.Recorder, ro
 	}
 }
 
-func (ts *TableSync) RecSetRow(self datatype.Entityer, rec datatype.Recorder, row int) {
+func (ts *TableSync) RecSetRow(self datatype.Entity, rec datatype.Recorder, row int) {
 	out := tt.RecSetRow(rec, row)
 	if out == nil {
 		return

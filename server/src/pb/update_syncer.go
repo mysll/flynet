@@ -15,7 +15,7 @@ func (ps *PBPropCodec) GetCodecInfo() string {
 	return "use protobuf"
 }
 
-func (ps *PBPropCodec) UpdateAll(object Entityer, self bool) interface{} {
+func (ps *PBPropCodec) UpdateAll(object Entity, self bool) interface{} {
 	data, _ := object.SerialModify()
 	if data == nil {
 		return nil
