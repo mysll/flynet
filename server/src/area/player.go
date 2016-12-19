@@ -16,7 +16,7 @@ type Player struct {
 }
 
 func (p *Player) OnEnterScene(self Entity) int {
-	mb := self.GetExtraData("base").(rpc.Mailbox)
+	mb := self.FindExtraData("base").(rpc.Mailbox)
 	pl := App.Players.FindPlayer(mb.Uid)
 	if pl != nil {
 		App.AddHeartbeat(self, "Store", time.Minute*5, -1, mb)
@@ -33,16 +33,16 @@ func StorePlayer(obj Entity) (*EntityInfo, error) {
 		return nil, err
 	}
 	item.Type = obj.ObjTypeName()
-	item.Caps = obj.GetCapacity()
-	item.DbId = obj.GetDbId()
-	if obj.GetExtraData("linkObj") != nil {
-		item.ObjId = obj.GetExtraData("linkObj").(ObjectID)
+	item.Caps = obj.Caps()
+	item.DbId = obj.DBId()
+	if obj.FindExtraData("linkObj") != nil {
+		item.ObjId = obj.FindExtraData("linkObj").(ObjectID)
 	}
 
-	item.Index = obj.GetIndex()
+	item.Index = obj.ChildIndex()
 	item.Data = buffer.Bytes()
 
-	ls := obj.GetChilds()
+	ls := obj.AllChilds()
 	if len(ls) > 0 {
 		item.Childs = make([]*EntityInfo, 0, len(ls))
 	}
@@ -92,6 +92,6 @@ func (p *Player) OnLoad(self Entity, typ int) int {
 }
 
 func (p *Player) OnDestroy(self Entity, sender Entity) int {
-	log.LogInfo("player destroy,", self.GetObjId())
+	log.LogInfo("player destroy,", self.ObjectId())
 	return 1
 }

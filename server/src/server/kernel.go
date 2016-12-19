@@ -117,7 +117,7 @@ func (k *Kernel) CreateRole(typ string, args interface{}) (ent Entity, err error
 	for _, cl := range callee {
 		res = cl.OnCreateRole(ent, args)
 		if res == -1 {
-			k.factory.Destroy(ent.GetObjId())
+			k.factory.Destroy(ent.ObjectId())
 			err = errors.New("create role failed")
 			return
 		}
@@ -188,7 +188,7 @@ func (k *Kernel) CreateChildContainer(parent ObjectID, typ string, caps int, ind
 	}
 	_, err = k.addChild(p, ent, index)
 	if err != nil {
-		k.factory.Destroy(ent.GetObjId())
+		k.factory.Destroy(ent.ObjectId())
 	}
 	return
 }
@@ -222,8 +222,8 @@ func (k *Kernel) addChild(parent Entity, child Entity, index int) (destindex int
 		}
 	}
 
-	if child.GetParent() != nil {
-		k.removeChild(child.GetParent(), child, true)
+	if child.Parent() != nil {
+		k.removeChild(child.Parent(), child, true)
 	}
 
 	res := 0
@@ -243,13 +243,13 @@ func (k *Kernel) addChild(parent Entity, child Entity, index int) (destindex int
 			err = errors.New("combine child failed")
 			return
 		}
-		k.factory.Destroy(child.GetObjId())
+		k.factory.Destroy(child.ObjectId())
 		child = newchild
 	} else {
 		destindex, err = parent.AddChild(index, child)
 		if err == nil {
-			if viewid := parent.GetExtraData("viewportid"); viewid != nil {
-				root := parent.GetRoot()
+			if viewid := parent.FindExtraData("viewportid"); viewid != nil {
+				root := parent.Root()
 				vp := k.FindViewport(root)
 				if vp != nil {
 					vp.ViewportNotifyAdd(viewid.(int32), int32(destindex))
@@ -282,25 +282,25 @@ func (k *Kernel) addChild(parent Entity, child Entity, index int) (destindex int
 //交换子对象的位置
 func (k *Kernel) Exchange(src Entity, dest Entity) bool {
 	if src == nil || dest == nil ||
-		src.GetParent() == nil ||
-		dest.GetParent() == nil ||
-		!src.GetParent().GetObjId().Equal(dest.GetParent().GetObjId()) {
+		src.Parent() == nil ||
+		dest.Parent() == nil ||
+		!src.Parent().ObjectId().Equal(dest.Parent().ObjectId()) {
 		log.LogError("parent not equal")
 		return false
 	}
 
-	parent := src.GetParent()
-	err := parent.SwapChild(src.GetIndex(), dest.GetIndex())
+	parent := src.Parent()
+	err := parent.SwapChild(src.ChildIndex(), dest.ChildIndex())
 	if err != nil {
 		log.LogError(err)
 		return false
 	}
 
-	if viewid := parent.GetExtraData("viewportid"); viewid != nil {
-		root := parent.GetRoot()
+	if viewid := parent.FindExtraData("viewportid"); viewid != nil {
+		root := parent.Root()
 		vp := k.FindViewport(root)
 		if vp != nil {
-			vp.ViewportNotifyExchange(viewid.(int32), int32(dest.GetIndex()), viewid.(int32), int32(src.GetIndex()))
+			vp.ViewportNotifyExchange(viewid.(int32), int32(dest.ChildIndex()), viewid.(int32), int32(src.ChildIndex()))
 		}
 	}
 
@@ -309,7 +309,7 @@ func (k *Kernel) Exchange(src Entity, dest Entity) bool {
 
 //移除一个子对象，父对象将回调Callee.OnBeforeRemove,Callee.OnRemove。子对象将回调Callee.OnLeave
 func (k *Kernel) RemoveChild(parent Entity, child Entity) error {
-	if parent != nil && child != nil && !child.GetParent().GetObjId().Equal(parent.GetObjId()) {
+	if parent != nil && child != nil && !child.Parent().ObjectId().Equal(parent.ObjectId()) {
 		return errors.New("parent not equal")
 	}
 
@@ -325,9 +325,9 @@ func (k *Kernel) removeChild(parent Entity, child Entity, needcallback bool) err
 
 	res := 0
 
-	index := child.GetIndex()
+	index := child.ChildIndex()
 	if c := parent.GetChild(index); c != nil {
-		if !c.GetObjId().Equal(child.GetObjId()) {
+		if !c.ObjectId().Equal(child.ObjectId()) {
 			return ErrChildObjectNotFound
 		}
 	} else {
@@ -359,8 +359,8 @@ func (k *Kernel) removeChild(parent Entity, child Entity, needcallback bool) err
 		}
 	}
 
-	if viewid := parent.GetExtraData("viewportid"); viewid != nil {
-		root := parent.GetRoot()
+	if viewid := parent.FindExtraData("viewportid"); viewid != nil {
+		root := parent.Root()
 		vp := k.FindViewport(root)
 		if vp != nil {
 			vp.ViewportNotifyRemove(viewid.(int32), int32(index))
@@ -409,12 +409,12 @@ func (k *Kernel) loadArchive(data *EntityInfo) (ent Entity, err error) {
 				return
 			}
 			index = c.Index
-			if ent.GetCapacity() == -1 {
+			if ent.Caps() == -1 {
 				index = -1
 			}
 			_, err = k.addChild(ent, child, index)
 			if err != nil {
-				log.LogError("add failed:", ent.GetCapacity(), ",", index)
+				log.LogError("add failed:", ent.Caps(), ",", index)
 				k.destroyObj(child, false)
 				k.destroyObj(ent, false)
 				ent = nil
@@ -469,7 +469,7 @@ func (k *Kernel) loadObj(parent Entity, data *share.SaveEntity) (ent Entity, err
 		}
 	}
 
-	ent.SetDbId(data.DBId)
+	ent.SetDBId(data.DBId)
 
 	configid := ent.GetConfigFromDb(data.Obj)
 	if configid != "" {
@@ -486,7 +486,7 @@ func (k *Kernel) loadObj(parent Entity, data *share.SaveEntity) (ent Entity, err
 		}
 	}
 
-	caps := ent.GetCapacity()
+	caps := ent.Caps()
 	if caps == -1 {
 		ent.SetCapacity(-1, 16)
 	} else {
@@ -494,7 +494,7 @@ func (k *Kernel) loadObj(parent Entity, data *share.SaveEntity) (ent Entity, err
 	}
 
 	if parent != nil {
-		if parent.GetCapacity() == -1 {
+		if parent.Caps() == -1 {
 			_, err = k.addChild(parent, ent, -1)
 		} else {
 			_, err = k.addChild(parent, ent, data.Index)
@@ -621,8 +621,8 @@ func (k *Kernel) destroyObj(object Entity, needcallback bool) {
 	}
 
 	//从视图中移除
-	if viewid := object.GetExtraData("viewportid"); viewid != nil {
-		root := object.GetRoot()
+	if viewid := object.FindExtraData("viewportid"); viewid != nil {
+		root := object.Root()
 		if root != nil {
 			vp := k.FindViewport(root)
 			if vp != nil {
@@ -631,7 +631,7 @@ func (k *Kernel) destroyObj(object Entity, needcallback bool) {
 		}
 	}
 
-	chs := object.GetChilds()
+	chs := object.AllChilds()
 	for _, c := range chs {
 		if c != nil {
 			k.destroyObj(c, needcallback)
@@ -640,7 +640,7 @@ func (k *Kernel) destroyObj(object Entity, needcallback bool) {
 
 	object.ClearChilds()
 
-	parent := object.GetParent()
+	parent := object.Parent()
 	if parent != nil {
 		k.removeChild(parent, object, needcallback)
 	}
@@ -657,14 +657,14 @@ func (k *Kernel) destroyObj(object Entity, needcallback bool) {
 	}
 
 	//删除视图
-	if data := object.GetExtraData("viewportlinkid"); data != nil {
+	if data := object.FindExtraData("viewportlinkid"); data != nil {
 		sid := data.(int32)
 		k.RemoveSchedulerById(sid)
 		object.RemoveExtraData("viewportlinkid")
 	}
 
 	//清除所有的心跳
-	k.RemoveObjectHeartbeat(object.GetObjId())
+	k.RemoveObjectHeartbeat(object.ObjectId())
 	k.factory.destroySelf(object)
 }
 
@@ -681,7 +681,7 @@ func (k *Kernel) SetLandpos(object Entity, trans Transform) {
 
 //获取地图登录点
 func (k *Kernel) GetLandpos(object Entity) Transform {
-	if trans := object.GetExtraData("landpos"); trans != nil {
+	if trans := object.FindExtraData("landpos"); trans != nil {
 		if tr, ok := trans.(Transform); ok {
 			return tr
 		}
@@ -696,11 +696,11 @@ func (k *Kernel) SetRoleInfo(object Entity, info string) {
 
 //预保存，设置唯一ID
 func (k *Kernel) PreSave(object Entity, ignore bool) {
-	if object.GetDbId() == 0 && !ignore && object.IsSave() {
-		object.SetDbId(k.GetUid())
+	if object.DBId() == 0 && !ignore && object.IsSave() {
+		object.SetDBId(k.GetUid())
 	}
 
-	cds := object.GetChilds()
+	cds := object.AllChilds()
 	for _, c := range cds {
 		if c == nil {
 			continue
@@ -994,7 +994,7 @@ func (k *Kernel) CallScript(object Entity, id string, prop string, revert bool) 
 
 //查找一个对象的视图
 func (k *Kernel) FindViewport(player Entity) *Viewport {
-	if data := player.GetExtraData("viewportlinkid"); data != nil {
+	if data := player.FindExtraData("viewportlinkid"); data != nil {
 		sid := data.(int32)
 		scheduler := k.GetScheduler(sid)
 		if scheduler != nil {
@@ -1049,12 +1049,12 @@ func (k *Kernel) AttachPlayer(player Entity, mailbox rpc.Mailbox) error {
 	if player.PropUpdate() != nil {
 		k.RemoveScheduler(player.PropUpdate().(*PropSync))
 	}
-	propsync := NewPropSync(mailbox, player.GetObjId())
+	propsync := NewPropSync(mailbox, player.ObjectId())
 	player.SetPropUpdate(propsync)
-	recs := player.GetRecNames()
+	recs := player.RecordNames()
 	tablesyncer := NewTableTrans(mailbox)
 	for _, r := range recs {
-		rec := player.GetRec(r)
+		rec := player.FindRec(r)
 		if rec.IsVisible() {
 			rec.SetMonitor(tablesyncer)
 		}
@@ -1071,9 +1071,9 @@ func (k *Kernel) DetachPlayer(player Entity) {
 		k.RemoveScheduler(player.PropUpdate().(*PropSync))
 	}
 	player.SetPropUpdate(nil)
-	recs := player.GetRecNames()
+	recs := player.RecordNames()
 	for _, r := range recs {
-		rec := player.GetRec(r)
+		rec := player.FindRec(r)
 		rec.SetMonitor(nil)
 	}
 }

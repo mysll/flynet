@@ -138,7 +138,7 @@ type Entity interface {
 	//属性回调挂钩
 	SetPropHook(hooker PropChanger)
 	//设置属性标志(内部使用)
-	GetPropFlag(idx int) bool
+	PropFlag(idx int) bool
 	SetPropFlag(idx int, flag bool)
 	//设置关键属性(回调标志)
 	IsCritical(idx int) bool
@@ -150,33 +150,33 @@ type Entity interface {
 	//退出标志
 	SetQuiting()
 	IsQuiting() bool
-	//获取配置文件名
-	GetConfig() string
+	//获取配置编号
+	Config() string
 	SetConfig(config string)
+	ConfigHash() int32
 	//设置存档标志
 	SetSaveFlag()
 	ClearSaveFlag()
 	//是否需要保存
 	NeedSave() bool
 	//获取根对象
-	GetRoot() Entity
+	Root() Entity
 	//设置父对象
 	SetParent(p Entity)
 	//获取父对象
-	GetParent() Entity
+	Parent() Entity
 	//删除标志
 	SetDeleted(d bool)
-	GetDeleted() bool
+	IsDeleted() bool
 	//设置对象号
 	SetObjId(id ObjectID)
 	//获取对象号
-	GetObjId() ObjectID
+	ObjectId() ObjectID
 	//设置名字hash
 	SetNameHash(v int32)
-	GetIDHash() int32
-	//判断两个id是否相等
-	IDEqual(id string) bool
-	GetNameHash() int32
+	//判断两个对象的configid是否相等
+	ConfigIdEqual(id string) bool
+	NameHash() int32
 	//判断名字是否相等
 	NameEqual(name string) bool
 	//设置容量(-1无限)
@@ -184,15 +184,15 @@ type Entity interface {
 	//修改容量
 	ChangeCapacity(capacity int32) error
 	//获取容量
-	GetCapacity() int32
+	Caps() int32
 	//获取实际的容量
-	GetRealCap() int32
+	RealCaps() int32
 	//子对象数量
 	ChildCount() int
 	//获取所有的子对象
-	GetChilds() []Entity
+	AllChilds() []Entity
 	//获取在父对象中的索引
-	GetIndex() int
+	ChildIndex() int
 	//设置索引(由引擎自己设置，不要手动设置)
 	SetIndex(idx int)
 	//清除所有子对象
@@ -204,25 +204,25 @@ type Entity interface {
 	//通过索引获取一个子对象
 	GetChild(idx int) Entity
 	//通过配置ID获取一个子对象
-	GetChildByConfigId(id string) Entity
+	FindChildByConfigId(id string) Entity
 	//通过配置ID获取第一个子对象
-	GetFirstChildByConfigId(id string) (int, Entity)
+	FindFirstChildByConfigId(id string) (int, Entity)
 	//通过配置ID获取从start开始的下一个子对象
-	GetNextChildByConfigId(start int, id string) (int, Entity)
+	NextChildByConfigId(start int, id string) (int, Entity)
 	//获取名字获取子对象
-	GetChildByName(name string) Entity
+	FindChildByName(name string) Entity
 	//通过名字获取第一个子对象
-	GetFirstChild(name string) (int, Entity)
+	FindFirstChildByName(name string) (int, Entity)
 	//通过名字获取从start开始的下一下子对象
-	GetNextChild(start int, name string) (int, Entity)
+	NextChildByName(start int, name string) (int, Entity)
 	//交换两个子对象的位置
 	SwapChild(src int, dest int) error
 	//设置data
 	SetExtraData(key string, value interface{})
 	//获取data
-	GetExtraData(key string) interface{}
+	FindExtraData(key string) interface{}
 	//获取所有data
-	GetAllExtraData() map[string]interface{}
+	ExtraDatas() map[string]interface{}
 	//通过key移除data
 	RemoveExtraData(key string)
 	//移除所有data
@@ -234,20 +234,20 @@ type Entity interface {
 	//父类型(暂时未用)
 	Base() Entity
 	//数据库ID
-	GetDbId() uint64
+	DBId() uint64
 	//设置数据库ID(!!!不要手动设置)
-	SetDbId(id uint64)
+	SetDBId(id uint64)
 	//是否保存
 	IsSave() bool
 	SetSave(s bool)
 	//获取所有属性名
-	GetPropertys() []string
+	Propertys() []string
 	//获取所有可视属性名
-	GetVisiblePropertys(typ int) []string
+	VisiblePropertys(typ int) []string
 	//获取所有属性类型
-	GetPropertyType(p string) (int, string, error)
+	PropertyType(p string) (int, string, error)
 	//获取属性索引
-	GetPropertyIndex(p string) (int, error)
+	PropertyIndex(p string) (int, error)
 	//属性自增
 	Inc(p string, v interface{}) error
 	//设置属性(通用接口)
@@ -273,9 +273,9 @@ type Entity interface {
 	//清除所有修改标志
 	ClearModify()
 	//通过表格名获取表格
-	GetRec(rec string) Record
+	FindRec(rec string) Record
 	//获取所有表格的名字
-	GetRecNames() []string
+	RecordNames() []string
 	//清空对象所有数据
 	Reset()
 	//复制另一个对象数据
@@ -287,7 +287,7 @@ type Entity interface {
 	//从数据库加载
 	SyncFromDb(data interface{}) bool
 	//获取数据库操作接口
-	GetSaveLoader() DBSaveLoader
+	SaveLoader() DBSaveLoader
 	//序列化
 	Serial() ([]byte, error)
 	//序列化变动数据
@@ -297,7 +297,7 @@ type Entity interface {
 	//从scenedata同步
 	SyncFromSceneData(val interface{}) error
 	//获取scenedata
-	GetSceneData() interface{}
+	SceneData() interface{}
 }
 
 //注册函数

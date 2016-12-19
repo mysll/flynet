@@ -140,8 +140,8 @@ type Container_t struct {
 	parent          Entity
 	ObjId           ObjectID
 	Deleted         bool
-	NameHash        int32
-	IDHash          int32
+	NameHash_       int32
+	ConfigIdHash    int32
 	ContainerInited bool
 	Index           int //在容器中的位置
 	Childs          []Entity
@@ -209,17 +209,17 @@ func (obj *Container) IsQuiting() bool {
 	return obj.quiting
 }
 
-func (obj *Container) GetConfig() string {
+func (obj *Container) Config() string {
 	return obj.ConfigId
 }
 
 func (obj *Container) SetConfig(config string) {
 	obj.ConfigId = config
-	obj.IDHash = Hash(config)
+	obj.ConfigIdHash = Hash(config)
 }
 
 func (obj *Container) SetSaveFlag() {
-	root := obj.GetRoot()
+	root := obj.Root()
 	if root != nil {
 		root.SetSaveFlag()
 	} else {
@@ -294,42 +294,42 @@ func (obj *Container) SetCapacity(capacity int32, initcap int32) {
 
 }
 
-func (obj *Container) GetCapacity() int32 {
+func (obj *Container) Caps() int32 {
 	return obj.Capacity
 }
 
 //获取实际的容量
-func (obj *Container) GetRealCap() int32 {
+func (obj *Container) RealCaps() int32 {
 	if !obj.ContainerInited {
 		return 0
 	}
 	return int32(len(obj.Childs))
 }
 
-func (obj *Container) GetRoot() Entity {
+func (obj *Container) Root() Entity {
 	var ent Entity
-	if obj.GetParent() == nil {
+	if obj.Parent() == nil {
 		return nil
 	}
 	ent = obj
 	for {
-		if ent.GetParent() == nil {
+		if ent.Parent() == nil {
 			break
 		}
-		if ent.GetParent().ObjType() == SCENE {
+		if ent.Parent().ObjType() == SCENE {
 			break
 		}
-		ent = ent.GetParent()
+		ent = ent.Parent()
 	}
 	return ent
 }
 
 //获取数据库id
-func (obj *Container) GetDbId() uint64 {
+func (obj *Container) DBId() uint64 {
 	return obj.DbId
 }
 
-func (obj *Container) SetDbId(id uint64) {
+func (obj *Container) SetDBId(id uint64) {
 	obj.DbId = id
 }
 
@@ -337,7 +337,7 @@ func (obj *Container) SetParent(p Entity) {
 	obj.parent = p
 }
 
-func (obj *Container) GetParent() Entity {
+func (obj *Container) Parent() Entity {
 	return obj.parent
 }
 
@@ -345,7 +345,7 @@ func (obj *Container) SetDeleted(d bool) {
 	obj.Deleted = d
 }
 
-func (obj *Container) GetDeleted() bool {
+func (obj *Container) IsDeleted() bool {
 	return obj.Deleted
 }
 
@@ -353,18 +353,18 @@ func (obj *Container) SetObjId(id ObjectID) {
 	obj.ObjId = id
 }
 
-func (obj *Container) GetObjId() ObjectID {
+func (obj *Container) ObjectId() ObjectID {
 	return obj.ObjId
 }
 
 //设置名字Hash
 func (obj *Container) SetNameHash(v int32) {
-	obj.NameHash = v
+	obj.NameHash_ = v
 }
 
 //获取名字Hash
-func (obj *Container) GetNameHash() int32 {
-	return obj.NameHash
+func (obj *Container) NameHash() int32 {
+	return obj.NameHash_
 }
 
 //名字比较
@@ -372,13 +372,13 @@ func (obj *Container) NameEqual(name string) bool {
 	return obj.Name == name
 }
 
-//获取IDHash
-func (obj *Container) GetIDHash() int32 {
-	return obj.IDHash
+//获取ConfigIdHash
+func (obj *Container) ConfigHash() int32 {
+	return obj.ConfigIdHash
 }
 
 //ID比较
-func (obj *Container) IDEqual(id string) bool {
+func (obj *Container) ConfigIdEqual(id string) bool {
 	return obj.ConfigId == id
 }
 
@@ -388,10 +388,10 @@ func (obj *Container) ChildCount() int {
 
 //移除对象
 func (obj *Container) RemoveChild(de Entity) error {
-	idx := de.GetIndex()
+	idx := de.ChildIndex()
 	e := obj.GetChild(idx)
 
-	if e != nil && e.GetObjId().Equal(de.GetObjId()) {
+	if e != nil && e.ObjectId().Equal(de.ObjectId()) {
 		obj.Childs[idx] = nil
 		de.SetParent(nil)
 		obj.ChildNum--
@@ -402,12 +402,12 @@ func (obj *Container) RemoveChild(de Entity) error {
 }
 
 //获取子对象
-func (obj *Container) GetChilds() []Entity {
+func (obj *Container) AllChilds() []Entity {
 	return obj.Childs
 }
 
 //获取容器中索引
-func (obj *Container) GetIndex() int {
+func (obj *Container) ChildIndex() int {
 	return obj.Index
 }
 
@@ -443,14 +443,14 @@ func (obj *Container) AddChild(idx int, e Entity) (index int, err error) {
 				e.SetIndex(i)
 				e.SetParent(obj)
 				obj.ChildNum++
-				index = e.GetIndex()
+				index = e.ChildIndex()
 				return
 			}
 		}
 		obj.Childs = append(obj.Childs, e)
 		e.SetIndex(len(obj.Childs) - 1)
 		e.SetParent(obj)
-		index = e.GetIndex()
+		index = e.ChildIndex()
 		obj.ChildNum++
 		return
 	}
@@ -483,7 +483,7 @@ func (obj *Container) AddChild(idx int, e Entity) (index int, err error) {
 	e.SetIndex(idx)
 	e.SetParent(obj)
 	obj.ChildNum++
-	index = e.GetIndex()
+	index = e.ChildIndex()
 	return
 
 }
@@ -500,38 +500,38 @@ func (obj *Container) GetChild(idx int) Entity {
 }
 
 //通过ID获取子对象
-func (obj *Container) GetChildByConfigId(id string) Entity {
+func (obj *Container) FindChildByConfigId(id string) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
 	h := Hash(id)
 	for _, v := range obj.Childs {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return v
 		}
 	}
 	return nil
 }
-func (obj *Container) GetFirstChildByConfigId(id string) (int, Entity) {
+func (obj *Container) FindFirstChildByConfigId(id string) (int, Entity) {
 	if !obj.ContainerInited {
 		return -1, nil
 	}
 	h := Hash(id)
 	for k, v := range obj.Childs {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return k + 1, v
 		}
 	}
 	return -1, nil
 }
-func (obj *Container) GetNextChildByConfigId(start int, id string) (int, Entity) {
+func (obj *Container) NextChildByConfigId(start int, id string) (int, Entity) {
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
 	}
 	h := Hash(id)
 	for k, v := range obj.Childs[start:] {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return start + k + 1, v
 		}
 	}
@@ -539,38 +539,38 @@ func (obj *Container) GetNextChildByConfigId(start int, id string) (int, Entity)
 }
 
 //通过名称获取子对象
-func (obj *Container) GetChildByName(name string) Entity {
+func (obj *Container) FindChildByName(name string) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
 	h := Hash(name)
 	for _, v := range obj.Childs {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return v
 		}
 	}
 	return nil
 }
-func (obj *Container) GetFirstChild(name string) (int, Entity) {
+func (obj *Container) FindFirstChildByName(name string) (int, Entity) {
 	if !obj.ContainerInited {
 		return -1, nil
 	}
 	h := Hash(name)
 	for k, v := range obj.Childs {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return k + 1, v
 		}
 	}
 	return -1, nil
 }
-func (obj *Container) GetNextChild(start int, name string) (int, Entity) {
+func (obj *Container) NextChildByName(start int, name string) (int, Entity) {
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
 	}
 	h := Hash(name)
 	for k, v := range obj.Childs[start:] {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return start + k + 1, v
 		}
 	}
@@ -611,14 +611,14 @@ func (obj *Container) SetExtraData(key string, value interface{}) {
 	obj.ExtraData[key] = value
 }
 
-func (obj *Container) GetExtraData(key string) interface{} {
+func (obj *Container) FindExtraData(key string) interface{} {
 	if v, ok := obj.ExtraData[key]; ok {
 		return v
 	}
 	return nil
 }
 
-func (obj *Container) GetAllExtraData() map[string]interface{} {
+func (obj *Container) ExtraDatas() map[string]interface{} {
 	return obj.ExtraData
 }
 
@@ -662,7 +662,7 @@ func (obj *Container) SetPropHook(hooker PropChanger) {
 	obj.prophooker = hooker
 }
 
-func (obj *Container) GetPropFlag(idx int) bool {
+func (obj *Container) PropFlag(idx int) bool {
 	index := idx / 64
 	bit := uint(idx) % 64
 	return obj.propflag[index]&(uint64(1)<<bit) != 0
@@ -685,7 +685,7 @@ func (obj *Container) IsCritical(idx int) bool {
 }
 
 func (obj *Container) SetCritical(prop string) {
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return
 	}
@@ -697,7 +697,7 @@ func (obj *Container) SetCritical(prop string) {
 }
 
 func (obj *Container) ClearCritical(prop string) {
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return
 	}
@@ -709,7 +709,7 @@ func (obj *Container) ClearCritical(prop string) {
 }
 
 //获取所有属性
-func (obj *Container) GetPropertys() []string {
+func (obj *Container) Propertys() []string {
 	return []string{
 		"Name",
 		"ContainerType",
@@ -717,7 +717,7 @@ func (obj *Container) GetPropertys() []string {
 }
 
 //获取所有可视属性
-func (obj *Container) GetVisiblePropertys(typ int) []string {
+func (obj *Container) VisiblePropertys(typ int) []string {
 	if typ == 0 {
 		return []string{}
 	} else {
@@ -727,7 +727,7 @@ func (obj *Container) GetVisiblePropertys(typ int) []string {
 }
 
 //获取属性类型
-func (obj *Container) GetPropertyType(p string) (int, string, error) {
+func (obj *Container) PropertyType(p string) (int, string, error) {
 	switch p {
 	case "Name":
 		return DT_STRING, "string", nil
@@ -739,7 +739,7 @@ func (obj *Container) GetPropertyType(p string) (int, string, error) {
 }
 
 //通过属性名设置值
-func (obj *Container) GetPropertyIndex(p string) (int, error) {
+func (obj *Container) PropertyIndex(p string) (int, error) {
 	switch p {
 	case "Name":
 		return 0, nil
@@ -917,12 +917,12 @@ func (obj *Container) SetName(v string) {
 	}
 
 	obj.Name = v
-	if obj.prophooker != nil && obj.IsCritical(0) && !obj.GetPropFlag(0) {
+	if obj.prophooker != nil && obj.IsCritical(0) && !obj.PropFlag(0) {
 		obj.SetPropFlag(0, true)
 		obj.prophooker.OnPropChange(obj, "Name", old)
 		obj.SetPropFlag(0, false)
 	}
-	obj.NameHash = Hash(v)
+	obj.NameHash_ = Hash(v)
 
 	obj.setDirty("Name", v)
 }
@@ -943,7 +943,7 @@ func (obj *Container) SetContainerType(v int32) {
 	}
 
 	obj.ContainerType = v
-	if obj.prophooker != nil && obj.IsCritical(1) && !obj.GetPropFlag(1) {
+	if obj.prophooker != nil && obj.IsCritical(1) && !obj.PropFlag(1) {
 		obj.SetPropFlag(1, true)
 		obj.prophooker.OnPropChange(obj, "ContainerType", old)
 		obj.SetPropFlag(1, false)
@@ -964,7 +964,7 @@ func (obj *Container) initRec() {
 }
 
 //获取某个表格
-func (obj *Container) GetRec(rec string) Record {
+func (obj *Container) FindRec(rec string) Record {
 	switch rec {
 	default:
 		return nil
@@ -972,7 +972,7 @@ func (obj *Container) GetRec(rec string) Record {
 }
 
 //获取所有表格名称
-func (obj *Container) GetRecNames() []string {
+func (obj *Container) RecordNames() []string {
 	return []string{}
 }
 
@@ -1010,8 +1010,8 @@ func (obj *Container) Copy(other Entity) error {
 	if t, ok := other.(*Container); ok {
 		//属性复制
 		obj.DbId = t.DbId
-		obj.NameHash = t.NameHash
-		obj.IDHash = t.IDHash
+		obj.NameHash_ = t.NameHash_
+		obj.ConfigIdHash = t.ConfigIdHash
 		obj.uid = t.uid
 
 		obj.Container_t = t.Container_t
@@ -1046,15 +1046,15 @@ func (obj *Container) SyncFromDb(data interface{}) bool {
 	if v, ok := data.(*Container_Save); ok {
 		obj.Container_Save.Container_Save_Property = v.Container_Save_Property
 
-		obj.NameHash = Hash(obj.Name)
-		obj.IDHash = Hash(obj.ConfigId)
+		obj.NameHash_ = Hash(obj.Name)
+		obj.ConfigIdHash = Hash(obj.ConfigId)
 		return true
 	}
 
 	return false
 }
 
-func (obj *Container) GetSaveLoader() DBSaveLoader {
+func (obj *Container) SaveLoader() DBSaveLoader {
 	return &obj.Container_Save
 }
 
@@ -1075,11 +1075,11 @@ func (obj *Container) GobEncode() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = encoder.Encode(obj.NameHash)
+	err = encoder.Encode(obj.NameHash_)
 	if err != nil {
 		return nil, err
 	}
-	err = encoder.Encode(obj.IDHash)
+	err = encoder.Encode(obj.ConfigIdHash)
 	if err != nil {
 		return nil, err
 	}
@@ -1117,11 +1117,11 @@ func (obj *Container) GobDecode(buf []byte) error {
 	if err != nil {
 		return err
 	}
-	err = decoder.Decode(&obj.NameHash)
+	err = decoder.Decode(&obj.NameHash_)
 	if err != nil {
 		return err
 	}
-	err = decoder.Decode(&obj.IDHash)
+	err = decoder.Decode(&obj.ConfigIdHash)
 	if err != nil {
 		return err
 	}
@@ -1153,7 +1153,7 @@ func (obj *Container) baseInit(dirty, modify, extra map[string]interface{}) {
 
 func (obj *Container) Serial() ([]byte, error) {
 	ar := util.NewStoreArchiver(nil)
-	ps := obj.GetVisiblePropertys(0)
+	ps := obj.VisiblePropertys(0)
 	ar.Write(int16(len(ps)))
 
 	return ar.Data(), nil
@@ -1169,7 +1169,7 @@ func (obj *Container) SerialModify() ([]byte, error) {
 		if !obj.PropertyIsPrivate(k) {
 			continue
 		}
-		idx, _ := obj.GetPropertyIndex(k)
+		idx, _ := obj.PropertyIndex(k)
 
 		ar.Write(int16(idx))
 		ar.Write(v)
@@ -1179,7 +1179,7 @@ func (obj *Container) SerialModify() ([]byte, error) {
 }
 
 func (obj *Container) IsSceneData(prop string) bool {
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return false
 	}
@@ -1198,7 +1198,7 @@ func (obj *Container) SyncFromSceneData(val interface{}) error {
 	return nil
 }
 
-func (obj *Container) GetSceneData() interface{} {
+func (obj *Container) SceneData() interface{} {
 	sd := &ContainerSceneData{}
 
 	//属性

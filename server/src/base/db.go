@@ -60,7 +60,7 @@ func (d *DbBridge) LookLetterBack(mailbox rpc.Mailbox, msg *rpc.Message) (errcod
 			break
 		}
 		//删信
-		warp.RecvLetter(nil, player.GetDbId(), letter.Serial_no, "_", share.DBParams{})
+		warp.RecvLetter(nil, player.DBId(), letter.Serial_no, "_", share.DBParams{})
 	}
 
 	return 0, nil
@@ -270,7 +270,7 @@ func (d *DbBridge) UpdateUserInfo(mailbox rpc.Mailbox, msg *rpc.Message) (errcod
 	}
 	for _, info := range infos.Infos {
 		if e := App.GetEntity(info.ObjId); e != nil {
-			e.SetDbId(info.DBId)
+			e.SetDBId(info.DBId)
 			continue
 		}
 

@@ -283,7 +283,7 @@ func (gd *GlobalDataHelper) OnLoadGlobalData(msg *rpc.Message) {
 		log.LogError("create global data set failed, err:", err)
 	}
 	if gd.dataset != nil {
-		core.Destroy(gd.dataset.GetObjId())
+		core.Destroy(gd.dataset.ObjectId())
 	}
 	gd.dataset = ent
 	gd.ready = true
@@ -357,7 +357,7 @@ func (gd *GlobalDataHelper) createDataSet() error {
 			return fmt.Errorf("create global data failed, %s", err.Error())
 		}
 
-		ent.SetDbId(core.GetUid())
+		ent.SetDBId(core.GetUid())
 		ent.Set("Name", "GlobalData")
 		gd.dataset = ent
 		gd.isnew = true
@@ -394,7 +394,7 @@ func (gd *GlobalDataHelper) addData(name string, datatype string) error {
 		return fmt.Errorf("dataset is nil")
 	}
 
-	if gd.dataset.GetChildByName(name) != nil {
+	if gd.dataset.FindChildByName(name) != nil {
 		return fmt.Errorf("global data(%s) exist", name)
 	}
 
@@ -407,7 +407,7 @@ func (gd *GlobalDataHelper) addData(name string, datatype string) error {
 	data.SetInBase(true)
 	data.Set("Name", name)
 
-	index, err := core.AddChild(gd.dataset.GetObjId(), data.GetObjId(), -1)
+	index, err := core.AddChild(gd.dataset.ObjectId(), data.ObjectId(), -1)
 	if err == nil {
 
 		entityinfo, err := share.GetItemInfo(data, false)
@@ -438,7 +438,7 @@ func (gd *GlobalDataHelper) getData(name string) datatype.Entity {
 		return nil
 	}
 
-	return gd.dataset.GetChildByName(name)
+	return gd.dataset.FindChildByName(name)
 }
 
 func (gd *GlobalDataHelper) OnDataReady() {
@@ -537,7 +537,7 @@ func (gd *GlobalDataHelper) Update(self datatype.Entity, index int16, value inte
 			continue
 		}
 
-		app.CallBack(nil, "GlobalHelper.GlobalDataUpdate", gd.OnDataChanged, self.GetIndex(), v, index, datatype.NewAny(0, value))
+		app.CallBack(nil, "GlobalHelper.GlobalDataUpdate", gd.OnDataChanged, self.ChildIndex(), v, index, datatype.NewAny(0, value))
 	}
 }
 
@@ -560,7 +560,7 @@ func (gd *GlobalDataHelper) RecAppend(self datatype.Entity, rec datatype.Record,
 		}
 
 		rowvalues, _ := rec.SerialRow(row)
-		app.CallBack(nil, "GlobalHelper.GlobalDataRecAppend", gd.OnDataChanged, self.GetIndex(), v, rec.GetName(), row, rowvalues)
+		app.CallBack(nil, "GlobalHelper.GlobalDataRecAppend", gd.OnDataChanged, self.ChildIndex(), v, rec.GetName(), row, rowvalues)
 	}
 }
 
@@ -581,7 +581,7 @@ func (gd *GlobalDataHelper) RecDelete(self datatype.Entity, rec datatype.Record,
 			continue
 		}
 
-		app.CallBack(nil, "GlobalHelper.GlobalDataRecDelete", gd.OnDataChanged, self.GetIndex(), v, rec.GetName(), row)
+		app.CallBack(nil, "GlobalHelper.GlobalDataRecDelete", gd.OnDataChanged, self.ChildIndex(), v, rec.GetName(), row)
 	}
 }
 
@@ -601,7 +601,7 @@ func (gd *GlobalDataHelper) RecClear(self datatype.Entity, rec datatype.Record) 
 			continue
 		}
 
-		app.CallBack(nil, "GlobalHelper.GlobalDataRecClear", gd.OnDataChanged, self.GetIndex(), v, rec.GetName())
+		app.CallBack(nil, "GlobalHelper.GlobalDataRecClear", gd.OnDataChanged, self.ChildIndex(), v, rec.GetName())
 	}
 }
 
@@ -622,7 +622,7 @@ func (gd *GlobalDataHelper) RecModify(self datatype.Entity, rec datatype.Record,
 		}
 
 		val, _ := rec.Get(row, col)
-		app.CallBack(nil, "GlobalHelper.GlobalDataRecModify", gd.OnDataChanged, self.GetIndex(), v, rec.GetName(), row, col, datatype.NewAny(0, val))
+		app.CallBack(nil, "GlobalHelper.GlobalDataRecModify", gd.OnDataChanged, self.ChildIndex(), v, rec.GetName(), row, col, datatype.NewAny(0, val))
 	}
 }
 
@@ -645,7 +645,7 @@ func (gd *GlobalDataHelper) RecSetRow(self datatype.Entity, rec datatype.Record,
 
 		rowvalues, _ := rec.SerialRow(row)
 
-		app.CallBack(nil, "GlobalHelper.GlobalDataRecSetRow", gd.OnDataChanged, self.GetIndex(), v, rec.GetName(), row, rowvalues)
+		app.CallBack(nil, "GlobalHelper.GlobalDataRecSetRow", gd.OnDataChanged, self.ChildIndex(), v, rec.GetName(), row, rowvalues)
 	}
 
 }
@@ -656,9 +656,9 @@ func (gd *GlobalDataHelper) OnAfterAdd(self datatype.Entity, sender datatype.Ent
 	}
 
 	sender.SetPropUpdate(gd)
-	recs := sender.GetRecNames()
+	recs := sender.RecordNames()
 	for _, v := range recs {
-		rec := sender.GetRec(v)
+		rec := sender.FindRec(v)
 		if rec.IsVisible() {
 			rec.SetMonitor(gd)
 		}
@@ -671,9 +671,9 @@ func (gd *GlobalDataHelper) OnRemove(self datatype.Entity, sender datatype.Entit
 		return 1
 	}
 	sender.SetPropUpdate(nil)
-	recs := sender.GetRecNames()
+	recs := sender.RecordNames()
 	for _, v := range recs {
-		rec := sender.GetRec(v)
+		rec := sender.FindRec(v)
 		if rec.IsVisible() {
 			rec.SetMonitor(nil)
 		}
@@ -688,12 +688,12 @@ func (gd *GlobalDataHelper) FindGlobalData(name string) int {
 		return -1
 	}
 
-	c := gd.dataset.GetChildByName(name)
+	c := gd.dataset.FindChildByName(name)
 	if c == nil {
 		return -1
 	}
 
-	return c.GetIndex()
+	return c.ChildIndex()
 }
 
 func (gd *GlobalDataHelper) Set(index int, name string, val interface{}) error {
@@ -720,7 +720,7 @@ func (gd *GlobalDataHelper) SetGrid(index int, rec string, row, col int, val int
 		return fmt.Errorf("index(%d) not found", index)
 	}
 
-	record := data.GetRec(rec)
+	record := data.FindRec(rec)
 	if record == nil {
 		return fmt.Errorf("index(%d) record(%s) not found", index, rec)
 	}
@@ -739,7 +739,7 @@ func (gd *GlobalDataHelper) SetRow(index int, rec string, row int, args ...inter
 		return fmt.Errorf("index(%d) not found", index)
 	}
 
-	record := data.GetRec(rec)
+	record := data.FindRec(rec)
 	if record == nil {
 		return fmt.Errorf("index(%d) record(%s) not found", index, rec)
 	}
@@ -758,7 +758,7 @@ func (gd *GlobalDataHelper) AddRowValues(index int, rec string, row int, args ..
 		return -1, fmt.Errorf("index(%d) not found", index)
 	}
 
-	record := data.GetRec(rec)
+	record := data.FindRec(rec)
 	if record == nil {
 		return -1, fmt.Errorf("index(%d) record(%s) not found", index, rec)
 	}
@@ -777,7 +777,7 @@ func (gd *GlobalDataHelper) AddRow(index int, rec string, row int) (int, error) 
 		return -1, fmt.Errorf("index(%d) not found", index)
 	}
 
-	record := data.GetRec(rec)
+	record := data.FindRec(rec)
 	if record == nil {
 		return -1, fmt.Errorf("index(%d) record(%s) not found", index, rec)
 	}
@@ -796,7 +796,7 @@ func (gd *GlobalDataHelper) DelRow(index int, rec string, row int) error {
 		return fmt.Errorf("index(%d) not found", index)
 	}
 
-	record := data.GetRec(rec)
+	record := data.FindRec(rec)
 	if record == nil {
 		return fmt.Errorf("index(%d) record(%s) not found", index, rec)
 	}
@@ -816,7 +816,7 @@ func (gd *GlobalDataHelper) ClearRecord(index int, rec string) error {
 		return fmt.Errorf("index(%d) not found", index)
 	}
 
-	record := data.GetRec(rec)
+	record := data.FindRec(rec)
 	if record == nil {
 		return fmt.Errorf("index(%d) record(%s) not found", index, rec)
 	}

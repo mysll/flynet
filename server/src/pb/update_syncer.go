@@ -21,7 +21,7 @@ func (ps *PBPropCodec) UpdateAll(object Entity, self bool) interface{} {
 		return nil
 	}
 
-	objid := object.GetObjId()
+	objid := object.ObjectId()
 	update := &s2c.UpdateProperty{}
 	update.Self = proto.Bool(self)
 	update.Index = proto.Int32(objid.Index)

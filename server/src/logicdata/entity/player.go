@@ -370,8 +370,8 @@ type Player_t struct {
 	parent          Entity
 	ObjId           ObjectID
 	Deleted         bool
-	NameHash        int32
-	IDHash          int32
+	NameHash_       int32
+	ConfigIdHash    int32
 	ContainerInited bool
 	Index           int //在容器中的位置
 	Childs          []Entity
@@ -444,17 +444,17 @@ func (obj *Player) IsQuiting() bool {
 	return obj.quiting
 }
 
-func (obj *Player) GetConfig() string {
+func (obj *Player) Config() string {
 	return obj.ConfigId
 }
 
 func (obj *Player) SetConfig(config string) {
 	obj.ConfigId = config
-	obj.IDHash = Hash(config)
+	obj.ConfigIdHash = Hash(config)
 }
 
 func (obj *Player) SetSaveFlag() {
-	root := obj.GetRoot()
+	root := obj.Root()
 	if root != nil {
 		root.SetSaveFlag()
 	} else {
@@ -536,42 +536,42 @@ func (obj *Player) SetCapacity(capacity int32, initcap int32) {
 
 }
 
-func (obj *Player) GetCapacity() int32 {
+func (obj *Player) Caps() int32 {
 	return obj.Capacity
 }
 
 //获取实际的容量
-func (obj *Player) GetRealCap() int32 {
+func (obj *Player) RealCaps() int32 {
 	if !obj.ContainerInited {
 		return 0
 	}
 	return int32(len(obj.Childs))
 }
 
-func (obj *Player) GetRoot() Entity {
+func (obj *Player) Root() Entity {
 	var ent Entity
-	if obj.GetParent() == nil {
+	if obj.Parent() == nil {
 		return nil
 	}
 	ent = obj
 	for {
-		if ent.GetParent() == nil {
+		if ent.Parent() == nil {
 			break
 		}
-		if ent.GetParent().ObjType() == SCENE {
+		if ent.Parent().ObjType() == SCENE {
 			break
 		}
-		ent = ent.GetParent()
+		ent = ent.Parent()
 	}
 	return ent
 }
 
 //获取数据库id
-func (obj *Player) GetDbId() uint64 {
+func (obj *Player) DBId() uint64 {
 	return obj.DbId
 }
 
-func (obj *Player) SetDbId(id uint64) {
+func (obj *Player) SetDBId(id uint64) {
 	obj.DbId = id
 }
 
@@ -579,7 +579,7 @@ func (obj *Player) SetParent(p Entity) {
 	obj.parent = p
 }
 
-func (obj *Player) GetParent() Entity {
+func (obj *Player) Parent() Entity {
 	return obj.parent
 }
 
@@ -587,7 +587,7 @@ func (obj *Player) SetDeleted(d bool) {
 	obj.Deleted = d
 }
 
-func (obj *Player) GetDeleted() bool {
+func (obj *Player) IsDeleted() bool {
 	return obj.Deleted
 }
 
@@ -595,18 +595,18 @@ func (obj *Player) SetObjId(id ObjectID) {
 	obj.ObjId = id
 }
 
-func (obj *Player) GetObjId() ObjectID {
+func (obj *Player) ObjectId() ObjectID {
 	return obj.ObjId
 }
 
 //设置名字Hash
 func (obj *Player) SetNameHash(v int32) {
-	obj.NameHash = v
+	obj.NameHash_ = v
 }
 
 //获取名字Hash
-func (obj *Player) GetNameHash() int32 {
-	return obj.NameHash
+func (obj *Player) NameHash() int32 {
+	return obj.NameHash_
 }
 
 //名字比较
@@ -614,13 +614,13 @@ func (obj *Player) NameEqual(name string) bool {
 	return obj.Name == name
 }
 
-//获取IDHash
-func (obj *Player) GetIDHash() int32 {
-	return obj.IDHash
+//获取ConfigIdHash
+func (obj *Player) ConfigHash() int32 {
+	return obj.ConfigIdHash
 }
 
 //ID比较
-func (obj *Player) IDEqual(id string) bool {
+func (obj *Player) ConfigIdEqual(id string) bool {
 	return obj.ConfigId == id
 }
 
@@ -630,10 +630,10 @@ func (obj *Player) ChildCount() int {
 
 //移除对象
 func (obj *Player) RemoveChild(de Entity) error {
-	idx := de.GetIndex()
+	idx := de.ChildIndex()
 	e := obj.GetChild(idx)
 
-	if e != nil && e.GetObjId().Equal(de.GetObjId()) {
+	if e != nil && e.ObjectId().Equal(de.ObjectId()) {
 		obj.Childs[idx] = nil
 		de.SetParent(nil)
 		obj.ChildNum--
@@ -644,12 +644,12 @@ func (obj *Player) RemoveChild(de Entity) error {
 }
 
 //获取子对象
-func (obj *Player) GetChilds() []Entity {
+func (obj *Player) AllChilds() []Entity {
 	return obj.Childs
 }
 
 //获取容器中索引
-func (obj *Player) GetIndex() int {
+func (obj *Player) ChildIndex() int {
 	return obj.Index
 }
 
@@ -685,14 +685,14 @@ func (obj *Player) AddChild(idx int, e Entity) (index int, err error) {
 				e.SetIndex(i)
 				e.SetParent(obj)
 				obj.ChildNum++
-				index = e.GetIndex()
+				index = e.ChildIndex()
 				return
 			}
 		}
 		obj.Childs = append(obj.Childs, e)
 		e.SetIndex(len(obj.Childs) - 1)
 		e.SetParent(obj)
-		index = e.GetIndex()
+		index = e.ChildIndex()
 		obj.ChildNum++
 		return
 	}
@@ -725,7 +725,7 @@ func (obj *Player) AddChild(idx int, e Entity) (index int, err error) {
 	e.SetIndex(idx)
 	e.SetParent(obj)
 	obj.ChildNum++
-	index = e.GetIndex()
+	index = e.ChildIndex()
 	return
 
 }
@@ -742,38 +742,38 @@ func (obj *Player) GetChild(idx int) Entity {
 }
 
 //通过ID获取子对象
-func (obj *Player) GetChildByConfigId(id string) Entity {
+func (obj *Player) FindChildByConfigId(id string) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
 	h := Hash(id)
 	for _, v := range obj.Childs {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return v
 		}
 	}
 	return nil
 }
-func (obj *Player) GetFirstChildByConfigId(id string) (int, Entity) {
+func (obj *Player) FindFirstChildByConfigId(id string) (int, Entity) {
 	if !obj.ContainerInited {
 		return -1, nil
 	}
 	h := Hash(id)
 	for k, v := range obj.Childs {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return k + 1, v
 		}
 	}
 	return -1, nil
 }
-func (obj *Player) GetNextChildByConfigId(start int, id string) (int, Entity) {
+func (obj *Player) NextChildByConfigId(start int, id string) (int, Entity) {
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
 	}
 	h := Hash(id)
 	for k, v := range obj.Childs[start:] {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return start + k + 1, v
 		}
 	}
@@ -781,38 +781,38 @@ func (obj *Player) GetNextChildByConfigId(start int, id string) (int, Entity) {
 }
 
 //通过名称获取子对象
-func (obj *Player) GetChildByName(name string) Entity {
+func (obj *Player) FindChildByName(name string) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
 	h := Hash(name)
 	for _, v := range obj.Childs {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return v
 		}
 	}
 	return nil
 }
-func (obj *Player) GetFirstChild(name string) (int, Entity) {
+func (obj *Player) FindFirstChildByName(name string) (int, Entity) {
 	if !obj.ContainerInited {
 		return -1, nil
 	}
 	h := Hash(name)
 	for k, v := range obj.Childs {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return k + 1, v
 		}
 	}
 	return -1, nil
 }
-func (obj *Player) GetNextChild(start int, name string) (int, Entity) {
+func (obj *Player) NextChildByName(start int, name string) (int, Entity) {
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
 	}
 	h := Hash(name)
 	for k, v := range obj.Childs[start:] {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return start + k + 1, v
 		}
 	}
@@ -853,14 +853,14 @@ func (obj *Player) SetExtraData(key string, value interface{}) {
 	obj.ExtraData[key] = value
 }
 
-func (obj *Player) GetExtraData(key string) interface{} {
+func (obj *Player) FindExtraData(key string) interface{} {
 	if v, ok := obj.ExtraData[key]; ok {
 		return v
 	}
 	return nil
 }
 
-func (obj *Player) GetAllExtraData() map[string]interface{} {
+func (obj *Player) ExtraDatas() map[string]interface{} {
 	return obj.ExtraData
 }
 
@@ -904,7 +904,7 @@ func (obj *Player) SetPropHook(hooker PropChanger) {
 	obj.prophooker = hooker
 }
 
-func (obj *Player) GetPropFlag(idx int) bool {
+func (obj *Player) PropFlag(idx int) bool {
 	index := idx / 64
 	bit := uint(idx) % 64
 	return obj.propflag[index]&(uint64(1)<<bit) != 0
@@ -927,7 +927,7 @@ func (obj *Player) IsCritical(idx int) bool {
 }
 
 func (obj *Player) SetCritical(prop string) {
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return
 	}
@@ -939,7 +939,7 @@ func (obj *Player) SetCritical(prop string) {
 }
 
 func (obj *Player) ClearCritical(prop string) {
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return
 	}
@@ -951,7 +951,7 @@ func (obj *Player) ClearCritical(prop string) {
 }
 
 //获取所有属性
-func (obj *Player) GetPropertys() []string {
+func (obj *Player) Propertys() []string {
 	return []string{
 		"DataVer",
 		"Name",
@@ -970,7 +970,7 @@ func (obj *Player) GetPropertys() []string {
 }
 
 //获取所有可视属性
-func (obj *Player) GetVisiblePropertys(typ int) []string {
+func (obj *Player) VisiblePropertys(typ int) []string {
 	if typ == 0 {
 		return []string{
 			"Name",
@@ -992,7 +992,7 @@ func (obj *Player) GetVisiblePropertys(typ int) []string {
 }
 
 //获取属性类型
-func (obj *Player) GetPropertyType(p string) (int, string, error) {
+func (obj *Player) PropertyType(p string) (int, string, error) {
 	switch p {
 	case "DataVer":
 		return DT_INT32, "int32", nil
@@ -1026,7 +1026,7 @@ func (obj *Player) GetPropertyType(p string) (int, string, error) {
 }
 
 //通过属性名设置值
-func (obj *Player) GetPropertyIndex(p string) (int, error) {
+func (obj *Player) PropertyIndex(p string) (int, error) {
 	switch p {
 	case "DataVer":
 		return 0, nil
@@ -1567,7 +1567,7 @@ func (obj *Player) SetDataVer(v int32) {
 	}
 
 	obj.DataVer = v
-	if obj.prophooker != nil && obj.IsCritical(0) && !obj.GetPropFlag(0) {
+	if obj.prophooker != nil && obj.IsCritical(0) && !obj.PropFlag(0) {
 		obj.SetPropFlag(0, true)
 		obj.prophooker.OnPropChange(obj, "DataVer", old)
 		obj.SetPropFlag(0, false)
@@ -1595,12 +1595,12 @@ func (obj *Player) SetName(v string) {
 	}
 
 	obj.Name = v
-	if obj.prophooker != nil && obj.IsCritical(1) && !obj.GetPropFlag(1) {
+	if obj.prophooker != nil && obj.IsCritical(1) && !obj.PropFlag(1) {
 		obj.SetPropFlag(1, true)
 		obj.prophooker.OnPropChange(obj, "Name", old)
 		obj.SetPropFlag(1, false)
 	}
-	obj.NameHash = Hash(v)
+	obj.NameHash_ = Hash(v)
 	obj.setModify("Name", v)
 
 	obj.setDirty("Name", v)
@@ -1622,7 +1622,7 @@ func (obj *Player) SetSex(v int8) {
 	}
 
 	obj.Sex = v
-	if obj.prophooker != nil && obj.IsCritical(2) && !obj.GetPropFlag(2) {
+	if obj.prophooker != nil && obj.IsCritical(2) && !obj.PropFlag(2) {
 		obj.SetPropFlag(2, true)
 		obj.prophooker.OnPropChange(obj, "Sex", old)
 		obj.SetPropFlag(2, false)
@@ -1651,7 +1651,7 @@ func (obj *Player) SetLevel(v int16) {
 	}
 
 	obj.Level = v
-	if obj.prophooker != nil && obj.IsCritical(3) && !obj.GetPropFlag(3) {
+	if obj.prophooker != nil && obj.IsCritical(3) && !obj.PropFlag(3) {
 		obj.SetPropFlag(3, true)
 		obj.prophooker.OnPropChange(obj, "Level", old)
 		obj.SetPropFlag(3, false)
@@ -1680,7 +1680,7 @@ func (obj *Player) SetModel(v int32) {
 	}
 
 	obj.Model = v
-	if obj.prophooker != nil && obj.IsCritical(4) && !obj.GetPropFlag(4) {
+	if obj.prophooker != nil && obj.IsCritical(4) && !obj.PropFlag(4) {
 		obj.SetPropFlag(4, true)
 		obj.prophooker.OnPropChange(obj, "Model", old)
 		obj.SetPropFlag(4, false)
@@ -1709,7 +1709,7 @@ func (obj *Player) SetExp(v int32) {
 	}
 
 	obj.Exp = v
-	if obj.prophooker != nil && obj.IsCritical(5) && !obj.GetPropFlag(5) {
+	if obj.prophooker != nil && obj.IsCritical(5) && !obj.PropFlag(5) {
 		obj.SetPropFlag(5, true)
 		obj.prophooker.OnPropChange(obj, "Exp", old)
 		obj.SetPropFlag(5, false)
@@ -1738,7 +1738,7 @@ func (obj *Player) SetVip(v int8) {
 	}
 
 	obj.Vip = v
-	if obj.prophooker != nil && obj.IsCritical(6) && !obj.GetPropFlag(6) {
+	if obj.prophooker != nil && obj.IsCritical(6) && !obj.PropFlag(6) {
 		obj.SetPropFlag(6, true)
 		obj.prophooker.OnPropChange(obj, "Vip", old)
 		obj.SetPropFlag(6, false)
@@ -1767,7 +1767,7 @@ func (obj *Player) SetMaxExp(v int32) {
 	}
 
 	obj.MaxExp = v
-	if obj.prophooker != nil && obj.IsCritical(7) && !obj.GetPropFlag(7) {
+	if obj.prophooker != nil && obj.IsCritical(7) && !obj.PropFlag(7) {
 		obj.SetPropFlag(7, true)
 		obj.prophooker.OnPropChange(obj, "MaxExp", old)
 		obj.SetPropFlag(7, false)
@@ -1796,7 +1796,7 @@ func (obj *Player) SetHP(v int32) {
 	}
 
 	obj.HP = v
-	if obj.prophooker != nil && obj.IsCritical(8) && !obj.GetPropFlag(8) {
+	if obj.prophooker != nil && obj.IsCritical(8) && !obj.PropFlag(8) {
 		obj.SetPropFlag(8, true)
 		obj.prophooker.OnPropChange(obj, "HP", old)
 		obj.SetPropFlag(8, false)
@@ -1825,7 +1825,7 @@ func (obj *Player) SetMP(v int32) {
 	}
 
 	obj.MP = v
-	if obj.prophooker != nil && obj.IsCritical(9) && !obj.GetPropFlag(9) {
+	if obj.prophooker != nil && obj.IsCritical(9) && !obj.PropFlag(9) {
 		obj.SetPropFlag(9, true)
 		obj.prophooker.OnPropChange(obj, "MP", old)
 		obj.SetPropFlag(9, false)
@@ -1854,7 +1854,7 @@ func (obj *Player) SetMaxHP(v int32) {
 	}
 
 	obj.MaxHP = v
-	if obj.prophooker != nil && obj.IsCritical(10) && !obj.GetPropFlag(10) {
+	if obj.prophooker != nil && obj.IsCritical(10) && !obj.PropFlag(10) {
 		obj.SetPropFlag(10, true)
 		obj.prophooker.OnPropChange(obj, "MaxHP", old)
 		obj.SetPropFlag(10, false)
@@ -1883,7 +1883,7 @@ func (obj *Player) SetMaxMP(v int32) {
 	}
 
 	obj.MaxMP = v
-	if obj.prophooker != nil && obj.IsCritical(11) && !obj.GetPropFlag(11) {
+	if obj.prophooker != nil && obj.IsCritical(11) && !obj.PropFlag(11) {
 		obj.SetPropFlag(11, true)
 		obj.prophooker.OnPropChange(obj, "MaxMP", old)
 		obj.SetPropFlag(11, false)
@@ -1912,7 +1912,7 @@ func (obj *Player) SetLastUpdateTime(v int64) {
 	}
 
 	obj.LastUpdateTime = v
-	if obj.prophooker != nil && obj.IsCritical(12) && !obj.GetPropFlag(12) {
+	if obj.prophooker != nil && obj.IsCritical(12) && !obj.PropFlag(12) {
 		obj.SetPropFlag(12, true)
 		obj.prophooker.OnPropChange(obj, "LastUpdateTime", old)
 		obj.SetPropFlag(12, false)
@@ -6934,7 +6934,7 @@ func (obj *Player) initRec() {
 }
 
 //获取某个表格
-func (obj *Player) GetRec(rec string) Record {
+func (obj *Player) FindRec(rec string) Record {
 	switch rec {
 	case "MailBox":
 		return &obj.MailBox_r
@@ -6956,7 +6956,7 @@ func (obj *Player) GetRec(rec string) Record {
 }
 
 //获取所有表格名称
-func (obj *Player) GetRecNames() []string {
+func (obj *Player) RecordNames() []string {
 	return []string{"MailBox", "TaskAccepted", "TaskRecord", "TaskCanAccept", "TaskTimeLimit", "TaskGlobalRecord", "TaskPropRecord"}
 }
 
@@ -7010,8 +7010,8 @@ func (obj *Player) Copy(other Entity) error {
 	if t, ok := other.(*Player); ok {
 		//属性复制
 		obj.DbId = t.DbId
-		obj.NameHash = t.NameHash
-		obj.IDHash = t.IDHash
+		obj.NameHash_ = t.NameHash_
+		obj.ConfigIdHash = t.ConfigIdHash
 		obj.uid = t.uid
 
 		*obj.Moveable = *t.Moveable
@@ -7139,15 +7139,15 @@ func (obj *Player) SyncFromDb(data interface{}) bool {
 			}
 		}
 
-		obj.NameHash = Hash(obj.Name)
-		obj.IDHash = Hash(obj.ConfigId)
+		obj.NameHash_ = Hash(obj.Name)
+		obj.ConfigIdHash = Hash(obj.ConfigId)
 		return true
 	}
 
 	return false
 }
 
-func (obj *Player) GetSaveLoader() DBSaveLoader {
+func (obj *Player) SaveLoader() DBSaveLoader {
 	return &obj.Player_Save
 }
 
@@ -7168,11 +7168,11 @@ func (obj *Player) GobEncode() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = encoder.Encode(obj.NameHash)
+	err = encoder.Encode(obj.NameHash_)
 	if err != nil {
 		return nil, err
 	}
-	err = encoder.Encode(obj.IDHash)
+	err = encoder.Encode(obj.ConfigIdHash)
 	if err != nil {
 		return nil, err
 	}
@@ -7218,11 +7218,11 @@ func (obj *Player) GobDecode(buf []byte) error {
 	if err != nil {
 		return err
 	}
-	err = decoder.Decode(&obj.NameHash)
+	err = decoder.Decode(&obj.NameHash_)
 	if err != nil {
 		return err
 	}
-	err = decoder.Decode(&obj.IDHash)
+	err = decoder.Decode(&obj.ConfigIdHash)
 	if err != nil {
 		return err
 	}
@@ -7262,7 +7262,7 @@ func (obj *Player) baseInit(dirty, modify, extra map[string]interface{}) {
 
 func (obj *Player) Serial() ([]byte, error) {
 	ar := util.NewStoreArchiver(nil)
-	ps := obj.GetVisiblePropertys(0)
+	ps := obj.VisiblePropertys(0)
 	ar.Write(int16(len(ps)))
 
 	ar.Write(int16(1))
@@ -7300,7 +7300,7 @@ func (obj *Player) SerialModify() ([]byte, error) {
 		if !obj.PropertyIsPrivate(k) {
 			continue
 		}
-		idx, _ := obj.GetPropertyIndex(k)
+		idx, _ := obj.PropertyIndex(k)
 
 		ar.Write(int16(idx))
 		ar.Write(v)
@@ -7310,7 +7310,7 @@ func (obj *Player) SerialModify() ([]byte, error) {
 }
 
 func (obj *Player) IsSceneData(prop string) bool {
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return false
 	}
@@ -7374,7 +7374,7 @@ func (obj *Player) SyncFromSceneData(val interface{}) error {
 	return nil
 }
 
-func (obj *Player) GetSceneData() interface{} {
+func (obj *Player) SceneData() interface{} {
 	sd := &PlayerSceneData{}
 
 	//属性

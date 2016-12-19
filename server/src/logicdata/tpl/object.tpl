@@ -178,8 +178,8 @@ type {{.Name}}_t struct {
 	parent Entity
 	ObjId ObjectID
 	Deleted bool
-	NameHash int32
-	IDHash int32
+	NameHash_ int32
+	ConfigIdHash int32
 	ContainerInited bool 
 	Index int //在容器中的位置
 	Childs []Entity
@@ -258,17 +258,17 @@ func (obj *{{.Name}})	IsQuiting() bool{
 	return obj.quiting
 }
 
-func (obj *{{.Name}}) GetConfig() string {
+func (obj *{{.Name}}) Config() string {
 	return obj.ConfigId
 }
 
 func (obj *{{.Name}}) SetConfig(config string) {
 	obj.ConfigId = config
-	obj.IDHash = Hash(config)
+	obj.ConfigIdHash = Hash(config)
 }
 
 func (obj *{{.Name}}) SetSaveFlag() {
-	root := obj.GetRoot()
+	root := obj.Root()
 	if root != nil {
 		root.SetSaveFlag()
 	} else {
@@ -346,12 +346,12 @@ func (obj *{{.Name}}) SetCapacity(capacity int32, initcap int32) {
 	{{end}}
 }
 
-func (obj *{{.Name}}) GetCapacity() int32 {
+func (obj *{{.Name}}) Caps() int32 {
 	return obj.Capacity
 }
 
 //获取实际的容量
-func (obj *{{.Name}}) GetRealCap() int32 {
+func (obj *{{.Name}}) RealCaps() int32 {
 	if !obj.ContainerInited {
 		return 0
 	}
@@ -359,30 +359,30 @@ func (obj *{{.Name}}) GetRealCap() int32 {
 }
 
 {{if not .Base}}
-func (obj *{{$Obj}}) GetRoot() Entity {
+func (obj *{{$Obj}}) Root() Entity {
 	var ent Entity
-	if obj.GetParent() == nil {
+	if obj.Parent() == nil {
 		return nil
 	}
 	ent = obj
 	for {
-		if ent.GetParent() == nil {
+		if ent.Parent() == nil {
 			break
 		}
-		if ent.GetParent().ObjType() == SCENE {
+		if ent.Parent().ObjType() == SCENE {
 			break
 		}
-		ent = ent.GetParent()
+		ent = ent.Parent()
 	}
 	return ent
 }
 
 //获取数据库id
-func (obj *{{$Obj}}) GetDbId() uint64 {
+func (obj *{{$Obj}}) DBId() uint64 {
 	return obj.DbId
 }
 
-func (obj *{{$Obj}}) SetDbId(id uint64) {
+func (obj *{{$Obj}}) SetDBId(id uint64) {
 	obj.DbId = id
 }
 
@@ -390,7 +390,7 @@ func (obj *{{.Name}}) SetParent(p Entity) {
 	obj.parent = p
 }
 
-func (obj *{{.Name}}) GetParent() Entity {
+func (obj *{{.Name}}) Parent() Entity {
 	return obj.parent
 }
 
@@ -398,7 +398,7 @@ func (obj *{{.Name}}) SetDeleted(d bool) {
 	obj.Deleted = d
 }
 
-func (obj *{{.Name}}) GetDeleted() bool {
+func (obj *{{.Name}}) IsDeleted() bool {
 	return obj.Deleted
 }
 
@@ -406,19 +406,19 @@ func (obj *{{.Name}}) SetObjId(id ObjectID) {
 	obj.ObjId = id
 }
 
-func (obj *{{.Name}}) GetObjId() ObjectID{
+func (obj *{{.Name}}) ObjectId() ObjectID{
 	return obj.ObjId
 }
 
 
 //设置名字Hash
 func (obj *{{.Name}}) SetNameHash(v int32) {
-	obj.NameHash = v
+	obj.NameHash_ = v
 }
 
 //获取名字Hash
-func (obj *{{.Name}}) GetNameHash() int32 {
-	return obj.NameHash 
+func (obj *{{.Name}}) NameHash() int32 {
+	return obj.NameHash_ 
 }
 
 //名字比较
@@ -426,13 +426,13 @@ func (obj *{{.Name}}) NameEqual(name string) bool{
 	return obj.Name == name
 }
 
-//获取IDHash
-func (obj *{{.Name}}) GetIDHash() int32 {
-	return obj.IDHash 
+//获取ConfigIdHash
+func (obj *{{.Name}}) ConfigHash() int32 {
+	return obj.ConfigIdHash 
 }
 
 //ID比较
-func (obj *{{.Name}}) IDEqual(id string) bool{
+func (obj *{{.Name}}) ConfigIdEqual(id string) bool{
 	return obj.ConfigId == id
 }
 
@@ -442,10 +442,10 @@ func (obj *{{.Name}}) ChildCount() int {
 
 //移除对象
 func (obj *{{.Name}}) RemoveChild(de Entity) error {
-	idx := de.GetIndex()
+	idx := de.ChildIndex()
 	e := obj.GetChild(idx)
 
-	if e != nil && e.GetObjId().Equal(de.GetObjId()) {
+	if e != nil && e.ObjectId().Equal(de.ObjectId()) {
 		obj.Childs[idx] = nil
 		de.SetParent(nil)		
 		obj.ChildNum--
@@ -456,12 +456,12 @@ func (obj *{{.Name}}) RemoveChild(de Entity) error {
 }
 
 //获取子对象
-func (obj *{{.Name}}) GetChilds() []Entity {
+func (obj *{{.Name}}) AllChilds() []Entity {
 	return obj.Childs
 }
 
 //获取容器中索引
-func (obj *{{.Name}}) GetIndex() int{
+func (obj *{{.Name}}) ChildIndex() int{
 	return obj.Index
 }
 
@@ -497,14 +497,14 @@ func (obj *{{.Name}}) AddChild(idx int, e Entity) (index int, err error){
 				e.SetIndex(i)
 				e.SetParent(obj)				
 				obj.ChildNum++
-				index = e.GetIndex()
+				index = e.ChildIndex()
 				return
 			}
 		}
 		obj.Childs = append(obj.Childs, e)
 		e.SetIndex(len(obj.Childs) -1 )
 		e.SetParent(obj)
-		index = e.GetIndex()
+		index = e.ChildIndex()
 		obj.ChildNum++
 		return
 	} 
@@ -537,7 +537,7 @@ func (obj *{{.Name}}) AddChild(idx int, e Entity) (index int, err error){
 	e.SetIndex(idx)
 	e.SetParent(obj)
 	obj.ChildNum++
-	index = e.GetIndex()
+	index = e.ChildIndex()
 	return 
 
 }
@@ -554,38 +554,38 @@ func (obj *{{.Name}}) GetChild(idx int) Entity{
 }
 
 //通过ID获取子对象
-func (obj *{{.Name}}) GetChildByConfigId(id string) Entity{
+func (obj *{{.Name}}) FindChildByConfigId(id string) Entity{
 	if !obj.ContainerInited {
 		return nil
 	}
 	h := Hash(id)
 	for _, v := range obj.Childs {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return v
 		}
 	}
 	return nil
 }
-func (obj *{{.Name}}) GetFirstChildByConfigId(id string) (int, Entity){
+func (obj *{{.Name}}) FindFirstChildByConfigId(id string) (int, Entity){
 	if !obj.ContainerInited {
 		return -1, nil
 	}
 	h := Hash(id)
 	for k, v := range obj.Childs {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return k+1, v
 		}
 	}
 	return -1, nil
 }
-func (obj *{{.Name}}) GetNextChildByConfigId(start int, id string) (int, Entity){
+func (obj *{{.Name}}) NextChildByConfigId(start int, id string) (int, Entity){
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
 	}
 	h := Hash(id)
 	for k, v := range obj.Childs[start:] {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return start+k+1, v
 		}
 	}
@@ -593,38 +593,38 @@ func (obj *{{.Name}}) GetNextChildByConfigId(start int, id string) (int, Entity)
 }
 
 //通过名称获取子对象
-func (obj *{{.Name}}) GetChildByName(name string) Entity{
+func (obj *{{.Name}}) FindChildByName(name string) Entity{
 	if !obj.ContainerInited {
 		return nil
 	}
 	h := Hash(name)
 	for _, v := range obj.Childs {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return v
 		}
 	}
 	return nil
 }
-func (obj *{{.Name}}) GetFirstChild(name string) (int, Entity){
+func (obj *{{.Name}}) FindFirstChildByName(name string) (int, Entity){
 	if !obj.ContainerInited {
 		return -1, nil
 	}
 	h := Hash(name)
 	for k, v := range obj.Childs {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return k+1, v
 		}
 	}
 	return -1, nil
 }
-func (obj *{{.Name}}) GetNextChild(start int, name string) (int, Entity){
+func (obj *{{.Name}}) NextChildByName(start int, name string) (int, Entity){
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
 	}
 	h := Hash(name)
 	for k, v := range obj.Childs[start:] {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return start+k+1, v
 		}
 	}
@@ -667,14 +667,14 @@ func (obj *{{.Name}}) SetExtraData(key string, value interface{}) {
 	obj.ExtraData[key] = value
 }
 
-func (obj *{{.Name}}) GetExtraData(key string) interface{}{
+func (obj *{{.Name}}) FindExtraData(key string) interface{}{
 	if v, ok := obj.ExtraData[key] ; ok {
 		return v
 	}
 	return nil
 }
 
-func (obj *{{.Name}}) GetAllExtraData() map[string]interface{} {
+func (obj *{{.Name}}) ExtraDatas() map[string]interface{} {
 	return obj.ExtraData
 }
 
@@ -726,7 +726,7 @@ func (obj *{{.Name}}) SetPropHook(hooker PropChanger) {
 	obj.prophooker = hooker	
 }
 
-func (obj *{{.Name}}) GetPropFlag(idx int) bool {
+func (obj *{{.Name}}) PropFlag(idx int) bool {
 	index := idx / 64
 	bit := uint(idx) % 64
 	return obj.propflag[index] & (uint64(1) << bit) != 0
@@ -749,7 +749,7 @@ func (obj *{{.Name}}) IsCritical(idx int) bool {
 }
 
 func (obj *{{.Name}}) SetCritical(prop string) {
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return
 	}
@@ -761,7 +761,7 @@ func (obj *{{.Name}}) SetCritical(prop string) {
 }
 
 func (obj *{{.Name}}) ClearCritical(prop string) {
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return
 	}
@@ -773,14 +773,14 @@ func (obj *{{.Name}}) ClearCritical(prop string) {
 }
 
 //获取所有属性
-func (obj *{{.Name}}) GetPropertys() []string {	
+func (obj *{{.Name}}) Propertys() []string {	
 	return []string{ {{range  .Propertys}}
 	"{{.Name}}", {{end}}
 	}		
 }
 
 //获取所有可视属性
-func (obj *{{.Name}}) GetVisiblePropertys(typ int) []string {
+func (obj *{{.Name}}) VisiblePropertys(typ int) []string {
 	if typ == 0 {
 		return []string{ {{range  .Propertys}}{{if eq (isprivate .Public) "true"}}
 		"{{.Name}}", {{end}} {{end}}
@@ -793,22 +793,22 @@ func (obj *{{.Name}}) GetVisiblePropertys(typ int) []string {
 	
 }
 //获取属性类型
-func (obj *{{.Name}}) GetPropertyType(p string) (int, string, error) {
+func (obj *{{.Name}}) PropertyType(p string) (int, string, error) {
 	switch p {
 	{{range .Propertys}}case "{{.Name}}":
 		return DT_{{toupper .Type}}, "{{.Type}}", nil
 	{{end}}default:
-	{{if .Base}}	return obj.BaseObj.GetPropertyType(p){{else}}	return DT_NONE, "", ErrPropertyNotFound{{end}}
+	{{if .Base}}	return obj.BaseObj.PropertyType(p){{else}}	return DT_NONE, "", ErrPropertyNotFound{{end}}
 	}
 }
 
 //通过属性名设置值
-func (obj *{{.Name}}) GetPropertyIndex(p string) (int, error) {
+func (obj *{{.Name}}) PropertyIndex(p string) (int, error) {
 	switch p {
 	{{range $idx, $val := .Propertys}}case "{{$val.Name}}":
 		return {{$idx}}, nil
 	{{end}}default:
-	{{if .Base}}	return obj.{{.Base}}.GetPropertyIndex(p){{else}}	return -1, ErrPropertyNotFound{{end}}
+	{{if .Base}}	return obj.{{.Base}}.PropertyIndex(p){{else}}	return -1, ErrPropertyNotFound{{end}}
 	}
 }
 
@@ -968,12 +968,12 @@ func (obj *{{$Obj}}) Set{{$prop.Name}}(v {{$prop.Type}}) {
 	} {{end}}{{end}}
 	
 	obj.{{$prop.Name}} = v	
-	if obj.prophooker != nil && obj.IsCritical({{$idx}}) && !obj.GetPropFlag({{$idx}}){
+	if obj.prophooker != nil && obj.IsCritical({{$idx}}) && !obj.PropFlag({{$idx}}){
 		obj.SetPropFlag({{$idx}}, true)
 		obj.prophooker.OnPropChange(obj, "{{$prop.Name}}", old)
 		obj.SetPropFlag({{$idx}}, false)
 	}{{if eq $prop.Name "Name"}}
-	obj.NameHash = Hash(v){{end}}{{if eq $prop.Realtime "true"}}{{if eq (isprivate $prop.Public) "true"}}
+	obj.NameHash_ = Hash(v){{end}}{{if eq $prop.Realtime "true"}}{{if eq (isprivate $prop.Public) "true"}}
 	if obj.propupdate != nil {
 		obj.propupdate.Update(obj, {{$idx}}, v)
 	} else {
@@ -1590,18 +1590,18 @@ func (obj *{{$Obj}}) initRec() {
 }
 
 //获取某个表格
-func (obj *{{$Obj}}) GetRec(rec string) Record {
+func (obj *{{$Obj}}) FindRec(rec string) Record {
 	switch rec { {{range .Records}}
 	case "{{.Name}}":
 		return &obj.{{.Name}}_r{{end}}
 	default:{{if .Base}}
-		return obj.BaseObj.GetRec(rec){{else}}
+		return obj.BaseObj.FindRec(rec){{else}}
 		return nil{{end}}
 	}
 }
 
 //获取所有表格名称
-func (obj *{{$Obj}}) GetRecNames() []string {
+func (obj *{{$Obj}}) RecordNames() []string {
 	return []string{ {{range $index, $ele := .Records}}{{if $index}},"{{$ele.Name}}"{{else}}"{{$ele.Name}}"{{end}}{{end}} }
 }
 
@@ -1645,8 +1645,8 @@ func (obj *{{$Obj}}) Copy(other Entity) error {
 	if t, ok := other.(*{{$Obj}}); ok {
 		//属性复制{{if not .Base}}
 		obj.DbId = t.DbId
-		obj.NameHash = t.NameHash
-		obj.IDHash = t.IDHash
+		obj.NameHash_ = t.NameHash_
+		obj.ConfigIdHash = t.ConfigIdHash
 		obj.uid = t.uid{{end}}
 		
 		{{range $k, $v := .Interfaces}}
@@ -1702,15 +1702,15 @@ func (obj *{{$Obj}}) SyncFromDb(data interface{}) bool{
 		}
 		}
 		{{end}}{{end}}
-		{{if not .Base}}obj.NameHash=Hash(obj.Name)
-		obj.IDHash=Hash(obj.ConfigId){{end}}
+		{{if not .Base}}obj.NameHash_=Hash(obj.Name)
+		obj.ConfigIdHash=Hash(obj.ConfigId){{end}}
 		return true
 	}
 
 	return false
 }
 
-func (obj *{{$Obj}}) GetSaveLoader() DBSaveLoader{
+func (obj *{{$Obj}}) SaveLoader() DBSaveLoader{
 	return &obj.{{$Obj}}_Save
 }
 
@@ -1736,11 +1736,11 @@ func (obj *{{$Obj}}) GobEncode() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = encoder.Encode(obj.NameHash)
+	err = encoder.Encode(obj.NameHash_)
 	if err != nil {
 		return nil, err
 	}
-	err = encoder.Encode(obj.IDHash)
+	err = encoder.Encode(obj.ConfigIdHash)
 	if err != nil {
 		return nil, err
 	}
@@ -1792,11 +1792,11 @@ func (obj *{{$Obj}}) GobDecode(buf []byte) error {
 	if err != nil {
 		return err
 	}	
-	err = decoder.Decode(&obj.NameHash)
+	err = decoder.Decode(&obj.NameHash_)
 	if err != nil {
 		return err
 	}
-	err = decoder.Decode(&obj.IDHash)
+	err = decoder.Decode(&obj.ConfigIdHash)
 	if err != nil {
 		return err
 	}
@@ -1839,7 +1839,7 @@ func (obj *{{$Obj}}) baseInit(dirty, modify, extra map[string]interface{}) {
 
 func (obj *{{$Obj}}) Serial()([]byte, error) {
 	ar := util.NewStoreArchiver(nil)
-	ps := obj.GetVisiblePropertys(0)
+	ps := obj.VisiblePropertys(0)
 	ar.Write(int16(len(ps)))
 	{{range  $idx, $p := .Propertys}}{{if eq (isprivate $p.Public) "true"}}
 	ar.Write(int16({{$idx}}))
@@ -1857,7 +1857,7 @@ func (obj *{{$Obj}}) SerialModify()([]byte, error) {
 		if !obj.PropertyIsPrivate(k) {
 			continue
 		}
-		idx, _ := obj.GetPropertyIndex(k)
+		idx, _ := obj.PropertyIndex(k)
 		
 		ar.Write(int16(idx))
 		ar.Write(v)
@@ -1867,7 +1867,7 @@ func (obj *{{$Obj}}) SerialModify()([]byte, error) {
 }
 
 func (obj *{{$Obj}}) IsSceneData(prop string) bool{
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return false
 	}
@@ -1898,7 +1898,7 @@ func (obj *{{$Obj}}) SyncFromSceneData(val interface{}) error {
 	return nil
 }
 
-func (obj *{{$Obj}}) GetSceneData() interface{} {
+func (obj *{{$Obj}}) SceneData() interface{} {
 	sd := &{{$Obj}}SceneData{}
 
 	//属性{{range  .Propertys}}{{if eq .SceneData "true"}}

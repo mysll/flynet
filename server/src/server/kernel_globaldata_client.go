@@ -31,7 +31,7 @@ func (gd *GlobalDataHelper) CreateGlobalData(sender rpc.Mailbox, msg *rpc.Messag
 	}
 
 	if gd.dataset != nil {
-		core.Destroy(gd.dataset.GetObjId())
+		core.Destroy(gd.dataset.ObjectId())
 	}
 	gd.dataset = ent
 	log.LogMessage("create global data succeed, version:", gd.dataversion)
@@ -143,7 +143,7 @@ func (gd *GlobalDataHelper) GlobalDataRecAppend(sender rpc.Mailbox, msg *rpc.Mes
 		return share.ERR_FUNC_BEGIN + 4, reply
 	}
 
-	rec := cld.GetRec(recname)
+	rec := cld.FindRec(recname)
 	if rec == nil {
 		return share.ERR_FUNC_BEGIN + 5, reply
 	}
@@ -187,7 +187,7 @@ func (gd *GlobalDataHelper) GlobalDataRecDelete(sender rpc.Mailbox, msg *rpc.Mes
 		return share.ERR_FUNC_BEGIN + 4, reply
 	}
 
-	rec := cld.GetRec(recname)
+	rec := cld.FindRec(recname)
 	if rec == nil {
 		return share.ERR_FUNC_BEGIN + 5, reply
 	}
@@ -227,7 +227,7 @@ func (gd *GlobalDataHelper) GlobalDataRecClear(sender rpc.Mailbox, msg *rpc.Mess
 		return share.ERR_FUNC_BEGIN + 4, reply
 	}
 
-	rec := cld.GetRec(recname)
+	rec := cld.FindRec(recname)
 	if rec == nil {
 		return share.ERR_FUNC_BEGIN + 5, reply
 	}
@@ -267,7 +267,7 @@ func (gd *GlobalDataHelper) GlobalDataRecModify(sender rpc.Mailbox, msg *rpc.Mes
 		return share.ERR_FUNC_BEGIN + 4, reply
 	}
 
-	rec := cld.GetRec(recname)
+	rec := cld.FindRec(recname)
 	if rec == nil {
 		return share.ERR_FUNC_BEGIN + 5, reply
 	}
@@ -309,7 +309,7 @@ func (gd *GlobalDataHelper) GlobalDataRecSetRow(sender rpc.Mailbox, msg *rpc.Mes
 		return share.ERR_FUNC_BEGIN + 4, reply
 	}
 
-	rec := cld.GetRec(recname)
+	rec := cld.FindRec(recname)
 	if rec == nil {
 		return share.ERR_FUNC_BEGIN + 5, reply
 	}

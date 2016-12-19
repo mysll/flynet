@@ -146,7 +146,7 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) (errc
 				continue
 			}
 
-			item.SetDbId(appendix.UID)
+			item.SetDBId(appendix.UID)
 			switch inst := item.(type) {
 			case *entity.Item:
 				inst.SetAmount(appendix.Amount)
@@ -154,7 +154,7 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) (errc
 			}
 
 			if Module.fc == nil {
-				Module.GetCore().Destroy(item.GetObjId())
+				Module.GetCore().Destroy(item.ObjectId())
 				flag = true
 				res = share.ERROR_SYSTEMERROR
 				break
@@ -162,15 +162,15 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) (errc
 
 			container := Module.fc(player, item)
 			if container == nil {
-				Module.GetCore().Destroy(item.GetObjId())
+				Module.GetCore().Destroy(item.ObjectId())
 				flag = true
 				res = share.ERROR_SYSTEMERROR
 				break
 			}
 
-			_, err = Module.GetCore().AddChild(container.GetObjId(), item.GetObjId(), -1)
+			_, err = Module.GetCore().AddChild(container.ObjectId(), item.ObjectId(), -1)
 			if err != nil {
-				Module.GetCore().Destroy(item.GetObjId())
+				Module.GetCore().Destroy(item.ObjectId())
 				flag = true
 				res = share.ERROR_CONTAINER_FULL
 				break

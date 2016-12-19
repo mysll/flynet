@@ -33,7 +33,7 @@ func (pl *PlayerLetter) OnTimer(self datatype.Entity, beat string, count int32, 
 		if db != nil {
 			server.NewDBWarp(db).LookLetter(
 				nil,
-				self.GetDbId(),
+				self.DBId(),
 				"DbBridge.LookLetterBack",
 				share.DBParams{"mailbox": rpc.NewMailBoxFromUid(self.UID())},
 			)

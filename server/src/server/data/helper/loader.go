@@ -16,7 +16,7 @@ var (
 )
 
 type PropSeter interface {
-	GetPropertyType(p string) (int, string, error)
+	PropertyType(p string) (int, string, error)
 	Set(p string, v interface{}) error
 }
 
@@ -242,7 +242,7 @@ func LoadFromConfig(id string, ent PropSeter) error {
 }
 
 func SetProp(ent PropSeter, name string, val string) error {
-	typ, _, err := ent.GetPropertyType(name)
+	typ, _, err := ent.PropertyType(name)
 	if err != nil {
 		return nil
 	}

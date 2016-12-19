@@ -46,14 +46,14 @@ func GetItemInfo(obj datatype.Entity, syncchild bool) (*datatype.EntityInfo, err
 		return nil, err
 	}
 	item.Type = obj.ObjTypeName()
-	item.Caps = obj.GetCapacity()
-	item.DbId = obj.GetDbId()
-	item.ObjId = obj.GetObjId()
-	item.Index = obj.GetIndex()
+	item.Caps = obj.Caps()
+	item.DbId = obj.DBId()
+	item.ObjId = obj.ObjectId()
+	item.Index = obj.ChildIndex()
 	item.Data = buffer.Bytes()
 
 	if syncchild {
-		ls := obj.GetChilds()
+		ls := obj.AllChilds()
 		if len(ls) > 0 {
 			item.Childs = make([]*datatype.EntityInfo, 0, len(ls))
 		}

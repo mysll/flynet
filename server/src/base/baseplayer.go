@@ -167,7 +167,7 @@ func (p *BasePlayer) DeletePlayer() {
 	if p.Entity != nil {
 		App.DetachPlayer(p.Entity)
 		p.Entity.SetQuiting()
-		App.Destroy(p.Entity.GetObjId())
+		App.Destroy(p.Entity.ObjectId())
 		log.LogInfo("player destroy:", p.ChooseRole, " session:", p.Session)
 	}
 	App.CancelTimer(p.saveid)
@@ -176,7 +176,7 @@ func (p *BasePlayer) DeletePlayer() {
 func (p *BasePlayer) PlayerReady() {
 
 	if p.LandTimes == 0 {
-		App.Command(p.Entity.GetObjId(), p.Entity.GetObjId(), share.PLAYER_FIRST_LAND, nil)
+		App.Command(p.Entity.ObjectId(), p.Entity.ObjectId(), share.PLAYER_FIRST_LAND, nil)
 	}
 
 	server.MailTo(nil, &p.Mailbox, "Role.Ready", &s2c.Void{})

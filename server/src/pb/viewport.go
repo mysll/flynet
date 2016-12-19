@@ -19,7 +19,7 @@ func (vt *PBViewportCodec) ViewportCreate(id int32, container Entity) interface{
 	msg := &s2c.CreateView{}
 	msg.Entity = proto.String(container.ObjTypeName())
 	msg.ViewId = proto.Int32(id)
-	msg.Capacity = proto.Int32(container.GetCapacity())
+	msg.Capacity = proto.Int32(container.Caps())
 	return msg
 }
 
@@ -67,7 +67,7 @@ func (vp *PBViewportCodec) OnUpdate(id int32, child Entity) interface{} {
 
 	msg := &s2c.ViewobjProperty{}
 	msg.ViewId = proto.Int32(id)
-	msg.Index = proto.Int32(int32(child.GetIndex()))
+	msg.Index = proto.Int32(int32(child.ChildIndex()))
 	msg.Props = data
 	return msg
 }

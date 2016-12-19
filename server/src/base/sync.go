@@ -20,8 +20,8 @@ func (t *Sync) RegisterCallback(s rpc.Servicer) {
 }
 
 func (s *Sync) getAllChilds(obj Entity) {
-	s.childs[obj.GetObjId()] = obj
-	cs := obj.GetChilds()
+	s.childs[obj.ObjectId()] = obj
+	cs := obj.AllChilds()
 	for _, c := range cs {
 		if c != nil {
 			s.getAllChilds(c)
@@ -32,7 +32,7 @@ func (s *Sync) sync(info *EntityInfo) (obj Entity, err error) {
 	if info.ObjId.IsNil() {
 		obj, err = App.CreateContainer(info.Type, int(info.Caps))
 		if err == nil {
-			s.newobj[info.ObjId] = obj.GetObjId()
+			s.newobj[info.ObjId] = obj.ObjectId()
 		}
 	} else {
 		obj = App.GetEntity(info.ObjId)

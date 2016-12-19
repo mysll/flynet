@@ -139,8 +139,8 @@ type BaseScene_t struct {
 	parent          Entity
 	ObjId           ObjectID
 	Deleted         bool
-	NameHash        int32
-	IDHash          int32
+	NameHash_       int32
+	ConfigIdHash    int32
 	ContainerInited bool
 	Index           int //在容器中的位置
 	Childs          []Entity
@@ -208,17 +208,17 @@ func (obj *BaseScene) IsQuiting() bool {
 	return obj.quiting
 }
 
-func (obj *BaseScene) GetConfig() string {
+func (obj *BaseScene) Config() string {
 	return obj.ConfigId
 }
 
 func (obj *BaseScene) SetConfig(config string) {
 	obj.ConfigId = config
-	obj.IDHash = Hash(config)
+	obj.ConfigIdHash = Hash(config)
 }
 
 func (obj *BaseScene) SetSaveFlag() {
-	root := obj.GetRoot()
+	root := obj.Root()
 	if root != nil {
 		root.SetSaveFlag()
 	} else {
@@ -293,42 +293,42 @@ func (obj *BaseScene) SetCapacity(capacity int32, initcap int32) {
 
 }
 
-func (obj *BaseScene) GetCapacity() int32 {
+func (obj *BaseScene) Caps() int32 {
 	return obj.Capacity
 }
 
 //获取实际的容量
-func (obj *BaseScene) GetRealCap() int32 {
+func (obj *BaseScene) RealCaps() int32 {
 	if !obj.ContainerInited {
 		return 0
 	}
 	return int32(len(obj.Childs))
 }
 
-func (obj *BaseScene) GetRoot() Entity {
+func (obj *BaseScene) Root() Entity {
 	var ent Entity
-	if obj.GetParent() == nil {
+	if obj.Parent() == nil {
 		return nil
 	}
 	ent = obj
 	for {
-		if ent.GetParent() == nil {
+		if ent.Parent() == nil {
 			break
 		}
-		if ent.GetParent().ObjType() == SCENE {
+		if ent.Parent().ObjType() == SCENE {
 			break
 		}
-		ent = ent.GetParent()
+		ent = ent.Parent()
 	}
 	return ent
 }
 
 //获取数据库id
-func (obj *BaseScene) GetDbId() uint64 {
+func (obj *BaseScene) DBId() uint64 {
 	return obj.DbId
 }
 
-func (obj *BaseScene) SetDbId(id uint64) {
+func (obj *BaseScene) SetDBId(id uint64) {
 	obj.DbId = id
 }
 
@@ -336,7 +336,7 @@ func (obj *BaseScene) SetParent(p Entity) {
 	obj.parent = p
 }
 
-func (obj *BaseScene) GetParent() Entity {
+func (obj *BaseScene) Parent() Entity {
 	return obj.parent
 }
 
@@ -344,7 +344,7 @@ func (obj *BaseScene) SetDeleted(d bool) {
 	obj.Deleted = d
 }
 
-func (obj *BaseScene) GetDeleted() bool {
+func (obj *BaseScene) IsDeleted() bool {
 	return obj.Deleted
 }
 
@@ -352,18 +352,18 @@ func (obj *BaseScene) SetObjId(id ObjectID) {
 	obj.ObjId = id
 }
 
-func (obj *BaseScene) GetObjId() ObjectID {
+func (obj *BaseScene) ObjectId() ObjectID {
 	return obj.ObjId
 }
 
 //设置名字Hash
 func (obj *BaseScene) SetNameHash(v int32) {
-	obj.NameHash = v
+	obj.NameHash_ = v
 }
 
 //获取名字Hash
-func (obj *BaseScene) GetNameHash() int32 {
-	return obj.NameHash
+func (obj *BaseScene) NameHash() int32 {
+	return obj.NameHash_
 }
 
 //名字比较
@@ -371,13 +371,13 @@ func (obj *BaseScene) NameEqual(name string) bool {
 	return obj.Name == name
 }
 
-//获取IDHash
-func (obj *BaseScene) GetIDHash() int32 {
-	return obj.IDHash
+//获取ConfigIdHash
+func (obj *BaseScene) ConfigHash() int32 {
+	return obj.ConfigIdHash
 }
 
 //ID比较
-func (obj *BaseScene) IDEqual(id string) bool {
+func (obj *BaseScene) ConfigIdEqual(id string) bool {
 	return obj.ConfigId == id
 }
 
@@ -387,10 +387,10 @@ func (obj *BaseScene) ChildCount() int {
 
 //移除对象
 func (obj *BaseScene) RemoveChild(de Entity) error {
-	idx := de.GetIndex()
+	idx := de.ChildIndex()
 	e := obj.GetChild(idx)
 
-	if e != nil && e.GetObjId().Equal(de.GetObjId()) {
+	if e != nil && e.ObjectId().Equal(de.ObjectId()) {
 		obj.Childs[idx] = nil
 		de.SetParent(nil)
 		obj.ChildNum--
@@ -401,12 +401,12 @@ func (obj *BaseScene) RemoveChild(de Entity) error {
 }
 
 //获取子对象
-func (obj *BaseScene) GetChilds() []Entity {
+func (obj *BaseScene) AllChilds() []Entity {
 	return obj.Childs
 }
 
 //获取容器中索引
-func (obj *BaseScene) GetIndex() int {
+func (obj *BaseScene) ChildIndex() int {
 	return obj.Index
 }
 
@@ -442,14 +442,14 @@ func (obj *BaseScene) AddChild(idx int, e Entity) (index int, err error) {
 				e.SetIndex(i)
 				e.SetParent(obj)
 				obj.ChildNum++
-				index = e.GetIndex()
+				index = e.ChildIndex()
 				return
 			}
 		}
 		obj.Childs = append(obj.Childs, e)
 		e.SetIndex(len(obj.Childs) - 1)
 		e.SetParent(obj)
-		index = e.GetIndex()
+		index = e.ChildIndex()
 		obj.ChildNum++
 		return
 	}
@@ -482,7 +482,7 @@ func (obj *BaseScene) AddChild(idx int, e Entity) (index int, err error) {
 	e.SetIndex(idx)
 	e.SetParent(obj)
 	obj.ChildNum++
-	index = e.GetIndex()
+	index = e.ChildIndex()
 	return
 
 }
@@ -499,38 +499,38 @@ func (obj *BaseScene) GetChild(idx int) Entity {
 }
 
 //通过ID获取子对象
-func (obj *BaseScene) GetChildByConfigId(id string) Entity {
+func (obj *BaseScene) FindChildByConfigId(id string) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
 	h := Hash(id)
 	for _, v := range obj.Childs {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return v
 		}
 	}
 	return nil
 }
-func (obj *BaseScene) GetFirstChildByConfigId(id string) (int, Entity) {
+func (obj *BaseScene) FindFirstChildByConfigId(id string) (int, Entity) {
 	if !obj.ContainerInited {
 		return -1, nil
 	}
 	h := Hash(id)
 	for k, v := range obj.Childs {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return k + 1, v
 		}
 	}
 	return -1, nil
 }
-func (obj *BaseScene) GetNextChildByConfigId(start int, id string) (int, Entity) {
+func (obj *BaseScene) NextChildByConfigId(start int, id string) (int, Entity) {
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
 	}
 	h := Hash(id)
 	for k, v := range obj.Childs[start:] {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return start + k + 1, v
 		}
 	}
@@ -538,38 +538,38 @@ func (obj *BaseScene) GetNextChildByConfigId(start int, id string) (int, Entity)
 }
 
 //通过名称获取子对象
-func (obj *BaseScene) GetChildByName(name string) Entity {
+func (obj *BaseScene) FindChildByName(name string) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
 	h := Hash(name)
 	for _, v := range obj.Childs {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return v
 		}
 	}
 	return nil
 }
-func (obj *BaseScene) GetFirstChild(name string) (int, Entity) {
+func (obj *BaseScene) FindFirstChildByName(name string) (int, Entity) {
 	if !obj.ContainerInited {
 		return -1, nil
 	}
 	h := Hash(name)
 	for k, v := range obj.Childs {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return k + 1, v
 		}
 	}
 	return -1, nil
 }
-func (obj *BaseScene) GetNextChild(start int, name string) (int, Entity) {
+func (obj *BaseScene) NextChildByName(start int, name string) (int, Entity) {
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
 	}
 	h := Hash(name)
 	for k, v := range obj.Childs[start:] {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return start + k + 1, v
 		}
 	}
@@ -610,14 +610,14 @@ func (obj *BaseScene) SetExtraData(key string, value interface{}) {
 	obj.ExtraData[key] = value
 }
 
-func (obj *BaseScene) GetExtraData(key string) interface{} {
+func (obj *BaseScene) FindExtraData(key string) interface{} {
 	if v, ok := obj.ExtraData[key]; ok {
 		return v
 	}
 	return nil
 }
 
-func (obj *BaseScene) GetAllExtraData() map[string]interface{} {
+func (obj *BaseScene) ExtraDatas() map[string]interface{} {
 	return obj.ExtraData
 }
 
@@ -661,7 +661,7 @@ func (obj *BaseScene) SetPropHook(hooker PropChanger) {
 	obj.prophooker = hooker
 }
 
-func (obj *BaseScene) GetPropFlag(idx int) bool {
+func (obj *BaseScene) PropFlag(idx int) bool {
 	index := idx / 64
 	bit := uint(idx) % 64
 	return obj.propflag[index]&(uint64(1)<<bit) != 0
@@ -684,7 +684,7 @@ func (obj *BaseScene) IsCritical(idx int) bool {
 }
 
 func (obj *BaseScene) SetCritical(prop string) {
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return
 	}
@@ -696,7 +696,7 @@ func (obj *BaseScene) SetCritical(prop string) {
 }
 
 func (obj *BaseScene) ClearCritical(prop string) {
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return
 	}
@@ -708,14 +708,14 @@ func (obj *BaseScene) ClearCritical(prop string) {
 }
 
 //获取所有属性
-func (obj *BaseScene) GetPropertys() []string {
+func (obj *BaseScene) Propertys() []string {
 	return []string{
 		"Name",
 	}
 }
 
 //获取所有可视属性
-func (obj *BaseScene) GetVisiblePropertys(typ int) []string {
+func (obj *BaseScene) VisiblePropertys(typ int) []string {
 	if typ == 0 {
 		return []string{}
 	} else {
@@ -725,7 +725,7 @@ func (obj *BaseScene) GetVisiblePropertys(typ int) []string {
 }
 
 //获取属性类型
-func (obj *BaseScene) GetPropertyType(p string) (int, string, error) {
+func (obj *BaseScene) PropertyType(p string) (int, string, error) {
 	switch p {
 	case "Name":
 		return DT_STRING, "string", nil
@@ -735,7 +735,7 @@ func (obj *BaseScene) GetPropertyType(p string) (int, string, error) {
 }
 
 //通过属性名设置值
-func (obj *BaseScene) GetPropertyIndex(p string) (int, error) {
+func (obj *BaseScene) PropertyIndex(p string) (int, error) {
 	switch p {
 	case "Name":
 		return 0, nil
@@ -880,12 +880,12 @@ func (obj *BaseScene) SetName(v string) {
 	}
 
 	obj.Name = v
-	if obj.prophooker != nil && obj.IsCritical(0) && !obj.GetPropFlag(0) {
+	if obj.prophooker != nil && obj.IsCritical(0) && !obj.PropFlag(0) {
 		obj.SetPropFlag(0, true)
 		obj.prophooker.OnPropChange(obj, "Name", old)
 		obj.SetPropFlag(0, false)
 	}
-	obj.NameHash = Hash(v)
+	obj.NameHash_ = Hash(v)
 
 	obj.setDirty("Name", v)
 }
@@ -899,7 +899,7 @@ func (obj *BaseScene) initRec() {
 }
 
 //获取某个表格
-func (obj *BaseScene) GetRec(rec string) Record {
+func (obj *BaseScene) FindRec(rec string) Record {
 	switch rec {
 	default:
 		return nil
@@ -907,7 +907,7 @@ func (obj *BaseScene) GetRec(rec string) Record {
 }
 
 //获取所有表格名称
-func (obj *BaseScene) GetRecNames() []string {
+func (obj *BaseScene) RecordNames() []string {
 	return []string{}
 }
 
@@ -945,8 +945,8 @@ func (obj *BaseScene) Copy(other Entity) error {
 	if t, ok := other.(*BaseScene); ok {
 		//属性复制
 		obj.DbId = t.DbId
-		obj.NameHash = t.NameHash
-		obj.IDHash = t.IDHash
+		obj.NameHash_ = t.NameHash_
+		obj.ConfigIdHash = t.ConfigIdHash
 		obj.uid = t.uid
 
 		obj.BaseScene_t = t.BaseScene_t
@@ -981,15 +981,15 @@ func (obj *BaseScene) SyncFromDb(data interface{}) bool {
 	if v, ok := data.(*BaseScene_Save); ok {
 		obj.BaseScene_Save.BaseScene_Save_Property = v.BaseScene_Save_Property
 
-		obj.NameHash = Hash(obj.Name)
-		obj.IDHash = Hash(obj.ConfigId)
+		obj.NameHash_ = Hash(obj.Name)
+		obj.ConfigIdHash = Hash(obj.ConfigId)
 		return true
 	}
 
 	return false
 }
 
-func (obj *BaseScene) GetSaveLoader() DBSaveLoader {
+func (obj *BaseScene) SaveLoader() DBSaveLoader {
 	return &obj.BaseScene_Save
 }
 
@@ -1010,11 +1010,11 @@ func (obj *BaseScene) GobEncode() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = encoder.Encode(obj.NameHash)
+	err = encoder.Encode(obj.NameHash_)
 	if err != nil {
 		return nil, err
 	}
-	err = encoder.Encode(obj.IDHash)
+	err = encoder.Encode(obj.ConfigIdHash)
 	if err != nil {
 		return nil, err
 	}
@@ -1052,11 +1052,11 @@ func (obj *BaseScene) GobDecode(buf []byte) error {
 	if err != nil {
 		return err
 	}
-	err = decoder.Decode(&obj.NameHash)
+	err = decoder.Decode(&obj.NameHash_)
 	if err != nil {
 		return err
 	}
-	err = decoder.Decode(&obj.IDHash)
+	err = decoder.Decode(&obj.ConfigIdHash)
 	if err != nil {
 		return err
 	}
@@ -1088,7 +1088,7 @@ func (obj *BaseScene) baseInit(dirty, modify, extra map[string]interface{}) {
 
 func (obj *BaseScene) Serial() ([]byte, error) {
 	ar := util.NewStoreArchiver(nil)
-	ps := obj.GetVisiblePropertys(0)
+	ps := obj.VisiblePropertys(0)
 	ar.Write(int16(len(ps)))
 
 	return ar.Data(), nil
@@ -1104,7 +1104,7 @@ func (obj *BaseScene) SerialModify() ([]byte, error) {
 		if !obj.PropertyIsPrivate(k) {
 			continue
 		}
-		idx, _ := obj.GetPropertyIndex(k)
+		idx, _ := obj.PropertyIndex(k)
 
 		ar.Write(int16(idx))
 		ar.Write(v)
@@ -1114,7 +1114,7 @@ func (obj *BaseScene) SerialModify() ([]byte, error) {
 }
 
 func (obj *BaseScene) IsSceneData(prop string) bool {
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return false
 	}
@@ -1133,7 +1133,7 @@ func (obj *BaseScene) SyncFromSceneData(val interface{}) error {
 	return nil
 }
 
-func (obj *BaseScene) GetSceneData() interface{} {
+func (obj *BaseScene) SceneData() interface{} {
 	sd := &BaseSceneSceneData{}
 
 	//属性

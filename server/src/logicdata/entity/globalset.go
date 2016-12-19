@@ -139,8 +139,8 @@ type GlobalSet_t struct {
 	parent          Entity
 	ObjId           ObjectID
 	Deleted         bool
-	NameHash        int32
-	IDHash          int32
+	NameHash_       int32
+	ConfigIdHash    int32
 	ContainerInited bool
 	Index           int //在容器中的位置
 	Childs          []Entity
@@ -208,17 +208,17 @@ func (obj *GlobalSet) IsQuiting() bool {
 	return obj.quiting
 }
 
-func (obj *GlobalSet) GetConfig() string {
+func (obj *GlobalSet) Config() string {
 	return obj.ConfigId
 }
 
 func (obj *GlobalSet) SetConfig(config string) {
 	obj.ConfigId = config
-	obj.IDHash = Hash(config)
+	obj.ConfigIdHash = Hash(config)
 }
 
 func (obj *GlobalSet) SetSaveFlag() {
-	root := obj.GetRoot()
+	root := obj.Root()
 	if root != nil {
 		root.SetSaveFlag()
 	} else {
@@ -293,42 +293,42 @@ func (obj *GlobalSet) SetCapacity(capacity int32, initcap int32) {
 
 }
 
-func (obj *GlobalSet) GetCapacity() int32 {
+func (obj *GlobalSet) Caps() int32 {
 	return obj.Capacity
 }
 
 //获取实际的容量
-func (obj *GlobalSet) GetRealCap() int32 {
+func (obj *GlobalSet) RealCaps() int32 {
 	if !obj.ContainerInited {
 		return 0
 	}
 	return int32(len(obj.Childs))
 }
 
-func (obj *GlobalSet) GetRoot() Entity {
+func (obj *GlobalSet) Root() Entity {
 	var ent Entity
-	if obj.GetParent() == nil {
+	if obj.Parent() == nil {
 		return nil
 	}
 	ent = obj
 	for {
-		if ent.GetParent() == nil {
+		if ent.Parent() == nil {
 			break
 		}
-		if ent.GetParent().ObjType() == SCENE {
+		if ent.Parent().ObjType() == SCENE {
 			break
 		}
-		ent = ent.GetParent()
+		ent = ent.Parent()
 	}
 	return ent
 }
 
 //获取数据库id
-func (obj *GlobalSet) GetDbId() uint64 {
+func (obj *GlobalSet) DBId() uint64 {
 	return obj.DbId
 }
 
-func (obj *GlobalSet) SetDbId(id uint64) {
+func (obj *GlobalSet) SetDBId(id uint64) {
 	obj.DbId = id
 }
 
@@ -336,7 +336,7 @@ func (obj *GlobalSet) SetParent(p Entity) {
 	obj.parent = p
 }
 
-func (obj *GlobalSet) GetParent() Entity {
+func (obj *GlobalSet) Parent() Entity {
 	return obj.parent
 }
 
@@ -344,7 +344,7 @@ func (obj *GlobalSet) SetDeleted(d bool) {
 	obj.Deleted = d
 }
 
-func (obj *GlobalSet) GetDeleted() bool {
+func (obj *GlobalSet) IsDeleted() bool {
 	return obj.Deleted
 }
 
@@ -352,18 +352,18 @@ func (obj *GlobalSet) SetObjId(id ObjectID) {
 	obj.ObjId = id
 }
 
-func (obj *GlobalSet) GetObjId() ObjectID {
+func (obj *GlobalSet) ObjectId() ObjectID {
 	return obj.ObjId
 }
 
 //设置名字Hash
 func (obj *GlobalSet) SetNameHash(v int32) {
-	obj.NameHash = v
+	obj.NameHash_ = v
 }
 
 //获取名字Hash
-func (obj *GlobalSet) GetNameHash() int32 {
-	return obj.NameHash
+func (obj *GlobalSet) NameHash() int32 {
+	return obj.NameHash_
 }
 
 //名字比较
@@ -371,13 +371,13 @@ func (obj *GlobalSet) NameEqual(name string) bool {
 	return obj.Name == name
 }
 
-//获取IDHash
-func (obj *GlobalSet) GetIDHash() int32 {
-	return obj.IDHash
+//获取ConfigIdHash
+func (obj *GlobalSet) ConfigHash() int32 {
+	return obj.ConfigIdHash
 }
 
 //ID比较
-func (obj *GlobalSet) IDEqual(id string) bool {
+func (obj *GlobalSet) ConfigIdEqual(id string) bool {
 	return obj.ConfigId == id
 }
 
@@ -387,10 +387,10 @@ func (obj *GlobalSet) ChildCount() int {
 
 //移除对象
 func (obj *GlobalSet) RemoveChild(de Entity) error {
-	idx := de.GetIndex()
+	idx := de.ChildIndex()
 	e := obj.GetChild(idx)
 
-	if e != nil && e.GetObjId().Equal(de.GetObjId()) {
+	if e != nil && e.ObjectId().Equal(de.ObjectId()) {
 		obj.Childs[idx] = nil
 		de.SetParent(nil)
 		obj.ChildNum--
@@ -401,12 +401,12 @@ func (obj *GlobalSet) RemoveChild(de Entity) error {
 }
 
 //获取子对象
-func (obj *GlobalSet) GetChilds() []Entity {
+func (obj *GlobalSet) AllChilds() []Entity {
 	return obj.Childs
 }
 
 //获取容器中索引
-func (obj *GlobalSet) GetIndex() int {
+func (obj *GlobalSet) ChildIndex() int {
 	return obj.Index
 }
 
@@ -442,14 +442,14 @@ func (obj *GlobalSet) AddChild(idx int, e Entity) (index int, err error) {
 				e.SetIndex(i)
 				e.SetParent(obj)
 				obj.ChildNum++
-				index = e.GetIndex()
+				index = e.ChildIndex()
 				return
 			}
 		}
 		obj.Childs = append(obj.Childs, e)
 		e.SetIndex(len(obj.Childs) - 1)
 		e.SetParent(obj)
-		index = e.GetIndex()
+		index = e.ChildIndex()
 		obj.ChildNum++
 		return
 	}
@@ -482,7 +482,7 @@ func (obj *GlobalSet) AddChild(idx int, e Entity) (index int, err error) {
 	e.SetIndex(idx)
 	e.SetParent(obj)
 	obj.ChildNum++
-	index = e.GetIndex()
+	index = e.ChildIndex()
 	return
 
 }
@@ -499,38 +499,38 @@ func (obj *GlobalSet) GetChild(idx int) Entity {
 }
 
 //通过ID获取子对象
-func (obj *GlobalSet) GetChildByConfigId(id string) Entity {
+func (obj *GlobalSet) FindChildByConfigId(id string) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
 	h := Hash(id)
 	for _, v := range obj.Childs {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return v
 		}
 	}
 	return nil
 }
-func (obj *GlobalSet) GetFirstChildByConfigId(id string) (int, Entity) {
+func (obj *GlobalSet) FindFirstChildByConfigId(id string) (int, Entity) {
 	if !obj.ContainerInited {
 		return -1, nil
 	}
 	h := Hash(id)
 	for k, v := range obj.Childs {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return k + 1, v
 		}
 	}
 	return -1, nil
 }
-func (obj *GlobalSet) GetNextChildByConfigId(start int, id string) (int, Entity) {
+func (obj *GlobalSet) NextChildByConfigId(start int, id string) (int, Entity) {
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
 	}
 	h := Hash(id)
 	for k, v := range obj.Childs[start:] {
-		if (v != nil) && (v.GetIDHash() == h) && v.IDEqual(id) {
+		if (v != nil) && (v.ConfigHash() == h) && v.ConfigIdEqual(id) {
 			return start + k + 1, v
 		}
 	}
@@ -538,38 +538,38 @@ func (obj *GlobalSet) GetNextChildByConfigId(start int, id string) (int, Entity)
 }
 
 //通过名称获取子对象
-func (obj *GlobalSet) GetChildByName(name string) Entity {
+func (obj *GlobalSet) FindChildByName(name string) Entity {
 	if !obj.ContainerInited {
 		return nil
 	}
 	h := Hash(name)
 	for _, v := range obj.Childs {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return v
 		}
 	}
 	return nil
 }
-func (obj *GlobalSet) GetFirstChild(name string) (int, Entity) {
+func (obj *GlobalSet) FindFirstChildByName(name string) (int, Entity) {
 	if !obj.ContainerInited {
 		return -1, nil
 	}
 	h := Hash(name)
 	for k, v := range obj.Childs {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return k + 1, v
 		}
 	}
 	return -1, nil
 }
-func (obj *GlobalSet) GetNextChild(start int, name string) (int, Entity) {
+func (obj *GlobalSet) NextChildByName(start int, name string) (int, Entity) {
 
 	if !obj.ContainerInited || start == -1 || start >= len(obj.Childs) {
 		return -1, nil
 	}
 	h := Hash(name)
 	for k, v := range obj.Childs[start:] {
-		if (v != nil) && (v.GetNameHash() == h) && v.NameEqual(name) {
+		if (v != nil) && (v.NameHash() == h) && v.NameEqual(name) {
 			return start + k + 1, v
 		}
 	}
@@ -610,14 +610,14 @@ func (obj *GlobalSet) SetExtraData(key string, value interface{}) {
 	obj.ExtraData[key] = value
 }
 
-func (obj *GlobalSet) GetExtraData(key string) interface{} {
+func (obj *GlobalSet) FindExtraData(key string) interface{} {
 	if v, ok := obj.ExtraData[key]; ok {
 		return v
 	}
 	return nil
 }
 
-func (obj *GlobalSet) GetAllExtraData() map[string]interface{} {
+func (obj *GlobalSet) ExtraDatas() map[string]interface{} {
 	return obj.ExtraData
 }
 
@@ -661,7 +661,7 @@ func (obj *GlobalSet) SetPropHook(hooker PropChanger) {
 	obj.prophooker = hooker
 }
 
-func (obj *GlobalSet) GetPropFlag(idx int) bool {
+func (obj *GlobalSet) PropFlag(idx int) bool {
 	index := idx / 64
 	bit := uint(idx) % 64
 	return obj.propflag[index]&(uint64(1)<<bit) != 0
@@ -684,7 +684,7 @@ func (obj *GlobalSet) IsCritical(idx int) bool {
 }
 
 func (obj *GlobalSet) SetCritical(prop string) {
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return
 	}
@@ -696,7 +696,7 @@ func (obj *GlobalSet) SetCritical(prop string) {
 }
 
 func (obj *GlobalSet) ClearCritical(prop string) {
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return
 	}
@@ -708,14 +708,14 @@ func (obj *GlobalSet) ClearCritical(prop string) {
 }
 
 //获取所有属性
-func (obj *GlobalSet) GetPropertys() []string {
+func (obj *GlobalSet) Propertys() []string {
 	return []string{
 		"Name",
 	}
 }
 
 //获取所有可视属性
-func (obj *GlobalSet) GetVisiblePropertys(typ int) []string {
+func (obj *GlobalSet) VisiblePropertys(typ int) []string {
 	if typ == 0 {
 		return []string{}
 	} else {
@@ -725,7 +725,7 @@ func (obj *GlobalSet) GetVisiblePropertys(typ int) []string {
 }
 
 //获取属性类型
-func (obj *GlobalSet) GetPropertyType(p string) (int, string, error) {
+func (obj *GlobalSet) PropertyType(p string) (int, string, error) {
 	switch p {
 	case "Name":
 		return DT_STRING, "string", nil
@@ -735,7 +735,7 @@ func (obj *GlobalSet) GetPropertyType(p string) (int, string, error) {
 }
 
 //通过属性名设置值
-func (obj *GlobalSet) GetPropertyIndex(p string) (int, error) {
+func (obj *GlobalSet) PropertyIndex(p string) (int, error) {
 	switch p {
 	case "Name":
 		return 0, nil
@@ -876,12 +876,12 @@ func (obj *GlobalSet) SetName(v string) {
 	old := obj.Name
 
 	obj.Name = v
-	if obj.prophooker != nil && obj.IsCritical(0) && !obj.GetPropFlag(0) {
+	if obj.prophooker != nil && obj.IsCritical(0) && !obj.PropFlag(0) {
 		obj.SetPropFlag(0, true)
 		obj.prophooker.OnPropChange(obj, "Name", old)
 		obj.SetPropFlag(0, false)
 	}
-	obj.NameHash = Hash(v)
+	obj.NameHash_ = Hash(v)
 
 	obj.setDirty("Name", v)
 }
@@ -895,7 +895,7 @@ func (obj *GlobalSet) initRec() {
 }
 
 //获取某个表格
-func (obj *GlobalSet) GetRec(rec string) Record {
+func (obj *GlobalSet) FindRec(rec string) Record {
 	switch rec {
 	default:
 		return nil
@@ -903,7 +903,7 @@ func (obj *GlobalSet) GetRec(rec string) Record {
 }
 
 //获取所有表格名称
-func (obj *GlobalSet) GetRecNames() []string {
+func (obj *GlobalSet) RecordNames() []string {
 	return []string{}
 }
 
@@ -941,8 +941,8 @@ func (obj *GlobalSet) Copy(other Entity) error {
 	if t, ok := other.(*GlobalSet); ok {
 		//属性复制
 		obj.DbId = t.DbId
-		obj.NameHash = t.NameHash
-		obj.IDHash = t.IDHash
+		obj.NameHash_ = t.NameHash_
+		obj.ConfigIdHash = t.ConfigIdHash
 		obj.uid = t.uid
 
 		obj.GlobalSet_t = t.GlobalSet_t
@@ -977,15 +977,15 @@ func (obj *GlobalSet) SyncFromDb(data interface{}) bool {
 	if v, ok := data.(*GlobalSet_Save); ok {
 		obj.GlobalSet_Save.GlobalSet_Save_Property = v.GlobalSet_Save_Property
 
-		obj.NameHash = Hash(obj.Name)
-		obj.IDHash = Hash(obj.ConfigId)
+		obj.NameHash_ = Hash(obj.Name)
+		obj.ConfigIdHash = Hash(obj.ConfigId)
 		return true
 	}
 
 	return false
 }
 
-func (obj *GlobalSet) GetSaveLoader() DBSaveLoader {
+func (obj *GlobalSet) SaveLoader() DBSaveLoader {
 	return &obj.GlobalSet_Save
 }
 
@@ -1006,11 +1006,11 @@ func (obj *GlobalSet) GobEncode() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = encoder.Encode(obj.NameHash)
+	err = encoder.Encode(obj.NameHash_)
 	if err != nil {
 		return nil, err
 	}
-	err = encoder.Encode(obj.IDHash)
+	err = encoder.Encode(obj.ConfigIdHash)
 	if err != nil {
 		return nil, err
 	}
@@ -1048,11 +1048,11 @@ func (obj *GlobalSet) GobDecode(buf []byte) error {
 	if err != nil {
 		return err
 	}
-	err = decoder.Decode(&obj.NameHash)
+	err = decoder.Decode(&obj.NameHash_)
 	if err != nil {
 		return err
 	}
-	err = decoder.Decode(&obj.IDHash)
+	err = decoder.Decode(&obj.ConfigIdHash)
 	if err != nil {
 		return err
 	}
@@ -1084,7 +1084,7 @@ func (obj *GlobalSet) baseInit(dirty, modify, extra map[string]interface{}) {
 
 func (obj *GlobalSet) Serial() ([]byte, error) {
 	ar := util.NewStoreArchiver(nil)
-	ps := obj.GetVisiblePropertys(0)
+	ps := obj.VisiblePropertys(0)
 	ar.Write(int16(len(ps)))
 
 	return ar.Data(), nil
@@ -1100,7 +1100,7 @@ func (obj *GlobalSet) SerialModify() ([]byte, error) {
 		if !obj.PropertyIsPrivate(k) {
 			continue
 		}
-		idx, _ := obj.GetPropertyIndex(k)
+		idx, _ := obj.PropertyIndex(k)
 
 		ar.Write(int16(idx))
 		ar.Write(v)
@@ -1110,7 +1110,7 @@ func (obj *GlobalSet) SerialModify() ([]byte, error) {
 }
 
 func (obj *GlobalSet) IsSceneData(prop string) bool {
-	idx, err := obj.GetPropertyIndex(prop)
+	idx, err := obj.PropertyIndex(prop)
 	if err != nil {
 		return false
 	}
@@ -1129,7 +1129,7 @@ func (obj *GlobalSet) SyncFromSceneData(val interface{}) error {
 	return nil
 }
 
-func (obj *GlobalSet) GetSceneData() interface{} {
+func (obj *GlobalSet) SceneData() interface{} {
 	sd := &GlobalSetSceneData{}
 
 	//属性

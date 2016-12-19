@@ -35,9 +35,9 @@ func NewTableTrans(mb rpc.Mailbox) *TableTrans {
 
 func (ts *TableTrans) SyncTable(player datatype.Entity) {
 
-	recs := player.GetRecNames()
+	recs := player.RecordNames()
 	for _, r := range recs {
-		rec := player.GetRec(r)
+		rec := player.FindRec(r)
 		if !rec.IsVisible() {
 			continue
 		}

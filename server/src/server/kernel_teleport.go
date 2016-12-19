@@ -44,7 +44,7 @@ func (t *TeleportHelper) TeleportPlayerByBase(sender rpc.Mailbox, msg *rpc.Messa
 		params = args[1].([]interface{})
 	}
 	if !core.apper.OnTeleportFromBase(params, pl) {
-		core.Destroy(pl.GetObjId())
+		core.Destroy(pl.ObjectId())
 		return share.ERR_REPLY_FAILED, reply
 	}
 
@@ -108,7 +108,7 @@ func (t *TeleportHelper) teleport(app *RemoteApp, player datatype.Entity, mailbo
 
 //传送回base
 func (t *TeleportHelper) teleportToBase(app *RemoteApp, object datatype.Entity, mailbox rpc.Mailbox, args ...interface{}) error {
-	sd := object.GetSceneData()
+	sd := object.SceneData()
 	infos := make([]interface{}, 0, len(args)+1)
 	infos = append(infos, sd)
 	infos = append(infos, args)

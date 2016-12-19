@@ -53,7 +53,7 @@ func (p *Pool) Free(e datatype.Entity) {
 
 //释放对象，如果有子对象一并释放
 func (p *Pool) FreeObj(e datatype.Entity) {
-	chds := e.GetChilds()
+	chds := e.AllChilds()
 	for _, ch := range chds {
 		if ch != nil {
 			p.FreeObj(ch)

@@ -58,7 +58,7 @@ func (slot *beatSlot) Run(t time.Time) {
 					}
 				}
 
-				if tick.ent == nil || tick.ent.GetDeleted() {
+				if tick.ent == nil || tick.ent.IsDeleted() {
 					tick.deleted = true
 				} else {
 					callee := GetCallee(tick.ent.ObjTypeName())
@@ -174,7 +174,7 @@ func (this *SceneBeat) Find(oid ObjectID, beat string) bool {
 }
 
 func (this *SceneBeat) Add(obj Entity, beat string, t time.Duration, count int32, param interface{}) bool {
-	oid := obj.GetObjId()
+	oid := obj.ObjectId()
 	if this.find(oid, beat) != nil {
 		log.LogError("heartbeat already add", beat)
 		return false
@@ -253,7 +253,7 @@ func (this *SceneBeat) Deatch(object Entity) bool {
 		return false
 	}
 
-	id := object.GetObjId()
+	id := object.ObjectId()
 	if beats, ok := this.beatHash[id.Index]; ok {
 		if len(beats) == 0 {
 			return true

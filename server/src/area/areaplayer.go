@@ -42,7 +42,7 @@ func (a *AreaPlayer) LoadPlayer(mailbox rpc.Mailbox, data *EntityInfo) error {
 	nameinter, err := ent.Get("Name")
 	if err != nil {
 		log.LogError(err)
-		App.Destroy(ent.GetObjId())
+		App.Destroy(ent.ObjectId())
 		return err
 	}
 	name := nameinter.(string)
@@ -96,7 +96,7 @@ func (a *AreaPlayer) RemovePlayer(mailbox rpc.Mailbox) bool {
 
 func (a *AreaPlayer) DeletePlayer() {
 	if a.Entity != nil {
-		App.Destroy(a.Entity.GetObjId())
+		App.Destroy(a.Entity.ObjectId())
 	}
 }
 

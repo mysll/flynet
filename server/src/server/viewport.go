@@ -60,7 +60,7 @@ func (vp *Viewport) AddViewport(id int32, container Entity) error {
 		return fmt.Errorf("container is nil")
 	}
 
-	if container.GetCapacity() == -1 {
+	if container.Caps() == -1 {
 		return fmt.Errorf("container capacity not set")
 	}
 
@@ -89,7 +89,7 @@ func (vp *Viewport) ViewportCreate(id int32) {
 		return
 	}
 	MailTo(nil, &vp.mailbox, "Viewport.Create", msg)
-	childs := vd.Container.GetCapacity()
+	childs := vd.Container.Caps()
 	for index := int32(0); index < childs; index++ {
 		vp.ViewportNotifyAdd(id, index)
 	}
@@ -160,7 +160,7 @@ func (vp *Viewport) ViewportNotifyExchange(srcid int32, src int32, destid int32,
 
 func (vp *Viewport) OnUpdate() {
 	for _, vd := range vp.Views {
-		childs := vd.Container.GetChilds()
+		childs := vd.Container.AllChilds()
 		for _, child := range childs {
 			if child == nil {
 				continue

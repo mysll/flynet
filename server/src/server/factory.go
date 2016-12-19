@@ -48,7 +48,7 @@ func (f *Factory) Create(typ string) (ent Entity, err error) {
 //通过id获取一个对象
 func (f *Factory) Find(id ObjectID) Entity {
 	if e, ok := f.objects[id.Index]; ok {
-		if e.GetDeleted() || !e.GetObjId().Equal(id) {
+		if e.IsDeleted() || !e.ObjectId().Equal(id) {
 			return nil
 		}
 		return e
@@ -60,7 +60,7 @@ func (f *Factory) Find(id ObjectID) Entity {
 //销毁一个对象
 func (f *Factory) Destroy(id ObjectID) {
 	if e, ok := f.objects[id.Index]; ok {
-		if e.GetDeleted() || !e.GetObjId().Equal(id) {
+		if e.IsDeleted() || !e.ObjectId().Equal(id) {
 			return
 		}
 		f.destroyObj(e)
@@ -69,24 +69,24 @@ func (f *Factory) Destroy(id ObjectID) {
 
 func (f *Factory) destroyObj(obj Entity) {
 	//查找是否有子对象，一并删除
-	chs := obj.GetChilds()
+	chs := obj.AllChilds()
 	for _, c := range chs {
 		if c != nil {
 			f.destroyObj(c)
 		}
 	}
-	parent := obj.GetParent()
+	parent := obj.Parent()
 	if parent != nil {
 		parent.RemoveChild(obj)
 	}
 	obj.ClearChilds()
 	obj.SetDeleted(true)
-	f.deletes.PushBack(obj.GetObjId().Index)
+	f.deletes.PushBack(obj.ObjectId().Index)
 }
 
 func (f *Factory) destroySelf(obj Entity) {
 	obj.SetDeleted(true)
-	f.deletes.PushBack(obj.GetObjId().Index)
+	f.deletes.PushBack(obj.ObjectId().Index)
 }
 
 func (f *Factory) realDestroy(id int32) {

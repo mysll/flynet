@@ -180,7 +180,7 @@ type LoadUserBak struct {
 func GetSaveData(ent datatype.Entity) *DbSave {
 	data := &DbSave{}
 	data.Data = GetEntityData(ent, false, 0)
-	roleinfo := ent.GetExtraData("roleinfo")
+	roleinfo := ent.FindExtraData("roleinfo")
 	if roleinfo != nil {
 		data.RoleInfo = roleinfo.(string)
 	}
@@ -194,9 +194,9 @@ func GetEntityData(ent datatype.Entity, base bool, depth int) *SaveEntity {
 	s := &SaveEntity{}
 	ent.SyncToDb()
 	s.Typ = ent.ObjTypeName()
-	s.DBId = ent.GetDbId()
-	s.Obj = ent.GetSaveLoader()
-	s.Index = ent.GetIndex()
+	s.DBId = ent.DBId()
+	s.Obj = ent.SaveLoader()
+	s.Index = ent.ChildIndex()
 	if ent.Base() != nil {
 		s.Base = GetEntityData(ent.Base(), true, depth)
 	}
@@ -207,7 +207,7 @@ func GetEntityData(ent datatype.Entity, base bool, depth int) *SaveEntity {
 		return s
 	}
 
-	clds := ent.GetChilds()
+	clds := ent.AllChilds()
 	l := len(clds)
 	if l > 0 {
 		s.Childs = make([]*SaveEntity, 0, l)
