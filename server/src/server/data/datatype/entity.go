@@ -41,7 +41,7 @@ type DBSaveLoader interface {
 	Unmarshal(data map[string]interface{}) error
 }
 
-type Recorder interface {
+type Record interface {
 	//获取表格名
 	GetName() string
 	//获取表最大行数
@@ -83,31 +83,35 @@ type Recorder interface {
 	Del(row int)
 	//清除表格内容
 	Clear()
-	//同步
-	SetSyncer(s TableSyncer)
-	GetSyncer() TableSyncer
+	//监视
+	SetMonitor(s TableMonitor)
+	Monitor() TableMonitor
 	//序列号表格
 	Serial() ([]byte, error)
 	//序列号一行
 	SerialRow(row int) ([]byte, error)
 }
 
-type TableSyncer interface {
-	RecAppend(self Entity, rec Recorder, row int)
-	RecDelete(self Entity, rec Recorder, row int)
-	RecClear(self Entity, rec Recorder)
-	RecModify(self Entity, rec Recorder, row, col int)
-	RecSetRow(self Entity, rec Recorder, row int)
+//表格变动监视
+type TableMonitor interface {
+	RecAppend(self Entity, rec Record, row int)
+	RecDelete(self Entity, rec Record, row int)
+	RecClear(self Entity, rec Record)
+	RecModify(self Entity, rec Record, row, col int)
+	RecSetRow(self Entity, rec Record, row int)
 }
 
-type PropSyncer interface {
+//属性更新回调，主要针对客户端可视的属性，用来向客户端同步数据
+type PropUpdater interface {
 	Update(self Entity, index int16, value interface{})
 }
 
-type PropHooker interface {
+//属性变动回调，逻辑层挂勾后的属性回调的接口
+type PropChanger interface {
 	OnPropChange(object Entity, prop string, value interface{})
 }
 
+//entity序列化数据
 type EntityInfo struct {
 	Type   string
 	Caps   int32
@@ -129,10 +133,10 @@ type Entity interface {
 	SetInScene(v bool)
 	IsInScene() bool
 	//属性同步模块
-	SetPropSyncer(sync PropSyncer)
-	GetPropSyncer() PropSyncer
+	SetPropUpdate(sync PropUpdater)
+	PropUpdate() PropUpdater
 	//属性回调挂钩
-	SetPropHooker(hooker PropHooker)
+	SetPropHook(hooker PropChanger)
 	//设置属性标志(内部使用)
 	GetPropFlag(idx int) bool
 	SetPropFlag(idx int, flag bool)
@@ -269,7 +273,7 @@ type Entity interface {
 	//清除所有修改标志
 	ClearModify()
 	//通过表格名获取表格
-	GetRec(rec string) Recorder
+	GetRec(rec string) Record
 	//获取所有表格的名字
 	GetRecNames() []string
 	//清空对象所有数据

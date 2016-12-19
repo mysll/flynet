@@ -158,8 +158,8 @@ type GlobalSet struct {
 	ExtraData    map[string]interface{}
 	loading      bool
 	quiting      bool
-	propsyncer   PropSyncer
-	prophooker   PropHooker
+	propupdate   PropUpdater
+	prophooker   PropChanger
 	propcritical []uint64
 	propflag     []uint64
 
@@ -648,16 +648,16 @@ func (obj *GlobalSet) ObjTypeName() string {
 	return "GlobalSet"
 }
 
-func (obj *GlobalSet) SetPropSyncer(sync PropSyncer) {
-	obj.propsyncer = sync
+func (obj *GlobalSet) SetPropUpdate(sync PropUpdater) {
+	obj.propupdate = sync
 }
 
-func (obj *GlobalSet) GetPropSyncer() PropSyncer {
-	return obj.propsyncer
+func (obj *GlobalSet) PropUpdate() PropUpdater {
+	return obj.propupdate
 }
 
 //属性回调接口
-func (obj *GlobalSet) SetPropHooker(hooker PropHooker) {
+func (obj *GlobalSet) SetPropHook(hooker PropChanger) {
 	obj.prophooker = hooker
 }
 
@@ -895,7 +895,7 @@ func (obj *GlobalSet) initRec() {
 }
 
 //获取某个表格
-func (obj *GlobalSet) GetRec(rec string) Recorder {
+func (obj *GlobalSet) GetRec(rec string) Record {
 	switch rec {
 	default:
 		return nil

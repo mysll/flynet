@@ -161,8 +161,8 @@ type Item struct {
 	ExtraData    map[string]interface{}
 	loading      bool
 	quiting      bool
-	propsyncer   PropSyncer
-	prophooker   PropHooker
+	propupdate   PropUpdater
+	prophooker   PropChanger
 	propcritical []uint64
 	propflag     []uint64
 
@@ -651,16 +651,16 @@ func (obj *Item) ObjTypeName() string {
 	return "Item"
 }
 
-func (obj *Item) SetPropSyncer(sync PropSyncer) {
-	obj.propsyncer = sync
+func (obj *Item) SetPropUpdate(sync PropUpdater) {
+	obj.propupdate = sync
 }
 
-func (obj *Item) GetPropSyncer() PropSyncer {
-	return obj.propsyncer
+func (obj *Item) PropUpdate() PropUpdater {
+	return obj.propupdate
 }
 
 //属性回调接口
-func (obj *Item) SetPropHooker(hooker PropHooker) {
+func (obj *Item) SetPropHook(hooker PropChanger) {
 	obj.prophooker = hooker
 }
 
@@ -1090,7 +1090,7 @@ func (obj *Item) initRec() {
 }
 
 //获取某个表格
-func (obj *Item) GetRec(rec string) Recorder {
+func (obj *Item) GetRec(rec string) Record {
 	switch rec {
 	default:
 		return nil

@@ -110,7 +110,7 @@ func (k *Kernel) CreateRole(typ string, args interface{}) (ent Entity, err error
 	if err != nil {
 		return
 	}
-	ent.SetPropHooker(k)
+	ent.SetPropHook(k)
 	ent.SetCapacity(-1, 16)
 	callee := GetCallee("role")
 	res := 0
@@ -135,7 +135,7 @@ func (k *Kernel) CreateContainer(typ string, caps int) (ent Entity, err error) {
 	if err != nil {
 		return
 	}
-	ent.SetPropHooker(k)
+	ent.SetPropHook(k)
 	if caps > 0 {
 		ent.SetCapacity(int32(caps), int32(caps))
 	} else {
@@ -171,7 +171,7 @@ func (k *Kernel) CreateChildContainer(parent ObjectID, typ string, caps int, ind
 	if err != nil {
 		return
 	}
-	ent.SetPropHooker(k)
+	ent.SetPropHook(k)
 	if caps > 0 {
 		ent.SetCapacity(int32(caps), int32(caps))
 	} else {
@@ -455,7 +455,7 @@ func (k *Kernel) loadObj(parent Entity, data *share.SaveEntity) (ent Entity, err
 		log.LogError("load object failed:", err)
 		return
 	}
-	ent.SetPropHooker(k)
+	ent.SetPropHook(k)
 	if parent == nil {
 		ent.SetLoading(true)
 	}
@@ -588,7 +588,7 @@ func (k *Kernel) CreateFromConfig(configid string) (ent Entity, err error) {
 	if err != nil {
 		return
 	}
-	ent.SetPropHooker(k)
+	ent.SetPropHook(k)
 	res := 0
 	callee := GetCallee(typ)
 
@@ -1046,17 +1046,17 @@ func (k *Kernel) AttachPlayer(player Entity, mailbox rpc.Mailbox) error {
 		return err
 	}
 
-	if player.GetPropSyncer() != nil {
-		k.RemoveScheduler(player.GetPropSyncer().(*PropSync))
+	if player.PropUpdate() != nil {
+		k.RemoveScheduler(player.PropUpdate().(*PropSync))
 	}
 	propsync := NewPropSync(mailbox, player.GetObjId())
-	player.SetPropSyncer(propsync)
+	player.SetPropUpdate(propsync)
 	recs := player.GetRecNames()
-	tablesyncer := NewTableSync(mailbox)
+	tablesyncer := NewTableTrans(mailbox)
 	for _, r := range recs {
 		rec := player.GetRec(r)
 		if rec.IsVisible() {
-			rec.SetSyncer(tablesyncer)
+			rec.SetMonitor(tablesyncer)
 		}
 	}
 	tablesyncer.SyncTable(player)
@@ -1067,14 +1067,14 @@ func (k *Kernel) AttachPlayer(player Entity, mailbox rpc.Mailbox) error {
 
 //和client解绑
 func (k *Kernel) DetachPlayer(player Entity) {
-	if player.GetPropSyncer() != nil {
-		k.RemoveScheduler(player.GetPropSyncer().(*PropSync))
+	if player.PropUpdate() != nil {
+		k.RemoveScheduler(player.PropUpdate().(*PropSync))
 	}
-	player.SetPropSyncer(nil)
+	player.SetPropUpdate(nil)
 	recs := player.GetRecNames()
 	for _, r := range recs {
 		rec := player.GetRec(r)
-		rec.SetSyncer(nil)
+		rec.SetMonitor(nil)
 	}
 }
 

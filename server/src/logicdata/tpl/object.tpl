@@ -27,7 +27,7 @@ type {{$Obj}}{{.Name}} struct {
 	Cols    int `json:"-"`
 	Rows    []{{$Obj}}{{.Name}}Row
 	Dirty   bool	`json:"-"`
-	syncer  TableSyncer
+	monitor  TableMonitor
 	owner   *{{$Obj}}
 }
 {{end}}
@@ -203,8 +203,8 @@ type {{.Name}} struct {
 	ExtraData map[string]interface{}
 	loading bool
 	quiting bool
-	propsyncer PropSyncer
-	prophooker PropHooker
+	propupdate PropUpdater
+	prophooker PropChanger
 	propcritical []uint64
 	propflag []uint64
 	{{end}}
@@ -713,16 +713,16 @@ func (obj *{{.Name}}) ObjTypeName() string {
 	return "{{.Name}}"
 }
 
-func (obj *{{.Name}}) SetPropSyncer(sync PropSyncer) {
-	obj.propsyncer = sync
+func (obj *{{.Name}}) SetPropUpdate(sync PropUpdater) {
+	obj.propupdate = sync
 }
 
-func (obj *{{.Name}}) GetPropSyncer() PropSyncer {
-	return obj.propsyncer
+func (obj *{{.Name}}) PropUpdate() PropUpdater {
+	return obj.propupdate
 }
 
 //属性回调接口
-func (obj *{{.Name}}) SetPropHooker(hooker PropHooker) {
+func (obj *{{.Name}}) SetPropHook(hooker PropChanger) {
 	obj.prophooker = hooker	
 }
 
@@ -974,8 +974,8 @@ func (obj *{{$Obj}}) Set{{$prop.Name}}(v {{$prop.Type}}) {
 		obj.SetPropFlag({{$idx}}, false)
 	}{{if eq $prop.Name "Name"}}
 	obj.NameHash = Hash(v){{end}}{{if eq $prop.Realtime "true"}}{{if eq (isprivate $prop.Public) "true"}}
-	if obj.propsyncer != nil {
-		obj.propsyncer.Update(obj, {{$idx}}, v)
+	if obj.propupdate != nil {
+		obj.propupdate.Update(obj, {{$idx}}, v)
 	} else {
 		obj.setModify("{{$prop.Name}}", v)
 	}{{end}}{{else if $prop.Public}}
@@ -1163,12 +1163,12 @@ func (rec *{{$Obj}}{{.Name}}) ClearDirty() {
 	rec.Dirty = false
 }
 
-func (rec *{{$Obj}}{{.Name}}) SetSyncer(s TableSyncer){
-	rec.syncer = s
+func (rec *{{$Obj}}{{.Name}}) SetMonitor(s TableMonitor){
+	rec.monitor = s
 }
 
-func (rec *{{$Obj}}{{.Name}}) GetSyncer() TableSyncer{
-	return rec.syncer
+func (rec *{{$Obj}}{{.Name}}) Monitor() TableMonitor{
+	return rec.monitor
 }
 
 //序列化
@@ -1218,8 +1218,8 @@ func (rec *{{$Obj}}{{.Name}}) Set(row, col int, val interface{}) error {
 			return ErrTypeMismatch
 		}{{end}}
 	}
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, col)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, col)
 	}
 	{{if eq .Save "true"}}rec.Dirty = true{{end}}
 	return nil
@@ -1285,8 +1285,8 @@ func (rec *{{$Obj}}{{$rec}}) Set{{$col.Name}}(row int, v {{$col.Type}}) error {
 
 	rec.Rows[row].{{$col.Name}} = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, {{$idx}})
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, {{$idx}})
 	}
 	return nil
 }
@@ -1329,8 +1329,8 @@ func (rec *{{$Obj}}{{.Name}}) SetRowInterface(row int, rowvalue interface{}) err
 
 	if value, ok  :=rowvalue.({{$Obj}}{{.Name}}Row);ok {
 		rec.Rows[row] = value
-		if rec.syncer != nil {
-			rec.syncer.RecSetRow(rec.owner, rec, row)
+		if rec.monitor != nil {
+			rec.monitor.RecSetRow(rec.owner, rec, row)
 		}
 		rec.Dirty = true
 		return nil
@@ -1369,8 +1369,8 @@ func (rec *{{$Obj}}{{.Name}}) SetRowValue(row int{{range .Columns}}, {{tolower .
 	{{range $idx, $c := .Columns}}
 	rec.Rows[row].{{$c.Name}}={{tolower $c.Name}}{{end}}
 
-	if rec.syncer != nil {
-		rec.syncer.RecSetRow(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecSetRow(rec.owner, rec, row)
 	}
 	rec.Dirty = true
 	return nil
@@ -1444,8 +1444,8 @@ func (rec *{{$Obj}}{{.Name}}) AddRow(row int) int {
 
 	}
 	if add != -1 {
-		if rec.syncer != nil {
-			rec.syncer.RecAppendrec.owner, rec, add)
+		if rec.monitor != nil {
+			rec.monitor.RecAppendrec.owner, rec, add)
 		}
 		rec.Dirty = true
 	}
@@ -1484,8 +1484,8 @@ func (rec *{{$Obj}}{{.Name}}) AddRowValue(row int {{range .Columns}}, {{tolower 
 
 	}
 	if add != -1 {
-		if rec.syncer != nil {
-			rec.syncer.RecAppend(rec.owner, rec, add)
+		if rec.monitor != nil {
+			rec.monitor.RecAppend(rec.owner, rec, add)
 		}
 		rec.Dirty = true
 	}
@@ -1546,8 +1546,8 @@ func (rec *{{$Obj}}{{.Name}}) Del(row int) {
 	rec.Rows = rec.Rows[:len(rec.Rows)-1]
 	rec.Dirty = true
 
-	if rec.syncer != nil {
-		rec.syncer.RecDelete(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecDelete(rec.owner, rec, row)
 	}
 }
 
@@ -1560,8 +1560,8 @@ func (rec *{{$Obj}}{{.Name}}) Clear() {
 	} {{end}}{{end}}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecClear(rec.owner, rec)
+	if rec.monitor != nil {
+		rec.monitor.RecClear(rec.owner, rec)
 	}
 }
 
@@ -1590,7 +1590,7 @@ func (obj *{{$Obj}}) initRec() {
 }
 
 //获取某个表格
-func (obj *{{$Obj}}) GetRec(rec string) Recorder {
+func (obj *{{$Obj}}) GetRec(rec string) Record {
 	switch rec { {{range .Records}}
 	case "{{.Name}}":
 		return &obj.{{.Name}}_r{{end}}
@@ -1625,7 +1625,7 @@ func (obj *{{$Obj}}) Reset() {
 	obj.{{$Obj}}Init()
 	//表格初始化{{range .Records}}	
 	obj.{{.Name}}_r.Clear()
-	obj.{{.Name}}_r.syncer = nil{{end}}
+	obj.{{.Name}}_r.monitor = nil{{end}}
 
 	{{if .Base}}
 	//基类初始化

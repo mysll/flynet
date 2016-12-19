@@ -158,8 +158,8 @@ type BaseScene struct {
 	ExtraData    map[string]interface{}
 	loading      bool
 	quiting      bool
-	propsyncer   PropSyncer
-	prophooker   PropHooker
+	propupdate   PropUpdater
+	prophooker   PropChanger
 	propcritical []uint64
 	propflag     []uint64
 
@@ -648,16 +648,16 @@ func (obj *BaseScene) ObjTypeName() string {
 	return "BaseScene"
 }
 
-func (obj *BaseScene) SetPropSyncer(sync PropSyncer) {
-	obj.propsyncer = sync
+func (obj *BaseScene) SetPropUpdate(sync PropUpdater) {
+	obj.propupdate = sync
 }
 
-func (obj *BaseScene) GetPropSyncer() PropSyncer {
-	return obj.propsyncer
+func (obj *BaseScene) PropUpdate() PropUpdater {
+	return obj.propupdate
 }
 
 //属性回调接口
-func (obj *BaseScene) SetPropHooker(hooker PropHooker) {
+func (obj *BaseScene) SetPropHook(hooker PropChanger) {
 	obj.prophooker = hooker
 }
 
@@ -899,7 +899,7 @@ func (obj *BaseScene) initRec() {
 }
 
 //获取某个表格
-func (obj *BaseScene) GetRec(rec string) Recorder {
+func (obj *BaseScene) GetRec(rec string) Record {
 	switch rec {
 	default:
 		return nil

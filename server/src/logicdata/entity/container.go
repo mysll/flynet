@@ -159,8 +159,8 @@ type Container struct {
 	ExtraData    map[string]interface{}
 	loading      bool
 	quiting      bool
-	propsyncer   PropSyncer
-	prophooker   PropHooker
+	propupdate   PropUpdater
+	prophooker   PropChanger
 	propcritical []uint64
 	propflag     []uint64
 
@@ -649,16 +649,16 @@ func (obj *Container) ObjTypeName() string {
 	return "Container"
 }
 
-func (obj *Container) SetPropSyncer(sync PropSyncer) {
-	obj.propsyncer = sync
+func (obj *Container) SetPropUpdate(sync PropUpdater) {
+	obj.propupdate = sync
 }
 
-func (obj *Container) GetPropSyncer() PropSyncer {
-	return obj.propsyncer
+func (obj *Container) PropUpdate() PropUpdater {
+	return obj.propupdate
 }
 
 //属性回调接口
-func (obj *Container) SetPropHooker(hooker PropHooker) {
+func (obj *Container) SetPropHook(hooker PropChanger) {
 	obj.prophooker = hooker
 }
 
@@ -964,7 +964,7 @@ func (obj *Container) initRec() {
 }
 
 //获取某个表格
-func (obj *Container) GetRec(rec string) Recorder {
+func (obj *Container) GetRec(rec string) Record {
 	switch rec {
 	default:
 		return nil

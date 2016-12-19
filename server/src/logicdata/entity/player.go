@@ -33,7 +33,7 @@ type PlayerMailBox struct {
 	Cols    int `json:"-"`
 	Rows    []PlayerMailBoxRow
 	Dirty   bool `json:"-"`
-	syncer  TableSyncer
+	monitor TableMonitor
 	owner   *Player
 }
 
@@ -49,7 +49,7 @@ type PlayerTaskAccepted struct {
 	Cols    int `json:"-"`
 	Rows    []PlayerTaskAcceptedRow
 	Dirty   bool `json:"-"`
-	syncer  TableSyncer
+	monitor TableMonitor
 	owner   *Player
 }
 
@@ -69,7 +69,7 @@ type PlayerTaskRecord struct {
 	Cols    int `json:"-"`
 	Rows    []PlayerTaskRecordRow
 	Dirty   bool `json:"-"`
-	syncer  TableSyncer
+	monitor TableMonitor
 	owner   *Player
 }
 
@@ -84,7 +84,7 @@ type PlayerTaskCanAccept struct {
 	Cols    int `json:"-"`
 	Rows    []PlayerTaskCanAcceptRow
 	Dirty   bool `json:"-"`
-	syncer  TableSyncer
+	monitor TableMonitor
 	owner   *Player
 }
 
@@ -101,7 +101,7 @@ type PlayerTaskTimeLimit struct {
 	Cols    int `json:"-"`
 	Rows    []PlayerTaskTimeLimitRow
 	Dirty   bool `json:"-"`
-	syncer  TableSyncer
+	monitor TableMonitor
 	owner   *Player
 }
 
@@ -118,7 +118,7 @@ type PlayerTaskGlobalRecord struct {
 	Cols    int `json:"-"`
 	Rows    []PlayerTaskGlobalRecordRow
 	Dirty   bool `json:"-"`
-	syncer  TableSyncer
+	monitor TableMonitor
 	owner   *Player
 }
 
@@ -135,7 +135,7 @@ type PlayerTaskPropRecord struct {
 	Cols    int `json:"-"`
 	Rows    []PlayerTaskPropRecordRow
 	Dirty   bool `json:"-"`
-	syncer  TableSyncer
+	monitor TableMonitor
 	owner   *Player
 }
 
@@ -392,8 +392,8 @@ type Player struct {
 	ExtraData    map[string]interface{}
 	loading      bool
 	quiting      bool
-	propsyncer   PropSyncer
-	prophooker   PropHooker
+	propupdate   PropUpdater
+	prophooker   PropChanger
 	propcritical []uint64
 	propflag     []uint64
 
@@ -891,16 +891,16 @@ func (obj *Player) ObjTypeName() string {
 	return "Player"
 }
 
-func (obj *Player) SetPropSyncer(sync PropSyncer) {
-	obj.propsyncer = sync
+func (obj *Player) SetPropUpdate(sync PropUpdater) {
+	obj.propupdate = sync
 }
 
-func (obj *Player) GetPropSyncer() PropSyncer {
-	return obj.propsyncer
+func (obj *Player) PropUpdate() PropUpdater {
+	return obj.propupdate
 }
 
 //属性回调接口
-func (obj *Player) SetPropHooker(hooker PropHooker) {
+func (obj *Player) SetPropHook(hooker PropChanger) {
 	obj.prophooker = hooker
 }
 
@@ -2031,12 +2031,12 @@ func (rec *PlayerMailBox) ClearDirty() {
 	rec.Dirty = false
 }
 
-func (rec *PlayerMailBox) SetSyncer(s TableSyncer) {
-	rec.syncer = s
+func (rec *PlayerMailBox) SetMonitor(s TableMonitor) {
+	rec.monitor = s
 }
 
-func (rec *PlayerMailBox) GetSyncer() TableSyncer {
-	return rec.syncer
+func (rec *PlayerMailBox) Monitor() TableMonitor {
+	return rec.monitor
 }
 
 //序列化
@@ -2156,8 +2156,8 @@ func (rec *PlayerMailBox) Set(row, col int, val interface{}) error {
 			return ErrTypeMismatch
 		}
 	}
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, col)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, col)
 	}
 	rec.Dirty = true
 	return nil
@@ -2237,8 +2237,8 @@ func (rec *PlayerMailBox) SetSource_uid(row int, v uint64) error {
 
 	rec.Rows[row].Source_uid = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 0)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 0)
 	}
 	return nil
 }
@@ -2290,8 +2290,8 @@ func (rec *PlayerMailBox) SetSource_name(row int, v string) error {
 
 	rec.Rows[row].Source_name = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 1)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 1)
 	}
 	return nil
 }
@@ -2343,8 +2343,8 @@ func (rec *PlayerMailBox) SetSendTime(row int, v int64) error {
 
 	rec.Rows[row].SendTime = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 2)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 2)
 	}
 	return nil
 }
@@ -2396,8 +2396,8 @@ func (rec *PlayerMailBox) SetTitle(row int, v string) error {
 
 	rec.Rows[row].Title = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 3)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 3)
 	}
 	return nil
 }
@@ -2449,8 +2449,8 @@ func (rec *PlayerMailBox) SetContent(row int, v string) error {
 
 	rec.Rows[row].Content = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 4)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 4)
 	}
 	return nil
 }
@@ -2502,8 +2502,8 @@ func (rec *PlayerMailBox) SetAppendix(row int, v string) error {
 
 	rec.Rows[row].Appendix = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 5)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 5)
 	}
 	return nil
 }
@@ -2555,8 +2555,8 @@ func (rec *PlayerMailBox) SetIsRead(row int, v int8) error {
 
 	rec.Rows[row].IsRead = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 6)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 6)
 	}
 	return nil
 }
@@ -2608,8 +2608,8 @@ func (rec *PlayerMailBox) SetSerial_no(row int, v uint64) error {
 
 	rec.Rows[row].Serial_no = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 7)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 7)
 	}
 	return nil
 }
@@ -2661,8 +2661,8 @@ func (rec *PlayerMailBox) SetMsgType(row int, v int32) error {
 
 	rec.Rows[row].MsgType = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 8)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 8)
 	}
 	return nil
 }
@@ -2725,8 +2725,8 @@ func (rec *PlayerMailBox) SetRowInterface(row int, rowvalue interface{}) error {
 
 	if value, ok := rowvalue.(PlayerMailBoxRow); ok {
 		rec.Rows[row] = value
-		if rec.syncer != nil {
-			rec.syncer.RecSetRow(rec.owner, rec, row)
+		if rec.monitor != nil {
+			rec.monitor.RecSetRow(rec.owner, rec, row)
 		}
 		rec.Dirty = true
 		return nil
@@ -2803,8 +2803,8 @@ func (rec *PlayerMailBox) SetRowValue(row int, source_uid uint64, source_name st
 	rec.Rows[row].Serial_no = serial_no
 	rec.Rows[row].MsgType = msgtype
 
-	if rec.syncer != nil {
-		rec.syncer.RecSetRow(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecSetRow(rec.owner, rec, row)
 	}
 	rec.Dirty = true
 	return nil
@@ -2946,8 +2946,8 @@ func (rec *PlayerMailBox) AddRowValue(row int, source_uid uint64, source_name st
 
 	}
 	if add != -1 {
-		if rec.syncer != nil {
-			rec.syncer.RecAppend(rec.owner, rec, add)
+		if rec.monitor != nil {
+			rec.monitor.RecAppend(rec.owner, rec, add)
 		}
 		rec.Dirty = true
 	}
@@ -3022,8 +3022,8 @@ func (rec *PlayerMailBox) Del(row int) {
 	rec.Rows = rec.Rows[:len(rec.Rows)-1]
 	rec.Dirty = true
 
-	if rec.syncer != nil {
-		rec.syncer.RecDelete(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecDelete(rec.owner, rec, row)
 	}
 }
 
@@ -3034,8 +3034,8 @@ func (rec *PlayerMailBox) Clear() {
 	}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecClear(rec.owner, rec)
+	if rec.monitor != nil {
+		rec.monitor.RecClear(rec.owner, rec)
 	}
 }
 
@@ -3161,12 +3161,12 @@ func (rec *PlayerTaskAccepted) ClearDirty() {
 	rec.Dirty = false
 }
 
-func (rec *PlayerTaskAccepted) SetSyncer(s TableSyncer) {
-	rec.syncer = s
+func (rec *PlayerTaskAccepted) SetMonitor(s TableMonitor) {
+	rec.monitor = s
 }
 
-func (rec *PlayerTaskAccepted) GetSyncer() TableSyncer {
-	return rec.syncer
+func (rec *PlayerTaskAccepted) Monitor() TableMonitor {
+	return rec.monitor
 }
 
 //序列化
@@ -3223,8 +3223,8 @@ func (rec *PlayerTaskAccepted) Set(row, col int, val interface{}) error {
 			return ErrTypeMismatch
 		}
 	}
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, col)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, col)
 	}
 	rec.Dirty = true
 	return nil
@@ -3290,8 +3290,8 @@ func (rec *PlayerTaskAccepted) SetID(row int, v string) error {
 
 	rec.Rows[row].ID = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 0)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 0)
 	}
 	return nil
 }
@@ -3343,8 +3343,8 @@ func (rec *PlayerTaskAccepted) SetFlag(row int, v int8) error {
 
 	rec.Rows[row].Flag = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 1)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 1)
 	}
 	return nil
 }
@@ -3386,8 +3386,8 @@ func (rec *PlayerTaskAccepted) SetRowInterface(row int, rowvalue interface{}) er
 
 	if value, ok := rowvalue.(PlayerTaskAcceptedRow); ok {
 		rec.Rows[row] = value
-		if rec.syncer != nil {
-			rec.syncer.RecSetRow(rec.owner, rec, row)
+		if rec.monitor != nil {
+			rec.monitor.RecSetRow(rec.owner, rec, row)
 		}
 		rec.Dirty = true
 		return nil
@@ -3429,8 +3429,8 @@ func (rec *PlayerTaskAccepted) SetRowValue(row int, id string, flag int8) error 
 	rec.Rows[row].ID = id
 	rec.Rows[row].Flag = flag
 
-	if rec.syncer != nil {
-		rec.syncer.RecSetRow(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecSetRow(rec.owner, rec, row)
 	}
 	rec.Dirty = true
 	return nil
@@ -3523,8 +3523,8 @@ func (rec *PlayerTaskAccepted) AddRowValue(row int, id string, flag int8) int {
 
 	}
 	if add != -1 {
-		if rec.syncer != nil {
-			rec.syncer.RecAppend(rec.owner, rec, add)
+		if rec.monitor != nil {
+			rec.monitor.RecAppend(rec.owner, rec, add)
 		}
 		rec.Dirty = true
 	}
@@ -3585,8 +3585,8 @@ func (rec *PlayerTaskAccepted) Del(row int) {
 	rec.Rows = rec.Rows[:len(rec.Rows)-1]
 	rec.Dirty = true
 
-	if rec.syncer != nil {
-		rec.syncer.RecDelete(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecDelete(rec.owner, rec, row)
 	}
 }
 
@@ -3597,8 +3597,8 @@ func (rec *PlayerTaskAccepted) Clear() {
 	}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecClear(rec.owner, rec)
+	if rec.monitor != nil {
+		rec.monitor.RecClear(rec.owner, rec)
 	}
 }
 
@@ -3724,12 +3724,12 @@ func (rec *PlayerTaskRecord) ClearDirty() {
 	rec.Dirty = false
 }
 
-func (rec *PlayerTaskRecord) SetSyncer(s TableSyncer) {
-	rec.syncer = s
+func (rec *PlayerTaskRecord) SetMonitor(s TableMonitor) {
+	rec.monitor = s
 }
 
-func (rec *PlayerTaskRecord) GetSyncer() TableSyncer {
-	return rec.syncer
+func (rec *PlayerTaskRecord) Monitor() TableMonitor {
+	return rec.monitor
 }
 
 //序列化
@@ -3822,8 +3822,8 @@ func (rec *PlayerTaskRecord) Set(row, col int, val interface{}) error {
 			return ErrTypeMismatch
 		}
 	}
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, col)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, col)
 	}
 	rec.Dirty = true
 	return nil
@@ -3897,8 +3897,8 @@ func (rec *PlayerTaskRecord) SetID(row int, v string) error {
 
 	rec.Rows[row].ID = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 0)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 0)
 	}
 	return nil
 }
@@ -3950,8 +3950,8 @@ func (rec *PlayerTaskRecord) SetTyp(row int, v int32) error {
 
 	rec.Rows[row].Typ = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 1)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 1)
 	}
 	return nil
 }
@@ -4003,8 +4003,8 @@ func (rec *PlayerTaskRecord) SetKey(row int, v string) error {
 
 	rec.Rows[row].Key = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 2)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 2)
 	}
 	return nil
 }
@@ -4056,8 +4056,8 @@ func (rec *PlayerTaskRecord) SetCurrentAmount(row int, v int32) error {
 
 	rec.Rows[row].CurrentAmount = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 3)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 3)
 	}
 	return nil
 }
@@ -4109,8 +4109,8 @@ func (rec *PlayerTaskRecord) SetTotalAmount(row int, v int32) error {
 
 	rec.Rows[row].TotalAmount = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 4)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 4)
 	}
 	return nil
 }
@@ -4162,8 +4162,8 @@ func (rec *PlayerTaskRecord) SetFlag(row int, v int8) error {
 
 	rec.Rows[row].Flag = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 5)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 5)
 	}
 	return nil
 }
@@ -4217,8 +4217,8 @@ func (rec *PlayerTaskRecord) SetRowInterface(row int, rowvalue interface{}) erro
 
 	if value, ok := rowvalue.(PlayerTaskRecordRow); ok {
 		rec.Rows[row] = value
-		if rec.syncer != nil {
-			rec.syncer.RecSetRow(rec.owner, rec, row)
+		if rec.monitor != nil {
+			rec.monitor.RecSetRow(rec.owner, rec, row)
 		}
 		rec.Dirty = true
 		return nil
@@ -4280,8 +4280,8 @@ func (rec *PlayerTaskRecord) SetRowValue(row int, id string, typ int32, key stri
 	rec.Rows[row].TotalAmount = totalamount
 	rec.Rows[row].Flag = flag
 
-	if rec.syncer != nil {
-		rec.syncer.RecSetRow(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecSetRow(rec.owner, rec, row)
 	}
 	rec.Dirty = true
 	return nil
@@ -4402,8 +4402,8 @@ func (rec *PlayerTaskRecord) AddRowValue(row int, id string, typ int32, key stri
 
 	}
 	if add != -1 {
-		if rec.syncer != nil {
-			rec.syncer.RecAppend(rec.owner, rec, add)
+		if rec.monitor != nil {
+			rec.monitor.RecAppend(rec.owner, rec, add)
 		}
 		rec.Dirty = true
 	}
@@ -4472,8 +4472,8 @@ func (rec *PlayerTaskRecord) Del(row int) {
 	rec.Rows = rec.Rows[:len(rec.Rows)-1]
 	rec.Dirty = true
 
-	if rec.syncer != nil {
-		rec.syncer.RecDelete(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecDelete(rec.owner, rec, row)
 	}
 }
 
@@ -4484,8 +4484,8 @@ func (rec *PlayerTaskRecord) Clear() {
 	}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecClear(rec.owner, rec)
+	if rec.monitor != nil {
+		rec.monitor.RecClear(rec.owner, rec)
 	}
 }
 
@@ -4611,12 +4611,12 @@ func (rec *PlayerTaskCanAccept) ClearDirty() {
 	rec.Dirty = false
 }
 
-func (rec *PlayerTaskCanAccept) SetSyncer(s TableSyncer) {
-	rec.syncer = s
+func (rec *PlayerTaskCanAccept) SetMonitor(s TableMonitor) {
+	rec.monitor = s
 }
 
-func (rec *PlayerTaskCanAccept) GetSyncer() TableSyncer {
-	return rec.syncer
+func (rec *PlayerTaskCanAccept) Monitor() TableMonitor {
+	return rec.monitor
 }
 
 //序列化
@@ -4664,8 +4664,8 @@ func (rec *PlayerTaskCanAccept) Set(row, col int, val interface{}) error {
 			return ErrTypeMismatch
 		}
 	}
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, col)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, col)
 	}
 	rec.Dirty = true
 	return nil
@@ -4729,8 +4729,8 @@ func (rec *PlayerTaskCanAccept) SetID(row int, v string) error {
 
 	rec.Rows[row].ID = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 0)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 0)
 	}
 	return nil
 }
@@ -4769,8 +4769,8 @@ func (rec *PlayerTaskCanAccept) SetRowInterface(row int, rowvalue interface{}) e
 
 	if value, ok := rowvalue.(PlayerTaskCanAcceptRow); ok {
 		rec.Rows[row] = value
-		if rec.syncer != nil {
-			rec.syncer.RecSetRow(rec.owner, rec, row)
+		if rec.monitor != nil {
+			rec.monitor.RecSetRow(rec.owner, rec, row)
 		}
 		rec.Dirty = true
 		return nil
@@ -4807,8 +4807,8 @@ func (rec *PlayerTaskCanAccept) SetRowValue(row int, id string) error {
 
 	rec.Rows[row].ID = id
 
-	if rec.syncer != nil {
-		rec.syncer.RecSetRow(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecSetRow(rec.owner, rec, row)
 	}
 	rec.Dirty = true
 	return nil
@@ -4894,8 +4894,8 @@ func (rec *PlayerTaskCanAccept) AddRowValue(row int, id string) int {
 
 	}
 	if add != -1 {
-		if rec.syncer != nil {
-			rec.syncer.RecAppend(rec.owner, rec, add)
+		if rec.monitor != nil {
+			rec.monitor.RecAppend(rec.owner, rec, add)
 		}
 		rec.Dirty = true
 	}
@@ -4954,8 +4954,8 @@ func (rec *PlayerTaskCanAccept) Del(row int) {
 	rec.Rows = rec.Rows[:len(rec.Rows)-1]
 	rec.Dirty = true
 
-	if rec.syncer != nil {
-		rec.syncer.RecDelete(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecDelete(rec.owner, rec, row)
 	}
 }
 
@@ -4966,8 +4966,8 @@ func (rec *PlayerTaskCanAccept) Clear() {
 	}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecClear(rec.owner, rec)
+	if rec.monitor != nil {
+		rec.monitor.RecClear(rec.owner, rec)
 	}
 }
 
@@ -5093,12 +5093,12 @@ func (rec *PlayerTaskTimeLimit) ClearDirty() {
 	rec.Dirty = false
 }
 
-func (rec *PlayerTaskTimeLimit) SetSyncer(s TableSyncer) {
-	rec.syncer = s
+func (rec *PlayerTaskTimeLimit) SetMonitor(s TableMonitor) {
+	rec.monitor = s
 }
 
-func (rec *PlayerTaskTimeLimit) GetSyncer() TableSyncer {
-	return rec.syncer
+func (rec *PlayerTaskTimeLimit) Monitor() TableMonitor {
+	return rec.monitor
 }
 
 //序列化
@@ -5164,8 +5164,8 @@ func (rec *PlayerTaskTimeLimit) Set(row, col int, val interface{}) error {
 			return ErrTypeMismatch
 		}
 	}
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, col)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, col)
 	}
 	rec.Dirty = true
 	return nil
@@ -5233,8 +5233,8 @@ func (rec *PlayerTaskTimeLimit) SetID(row int, v string) error {
 
 	rec.Rows[row].ID = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 0)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 0)
 	}
 	return nil
 }
@@ -5286,8 +5286,8 @@ func (rec *PlayerTaskTimeLimit) SetStartTime(row int, v int64) error {
 
 	rec.Rows[row].StartTime = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 1)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 1)
 	}
 	return nil
 }
@@ -5339,8 +5339,8 @@ func (rec *PlayerTaskTimeLimit) SetEndTime(row int, v int64) error {
 
 	rec.Rows[row].EndTime = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 2)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 2)
 	}
 	return nil
 }
@@ -5385,8 +5385,8 @@ func (rec *PlayerTaskTimeLimit) SetRowInterface(row int, rowvalue interface{}) e
 
 	if value, ok := rowvalue.(PlayerTaskTimeLimitRow); ok {
 		rec.Rows[row] = value
-		if rec.syncer != nil {
-			rec.syncer.RecSetRow(rec.owner, rec, row)
+		if rec.monitor != nil {
+			rec.monitor.RecSetRow(rec.owner, rec, row)
 		}
 		rec.Dirty = true
 		return nil
@@ -5433,8 +5433,8 @@ func (rec *PlayerTaskTimeLimit) SetRowValue(row int, id string, starttime int64,
 	rec.Rows[row].StartTime = starttime
 	rec.Rows[row].EndTime = endtime
 
-	if rec.syncer != nil {
-		rec.syncer.RecSetRow(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecSetRow(rec.owner, rec, row)
 	}
 	rec.Dirty = true
 	return nil
@@ -5534,8 +5534,8 @@ func (rec *PlayerTaskTimeLimit) AddRowValue(row int, id string, starttime int64,
 
 	}
 	if add != -1 {
-		if rec.syncer != nil {
-			rec.syncer.RecAppend(rec.owner, rec, add)
+		if rec.monitor != nil {
+			rec.monitor.RecAppend(rec.owner, rec, add)
 		}
 		rec.Dirty = true
 	}
@@ -5598,8 +5598,8 @@ func (rec *PlayerTaskTimeLimit) Del(row int) {
 	rec.Rows = rec.Rows[:len(rec.Rows)-1]
 	rec.Dirty = true
 
-	if rec.syncer != nil {
-		rec.syncer.RecDelete(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecDelete(rec.owner, rec, row)
 	}
 }
 
@@ -5610,8 +5610,8 @@ func (rec *PlayerTaskTimeLimit) Clear() {
 	}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecClear(rec.owner, rec)
+	if rec.monitor != nil {
+		rec.monitor.RecClear(rec.owner, rec)
 	}
 }
 
@@ -5737,12 +5737,12 @@ func (rec *PlayerTaskGlobalRecord) ClearDirty() {
 	rec.Dirty = false
 }
 
-func (rec *PlayerTaskGlobalRecord) SetSyncer(s TableSyncer) {
-	rec.syncer = s
+func (rec *PlayerTaskGlobalRecord) SetMonitor(s TableMonitor) {
+	rec.monitor = s
 }
 
-func (rec *PlayerTaskGlobalRecord) GetSyncer() TableSyncer {
-	return rec.syncer
+func (rec *PlayerTaskGlobalRecord) Monitor() TableMonitor {
+	return rec.monitor
 }
 
 //序列化
@@ -5808,8 +5808,8 @@ func (rec *PlayerTaskGlobalRecord) Set(row, col int, val interface{}) error {
 			return ErrTypeMismatch
 		}
 	}
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, col)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, col)
 	}
 	rec.Dirty = true
 	return nil
@@ -5877,8 +5877,8 @@ func (rec *PlayerTaskGlobalRecord) SetTyp(row int, v int32) error {
 
 	rec.Rows[row].Typ = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 0)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 0)
 	}
 	return nil
 }
@@ -5930,8 +5930,8 @@ func (rec *PlayerTaskGlobalRecord) SetKey(row int, v string) error {
 
 	rec.Rows[row].Key = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 1)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 1)
 	}
 	return nil
 }
@@ -5983,8 +5983,8 @@ func (rec *PlayerTaskGlobalRecord) SetCurrentAmount(row int, v int32) error {
 
 	rec.Rows[row].CurrentAmount = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 2)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 2)
 	}
 	return nil
 }
@@ -6029,8 +6029,8 @@ func (rec *PlayerTaskGlobalRecord) SetRowInterface(row int, rowvalue interface{}
 
 	if value, ok := rowvalue.(PlayerTaskGlobalRecordRow); ok {
 		rec.Rows[row] = value
-		if rec.syncer != nil {
-			rec.syncer.RecSetRow(rec.owner, rec, row)
+		if rec.monitor != nil {
+			rec.monitor.RecSetRow(rec.owner, rec, row)
 		}
 		rec.Dirty = true
 		return nil
@@ -6077,8 +6077,8 @@ func (rec *PlayerTaskGlobalRecord) SetRowValue(row int, typ int32, key string, c
 	rec.Rows[row].Key = key
 	rec.Rows[row].CurrentAmount = currentamount
 
-	if rec.syncer != nil {
-		rec.syncer.RecSetRow(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecSetRow(rec.owner, rec, row)
 	}
 	rec.Dirty = true
 	return nil
@@ -6178,8 +6178,8 @@ func (rec *PlayerTaskGlobalRecord) AddRowValue(row int, typ int32, key string, c
 
 	}
 	if add != -1 {
-		if rec.syncer != nil {
-			rec.syncer.RecAppend(rec.owner, rec, add)
+		if rec.monitor != nil {
+			rec.monitor.RecAppend(rec.owner, rec, add)
 		}
 		rec.Dirty = true
 	}
@@ -6242,8 +6242,8 @@ func (rec *PlayerTaskGlobalRecord) Del(row int) {
 	rec.Rows = rec.Rows[:len(rec.Rows)-1]
 	rec.Dirty = true
 
-	if rec.syncer != nil {
-		rec.syncer.RecDelete(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecDelete(rec.owner, rec, row)
 	}
 }
 
@@ -6254,8 +6254,8 @@ func (rec *PlayerTaskGlobalRecord) Clear() {
 	}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecClear(rec.owner, rec)
+	if rec.monitor != nil {
+		rec.monitor.RecClear(rec.owner, rec)
 	}
 }
 
@@ -6381,12 +6381,12 @@ func (rec *PlayerTaskPropRecord) ClearDirty() {
 	rec.Dirty = false
 }
 
-func (rec *PlayerTaskPropRecord) SetSyncer(s TableSyncer) {
-	rec.syncer = s
+func (rec *PlayerTaskPropRecord) SetMonitor(s TableMonitor) {
+	rec.monitor = s
 }
 
-func (rec *PlayerTaskPropRecord) GetSyncer() TableSyncer {
-	return rec.syncer
+func (rec *PlayerTaskPropRecord) Monitor() TableMonitor {
+	return rec.monitor
 }
 
 //序列化
@@ -6452,8 +6452,8 @@ func (rec *PlayerTaskPropRecord) Set(row, col int, val interface{}) error {
 			return ErrTypeMismatch
 		}
 	}
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, col)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, col)
 	}
 	rec.Dirty = true
 	return nil
@@ -6521,8 +6521,8 @@ func (rec *PlayerTaskPropRecord) SetID(row int, v string) error {
 
 	rec.Rows[row].ID = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 0)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 0)
 	}
 	return nil
 }
@@ -6574,8 +6574,8 @@ func (rec *PlayerTaskPropRecord) SetProperty(row int, v string) error {
 
 	rec.Rows[row].Property = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 1)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 1)
 	}
 	return nil
 }
@@ -6627,8 +6627,8 @@ func (rec *PlayerTaskPropRecord) SetNeedValue(row int, v string) error {
 
 	rec.Rows[row].NeedValue = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 2)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 2)
 	}
 	return nil
 }
@@ -6673,8 +6673,8 @@ func (rec *PlayerTaskPropRecord) SetRowInterface(row int, rowvalue interface{}) 
 
 	if value, ok := rowvalue.(PlayerTaskPropRecordRow); ok {
 		rec.Rows[row] = value
-		if rec.syncer != nil {
-			rec.syncer.RecSetRow(rec.owner, rec, row)
+		if rec.monitor != nil {
+			rec.monitor.RecSetRow(rec.owner, rec, row)
 		}
 		rec.Dirty = true
 		return nil
@@ -6721,8 +6721,8 @@ func (rec *PlayerTaskPropRecord) SetRowValue(row int, id string, property string
 	rec.Rows[row].Property = property
 	rec.Rows[row].NeedValue = needvalue
 
-	if rec.syncer != nil {
-		rec.syncer.RecSetRow(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecSetRow(rec.owner, rec, row)
 	}
 	rec.Dirty = true
 	return nil
@@ -6822,8 +6822,8 @@ func (rec *PlayerTaskPropRecord) AddRowValue(row int, id string, property string
 
 	}
 	if add != -1 {
-		if rec.syncer != nil {
-			rec.syncer.RecAppend(rec.owner, rec, add)
+		if rec.monitor != nil {
+			rec.monitor.RecAppend(rec.owner, rec, add)
 		}
 		rec.Dirty = true
 	}
@@ -6886,8 +6886,8 @@ func (rec *PlayerTaskPropRecord) Del(row int) {
 	rec.Rows = rec.Rows[:len(rec.Rows)-1]
 	rec.Dirty = true
 
-	if rec.syncer != nil {
-		rec.syncer.RecDelete(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecDelete(rec.owner, rec, row)
 	}
 }
 
@@ -6898,8 +6898,8 @@ func (rec *PlayerTaskPropRecord) Clear() {
 	}
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecClear(rec.owner, rec)
+	if rec.monitor != nil {
+		rec.monitor.RecClear(rec.owner, rec)
 	}
 }
 
@@ -6934,7 +6934,7 @@ func (obj *Player) initRec() {
 }
 
 //获取某个表格
-func (obj *Player) GetRec(rec string) Recorder {
+func (obj *Player) GetRec(rec string) Record {
 	switch rec {
 	case "MailBox":
 		return &obj.MailBox_r
@@ -6981,19 +6981,19 @@ func (obj *Player) Reset() {
 	obj.PlayerInit()
 	//表格初始化
 	obj.MailBox_r.Clear()
-	obj.MailBox_r.syncer = nil
+	obj.MailBox_r.monitor = nil
 	obj.TaskAccepted_r.Clear()
-	obj.TaskAccepted_r.syncer = nil
+	obj.TaskAccepted_r.monitor = nil
 	obj.TaskRecord_r.Clear()
-	obj.TaskRecord_r.syncer = nil
+	obj.TaskRecord_r.monitor = nil
 	obj.TaskCanAccept_r.Clear()
-	obj.TaskCanAccept_r.syncer = nil
+	obj.TaskCanAccept_r.monitor = nil
 	obj.TaskTimeLimit_r.Clear()
-	obj.TaskTimeLimit_r.syncer = nil
+	obj.TaskTimeLimit_r.monitor = nil
 	obj.TaskGlobalRecord_r.Clear()
-	obj.TaskGlobalRecord_r.syncer = nil
+	obj.TaskGlobalRecord_r.monitor = nil
 	obj.TaskPropRecord_r.Clear()
-	obj.TaskPropRecord_r.syncer = nil
+	obj.TaskPropRecord_r.monitor = nil
 
 	obj.ClearDirty()
 	obj.ClearModify()

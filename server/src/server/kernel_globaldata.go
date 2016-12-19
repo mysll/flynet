@@ -542,7 +542,7 @@ func (gd *GlobalDataHelper) Update(self datatype.Entity, index int16, value inte
 }
 
 //表格变动同步
-func (gd *GlobalDataHelper) RecAppend(self datatype.Entity, rec datatype.Recorder, row int) {
+func (gd *GlobalDataHelper) RecAppend(self datatype.Entity, rec datatype.Record, row int) {
 	if !gd.isServer {
 		return
 	}
@@ -564,7 +564,7 @@ func (gd *GlobalDataHelper) RecAppend(self datatype.Entity, rec datatype.Recorde
 	}
 }
 
-func (gd *GlobalDataHelper) RecDelete(self datatype.Entity, rec datatype.Recorder, row int) {
+func (gd *GlobalDataHelper) RecDelete(self datatype.Entity, rec datatype.Record, row int) {
 	if !gd.isServer {
 		return
 	}
@@ -585,7 +585,7 @@ func (gd *GlobalDataHelper) RecDelete(self datatype.Entity, rec datatype.Recorde
 	}
 }
 
-func (gd *GlobalDataHelper) RecClear(self datatype.Entity, rec datatype.Recorder) {
+func (gd *GlobalDataHelper) RecClear(self datatype.Entity, rec datatype.Record) {
 	if !gd.isServer {
 		return
 	}
@@ -605,7 +605,7 @@ func (gd *GlobalDataHelper) RecClear(self datatype.Entity, rec datatype.Recorder
 	}
 }
 
-func (gd *GlobalDataHelper) RecModify(self datatype.Entity, rec datatype.Recorder, row, col int) {
+func (gd *GlobalDataHelper) RecModify(self datatype.Entity, rec datatype.Record, row, col int) {
 	if !gd.isServer {
 		return
 	}
@@ -626,7 +626,7 @@ func (gd *GlobalDataHelper) RecModify(self datatype.Entity, rec datatype.Recorde
 	}
 }
 
-func (gd *GlobalDataHelper) RecSetRow(self datatype.Entity, rec datatype.Recorder, row int) {
+func (gd *GlobalDataHelper) RecSetRow(self datatype.Entity, rec datatype.Record, row int) {
 	if !gd.isServer {
 		return
 	}
@@ -655,12 +655,12 @@ func (gd *GlobalDataHelper) OnAfterAdd(self datatype.Entity, sender datatype.Ent
 		return 1
 	}
 
-	sender.SetPropSyncer(gd)
+	sender.SetPropUpdate(gd)
 	recs := sender.GetRecNames()
 	for _, v := range recs {
 		rec := sender.GetRec(v)
 		if rec.IsVisible() {
-			rec.SetSyncer(gd)
+			rec.SetMonitor(gd)
 		}
 	}
 	return 1
@@ -670,12 +670,12 @@ func (gd *GlobalDataHelper) OnRemove(self datatype.Entity, sender datatype.Entit
 	if !gd.isServer {
 		return 1
 	}
-	sender.SetPropSyncer(nil)
+	sender.SetPropUpdate(nil)
 	recs := sender.GetRecNames()
 	for _, v := range recs {
 		rec := sender.GetRec(v)
 		if rec.IsVisible() {
-			rec.SetSyncer(nil)
+			rec.SetMonitor(nil)
 		}
 	}
 	return 1

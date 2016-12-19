@@ -10,30 +10,30 @@ var tt TableCodec
 
 type TableCodec interface {
 	GetCodecInfo() string
-	SyncTable(rec datatype.Recorder) interface{}
-	RecAppend(rec datatype.Recorder, row int) interface{}
-	RecDelete(rec datatype.Recorder, row int) interface{}
-	RecClear(rec datatype.Recorder) interface{}
-	RecModify(rec datatype.Recorder, row, col int) interface{}
-	RecSetRow(rec datatype.Recorder, row int) interface{}
+	SyncTable(rec datatype.Record) interface{}
+	RecAppend(rec datatype.Record, row int) interface{}
+	RecDelete(rec datatype.Record, row int) interface{}
+	RecClear(rec datatype.Record) interface{}
+	RecModify(rec datatype.Record, row, col int) interface{}
+	RecSetRow(rec datatype.Record, row int) interface{}
 }
 
-type TableSync struct {
+type TableTrans struct {
 	mailbox rpc.Mailbox
 }
 
-func NewTableSync(mb rpc.Mailbox) *TableSync {
+func NewTableTrans(mb rpc.Mailbox) *TableTrans {
 	if tt == nil {
 		panic("table transporter not set")
 	}
 
 	log.LogMessage("table sync proto:", tt.GetCodecInfo())
-	ts := &TableSync{}
+	ts := &TableTrans{}
 	ts.mailbox = mb
 	return ts
 }
 
-func (ts *TableSync) SyncTable(player datatype.Entity) {
+func (ts *TableTrans) SyncTable(player datatype.Entity) {
 
 	recs := player.GetRecNames()
 	for _, r := range recs {
@@ -53,7 +53,7 @@ func (ts *TableSync) SyncTable(player datatype.Entity) {
 	}
 }
 
-func (ts *TableSync) RecAppend(self datatype.Entity, rec datatype.Recorder, row int) {
+func (ts *TableTrans) RecAppend(self datatype.Entity, rec datatype.Record, row int) {
 	out := tt.RecAppend(rec, row)
 	if out == nil {
 		return
@@ -64,7 +64,7 @@ func (ts *TableSync) RecAppend(self datatype.Entity, rec datatype.Recorder, row 
 	}
 }
 
-func (ts *TableSync) RecDelete(self datatype.Entity, rec datatype.Recorder, row int) {
+func (ts *TableTrans) RecDelete(self datatype.Entity, rec datatype.Record, row int) {
 	out := tt.RecDelete(rec, row)
 	if out == nil {
 		return
@@ -75,7 +75,7 @@ func (ts *TableSync) RecDelete(self datatype.Entity, rec datatype.Recorder, row 
 	}
 }
 
-func (ts *TableSync) RecClear(self datatype.Entity, rec datatype.Recorder) {
+func (ts *TableTrans) RecClear(self datatype.Entity, rec datatype.Record) {
 	out := tt.RecClear(rec)
 	if out == nil {
 		return
@@ -86,7 +86,7 @@ func (ts *TableSync) RecClear(self datatype.Entity, rec datatype.Recorder) {
 	}
 }
 
-func (ts *TableSync) RecModify(self datatype.Entity, rec datatype.Recorder, row, col int) {
+func (ts *TableTrans) RecModify(self datatype.Entity, rec datatype.Record, row, col int) {
 	out := tt.RecModify(rec, row, col)
 	if out == nil {
 		return
@@ -97,7 +97,7 @@ func (ts *TableSync) RecModify(self datatype.Entity, rec datatype.Recorder, row,
 	}
 }
 
-func (ts *TableSync) RecSetRow(self datatype.Entity, rec datatype.Recorder, row int) {
+func (ts *TableTrans) RecSetRow(self datatype.Entity, rec datatype.Record, row int) {
 	out := tt.RecSetRow(rec, row)
 	if out == nil {
 		return

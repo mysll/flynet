@@ -35,7 +35,7 @@ type BasePlayer struct {
 	AreaId      string
 	LandTimes   int32
 	propsyncer  *server.PropSync
-	tablesyncer *server.TableSync
+	tablesyncer *server.TableTrans
 	lastupdate  time.Time
 	saveid      server.TimerID
 }

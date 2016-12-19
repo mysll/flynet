@@ -25,7 +25,7 @@ type GlobalDataTestRec struct {
 	Cols    int `json:"-"`
 	Rows    []GlobalDataTestRecRow
 	Dirty   bool `json:"-"`
-	syncer  TableSyncer
+	monitor TableMonitor
 	owner   *GlobalData
 }
 
@@ -191,8 +191,8 @@ type GlobalData struct {
 	ExtraData    map[string]interface{}
 	loading      bool
 	quiting      bool
-	propsyncer   PropSyncer
-	prophooker   PropHooker
+	propupdate   PropUpdater
+	prophooker   PropChanger
 	propcritical []uint64
 	propflag     []uint64
 
@@ -684,16 +684,16 @@ func (obj *GlobalData) ObjTypeName() string {
 	return "GlobalData"
 }
 
-func (obj *GlobalData) SetPropSyncer(sync PropSyncer) {
-	obj.propsyncer = sync
+func (obj *GlobalData) SetPropUpdate(sync PropUpdater) {
+	obj.propupdate = sync
 }
 
-func (obj *GlobalData) GetPropSyncer() PropSyncer {
-	return obj.propsyncer
+func (obj *GlobalData) PropUpdate() PropUpdater {
+	return obj.propupdate
 }
 
 //属性回调接口
-func (obj *GlobalData) SetPropHooker(hooker PropHooker) {
+func (obj *GlobalData) SetPropHook(hooker PropChanger) {
 	obj.prophooker = hooker
 }
 
@@ -980,8 +980,8 @@ func (obj *GlobalData) SetName(v string) {
 		obj.SetPropFlag(0, false)
 	}
 	obj.NameHash = Hash(v)
-	if obj.propsyncer != nil {
-		obj.propsyncer.Update(obj, 0, v)
+	if obj.propupdate != nil {
+		obj.propupdate.Update(obj, 0, v)
 	} else {
 		obj.setModify("Name", v)
 	}
@@ -1006,8 +1006,8 @@ func (obj *GlobalData) SetTest1(v string) {
 		obj.prophooker.OnPropChange(obj, "Test1", old)
 		obj.SetPropFlag(1, false)
 	}
-	if obj.propsyncer != nil {
-		obj.propsyncer.Update(obj, 1, v)
+	if obj.propupdate != nil {
+		obj.propupdate.Update(obj, 1, v)
 	} else {
 		obj.setModify("Test1", v)
 	}
@@ -1032,8 +1032,8 @@ func (obj *GlobalData) SetTest2(v string) {
 		obj.prophooker.OnPropChange(obj, "Test2", old)
 		obj.SetPropFlag(2, false)
 	}
-	if obj.propsyncer != nil {
-		obj.propsyncer.Update(obj, 2, v)
+	if obj.propupdate != nil {
+		obj.propupdate.Update(obj, 2, v)
 	} else {
 		obj.setModify("Test2", v)
 	}
@@ -1148,12 +1148,12 @@ func (rec *GlobalDataTestRec) ClearDirty() {
 	rec.Dirty = false
 }
 
-func (rec *GlobalDataTestRec) SetSyncer(s TableSyncer) {
-	rec.syncer = s
+func (rec *GlobalDataTestRec) SetMonitor(s TableMonitor) {
+	rec.monitor = s
 }
 
-func (rec *GlobalDataTestRec) GetSyncer() TableSyncer {
-	return rec.syncer
+func (rec *GlobalDataTestRec) Monitor() TableMonitor {
+	return rec.monitor
 }
 
 //序列化
@@ -1207,8 +1207,8 @@ func (rec *GlobalDataTestRec) Set(row, col int, val interface{}) error {
 			return ErrTypeMismatch
 		}
 	}
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, col)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, col)
 	}
 	rec.Dirty = true
 	return nil
@@ -1271,8 +1271,8 @@ func (rec *GlobalDataTestRec) SetID(row int, v string) error {
 
 	rec.Rows[row].ID = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 0)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 0)
 	}
 	return nil
 }
@@ -1321,8 +1321,8 @@ func (rec *GlobalDataTestRec) SetFlag(row int, v int8) error {
 
 	rec.Rows[row].Flag = v
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecModify(rec.owner, rec, row, 1)
+	if rec.monitor != nil {
+		rec.monitor.RecModify(rec.owner, rec, row, 1)
 	}
 	return nil
 }
@@ -1358,8 +1358,8 @@ func (rec *GlobalDataTestRec) SetRowInterface(row int, rowvalue interface{}) err
 
 	if value, ok := rowvalue.(GlobalDataTestRecRow); ok {
 		rec.Rows[row] = value
-		if rec.syncer != nil {
-			rec.syncer.RecSetRow(rec.owner, rec, row)
+		if rec.monitor != nil {
+			rec.monitor.RecSetRow(rec.owner, rec, row)
 		}
 		rec.Dirty = true
 		return nil
@@ -1401,8 +1401,8 @@ func (rec *GlobalDataTestRec) SetRowValue(row int, id string, flag int8) error {
 	rec.Rows[row].ID = id
 	rec.Rows[row].Flag = flag
 
-	if rec.syncer != nil {
-		rec.syncer.RecSetRow(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecSetRow(rec.owner, rec, row)
 	}
 	rec.Dirty = true
 	return nil
@@ -1487,8 +1487,8 @@ func (rec *GlobalDataTestRec) AddRowValue(row int, id string, flag int8) int {
 
 	}
 	if add != -1 {
-		if rec.syncer != nil {
-			rec.syncer.RecAppend(rec.owner, rec, add)
+		if rec.monitor != nil {
+			rec.monitor.RecAppend(rec.owner, rec, add)
 		}
 		rec.Dirty = true
 	}
@@ -1547,8 +1547,8 @@ func (rec *GlobalDataTestRec) Del(row int) {
 	rec.Rows = rec.Rows[:len(rec.Rows)-1]
 	rec.Dirty = true
 
-	if rec.syncer != nil {
-		rec.syncer.RecDelete(rec.owner, rec, row)
+	if rec.monitor != nil {
+		rec.monitor.RecDelete(rec.owner, rec, row)
 	}
 }
 
@@ -1557,8 +1557,8 @@ func (rec *GlobalDataTestRec) Clear() {
 
 	rec.Rows = rec.Rows[:0]
 	rec.Dirty = true
-	if rec.syncer != nil {
-		rec.syncer.RecClear(rec.owner, rec)
+	if rec.monitor != nil {
+		rec.monitor.RecClear(rec.owner, rec)
 	}
 }
 
@@ -1587,7 +1587,7 @@ func (obj *GlobalData) initRec() {
 }
 
 //获取某个表格
-func (obj *GlobalData) GetRec(rec string) Recorder {
+func (obj *GlobalData) GetRec(rec string) Record {
 	switch rec {
 	case "TestRec":
 		return &obj.TestRec_r
@@ -1620,7 +1620,7 @@ func (obj *GlobalData) Reset() {
 	obj.GlobalDataInit()
 	//表格初始化
 	obj.TestRec_r.Clear()
-	obj.TestRec_r.syncer = nil
+	obj.TestRec_r.monitor = nil
 
 	obj.ClearDirty()
 	obj.ClearModify()
