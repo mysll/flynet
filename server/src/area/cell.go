@@ -147,7 +147,7 @@ func (this *cell) OnLastUpdate() {
 		if child == nil {
 			continue
 		}
-		d := child.GetModify()
+		d := child.Modifys()
 		if len(d) > 0 {
 
 		}

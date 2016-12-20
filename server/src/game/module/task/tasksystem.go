@@ -221,7 +221,7 @@ func (ts *TaskSystem) OnAfterAdd(self datatype.Entity, sender datatype.Entity, i
 
 //每分钟更新一次
 func (ts *TaskSystem) OnUpdate(player *entity.Player) {
-	rows := player.TaskTimeLimit_r.GetRows()
+	rows := player.TaskTimeLimit_r.RowCount()
 	now := time.Now()
 	for i := rows - 1; i >= 0; i-- {
 		if now.Sub(time.Unix(player.TaskTimeLimit_r.Rows[i].EndTime, 0)).Seconds() >= 0 { //超时
@@ -354,7 +354,7 @@ func (ts *TaskSystem) DeleteTask(player *entity.Player, task_id string) {
 }
 
 func (ts *TaskSystem) NewDay(player *entity.Player) {
-	rows := player.TaskAccepted_r.GetRows()
+	rows := player.TaskAccepted_r.RowCount()
 	deltask := make([]string, 0, 10)
 	for r := 0; r < rows; r++ {
 		if task, exist := ts.taskinfos[player.TaskAccepted_r.Rows[r].ID]; exist {
@@ -374,7 +374,7 @@ func (ts *TaskSystem) NewDay(player *entity.Player) {
 }
 
 func (ts *TaskSystem) CheckTaskInfo(player *entity.Player) {
-	rows := player.TaskAccepted_r.GetRows()
+	rows := player.TaskAccepted_r.RowCount()
 	deltask := make([]string, 0, 10)
 	for r := 0; r < rows; r++ {
 		if task, exist := ts.taskinfos[player.TaskAccepted_r.Rows[r].ID]; exist {

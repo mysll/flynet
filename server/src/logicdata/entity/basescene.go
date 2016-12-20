@@ -841,7 +841,7 @@ func (obj *BaseScene) setDirty(p string, v interface{}) {
 	obj.SetSaveFlag()
 }
 
-func (obj *BaseScene) GetDirty() map[string]interface{} {
+func (obj *BaseScene) Dirtys() map[string]interface{} {
 
 	return obj.Mdirty
 }
@@ -857,7 +857,7 @@ func (obj *BaseScene) setModify(p string, v interface{}) {
 	obj.Mmodify[p] = v
 }
 
-func (obj *BaseScene) GetModify() map[string]interface{} {
+func (obj *BaseScene) Modifys() map[string]interface{} {
 	return obj.Mmodify
 }
 

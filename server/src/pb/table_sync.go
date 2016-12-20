@@ -22,9 +22,9 @@ func (ts *PBTableCodec) SyncTable(rec datatype.Record) interface{} {
 		return nil
 	}
 	out := &s2c.CreateRecord{}
-	out.Record = proto.String(rec.GetName())
-	out.Rows = proto.Int32(int32(rec.GetRows()))
-	out.Cols = proto.Int32(int32(rec.GetCols()))
+	out.Record = proto.String(rec.Name())
+	out.Rows = proto.Int32(int32(rec.RowCount()))
+	out.Cols = proto.Int32(int32(rec.ColCount()))
 	out.Recinfo = data
 
 	return out
@@ -32,7 +32,7 @@ func (ts *PBTableCodec) SyncTable(rec datatype.Record) interface{} {
 
 func (ts *PBTableCodec) RecAppend(rec datatype.Record, row int) interface{} {
 	out := &s2c.RecordAddRow{}
-	out.Record = proto.String(rec.GetName())
+	out.Record = proto.String(rec.Name())
 	out.Row = proto.Int32(int32(row))
 	data, err := rec.SerialRow(row)
 	if err != nil {
@@ -45,20 +45,20 @@ func (ts *PBTableCodec) RecAppend(rec datatype.Record, row int) interface{} {
 
 func (ts *PBTableCodec) RecDelete(rec datatype.Record, row int) interface{} {
 	out := &s2c.RecordDelRow{}
-	out.Record = proto.String(rec.GetName())
+	out.Record = proto.String(rec.Name())
 	out.Row = proto.Int32(int32(row))
 	return out
 }
 
 func (ts *PBTableCodec) RecClear(rec datatype.Record) interface{} {
 	out := &s2c.RecordClear{}
-	out.Record = proto.String(rec.GetName())
+	out.Record = proto.String(rec.Name())
 	return out
 }
 
 func (ts *PBTableCodec) RecModify(rec datatype.Record, row, col int) interface{} {
 	out := &s2c.RecordGrid{}
-	out.Record = proto.String(rec.GetName())
+	out.Record = proto.String(rec.Name())
 	out.Row = proto.Int32(int32(row))
 	out.Col = proto.Int32(int32(col))
 	value, _ := rec.Get(row, col)
@@ -71,7 +71,7 @@ func (ts *PBTableCodec) RecModify(rec datatype.Record, row, col int) interface{}
 
 func (ts *PBTableCodec) RecSetRow(rec datatype.Record, row int) interface{} {
 	out := &s2c.RecordSetRow{}
-	out.Record = proto.String(rec.GetName())
+	out.Record = proto.String(rec.Name())
 	out.Row = proto.Int32(int32(row))
 	data, err := rec.SerialRow(row)
 	if err != nil {

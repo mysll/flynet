@@ -40,7 +40,7 @@ func NewLetterSystem() *LetterSystem {
 //清理过期的邮件
 func DeleteExpiredLetter(player *entity.Player) {
 	now := time.Now()
-	rows := player.MailBox_r.GetRows()
+	rows := player.MailBox_r.RowCount()
 	for i := rows - 1; i >= 0; i-- {
 		st, _ := player.MailBox_r.GetSendTime(i)
 		if now.Sub(time.Unix(st, 0)).Hours() >= 168.0 { //超过七天
@@ -104,14 +104,14 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) (errc
 	}
 	player := p.GetEntity().(*entity.Player)
 
-	if player.MailBox_r.GetRows() == 0 {
+	if player.MailBox_r.RowCount() == 0 {
 		return 0, nil
 	}
 
 	var mails []uint64
 	if len(args.Mails) == 0 {
-		mails = make([]uint64, 0, player.MailBox_r.GetRows())
-		for i := 0; i < player.MailBox_r.GetRows(); i++ {
+		mails = make([]uint64, 0, player.MailBox_r.RowCount())
+		for i := 0; i < player.MailBox_r.RowCount(); i++ {
 			sno, _ := player.MailBox_r.GetSerial_no(i)
 			mails = append(mails, sno)
 		}

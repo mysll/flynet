@@ -1528,7 +1528,7 @@ func (obj *Player) setDirty(p string, v interface{}) {
 	obj.SetSaveFlag()
 }
 
-func (obj *Player) GetDirty() map[string]interface{} {
+func (obj *Player) Dirtys() map[string]interface{} {
 
 	return obj.Mdirty
 }
@@ -1544,7 +1544,7 @@ func (obj *Player) setModify(p string, v interface{}) {
 	obj.Mmodify[p] = v
 }
 
-func (obj *Player) GetModify() map[string]interface{} {
+func (obj *Player) Modifys() map[string]interface{} {
 	return obj.Mmodify
 }
 
@@ -1991,17 +1991,17 @@ func (rec *PlayerMailBox) Load(eq ExecQueryer, dbId uint64) error {
 	return nil
 }
 
-func (rec *PlayerMailBox) GetName() string {
+func (rec *PlayerMailBox) Name() string {
 	return "MailBox"
 }
 
 //表格的容量
-func (rec *PlayerMailBox) GetCap() int {
+func (rec *PlayerMailBox) Caps() int {
 	return rec.MaxRows
 }
 
 //表格当前的行数
-func (rec *PlayerMailBox) GetRows() int {
+func (rec *PlayerMailBox) RowCount() int {
 	return len(rec.Rows)
 }
 
@@ -2013,7 +2013,7 @@ func (rec *PlayerMailBox) ColTypes() ([]int, []string) {
 }
 
 //获取列数
-func (rec *PlayerMailBox) GetCols() int {
+func (rec *PlayerMailBox) ColCount() int {
 	return rec.Cols
 }
 
@@ -2977,7 +2977,7 @@ func (rec *PlayerMailBox) GetRow(row int) (source_uid uint64, source_name string
 }
 
 //获取一行数据
-func (rec *PlayerMailBox) GetRowInterface(row int) (rowvalue interface{}, err error) {
+func (rec *PlayerMailBox) FindRowInterface(row int) (rowvalue interface{}, err error) {
 
 	if row < 0 || row >= len(rec.Rows) {
 		err = ErrRowError
@@ -3121,17 +3121,17 @@ func (rec *PlayerTaskAccepted) Load(eq ExecQueryer, dbId uint64) error {
 	return nil
 }
 
-func (rec *PlayerTaskAccepted) GetName() string {
+func (rec *PlayerTaskAccepted) Name() string {
 	return "TaskAccepted"
 }
 
 //表格的容量
-func (rec *PlayerTaskAccepted) GetCap() int {
+func (rec *PlayerTaskAccepted) Caps() int {
 	return rec.MaxRows
 }
 
 //表格当前的行数
-func (rec *PlayerTaskAccepted) GetRows() int {
+func (rec *PlayerTaskAccepted) RowCount() int {
 	return len(rec.Rows)
 }
 
@@ -3143,7 +3143,7 @@ func (rec *PlayerTaskAccepted) ColTypes() ([]int, []string) {
 }
 
 //获取列数
-func (rec *PlayerTaskAccepted) GetCols() int {
+func (rec *PlayerTaskAccepted) ColCount() int {
 	return rec.Cols
 }
 
@@ -3547,7 +3547,7 @@ func (rec *PlayerTaskAccepted) GetRow(row int) (id string, flag int8, err error)
 }
 
 //获取一行数据
-func (rec *PlayerTaskAccepted) GetRowInterface(row int) (rowvalue interface{}, err error) {
+func (rec *PlayerTaskAccepted) FindRowInterface(row int) (rowvalue interface{}, err error) {
 
 	if row < 0 || row >= len(rec.Rows) {
 		err = ErrRowError
@@ -3684,17 +3684,17 @@ func (rec *PlayerTaskRecord) Load(eq ExecQueryer, dbId uint64) error {
 	return nil
 }
 
-func (rec *PlayerTaskRecord) GetName() string {
+func (rec *PlayerTaskRecord) Name() string {
 	return "TaskRecord"
 }
 
 //表格的容量
-func (rec *PlayerTaskRecord) GetCap() int {
+func (rec *PlayerTaskRecord) Caps() int {
 	return rec.MaxRows
 }
 
 //表格当前的行数
-func (rec *PlayerTaskRecord) GetRows() int {
+func (rec *PlayerTaskRecord) RowCount() int {
 	return len(rec.Rows)
 }
 
@@ -3706,7 +3706,7 @@ func (rec *PlayerTaskRecord) ColTypes() ([]int, []string) {
 }
 
 //获取列数
-func (rec *PlayerTaskRecord) GetCols() int {
+func (rec *PlayerTaskRecord) ColCount() int {
 	return rec.Cols
 }
 
@@ -4430,7 +4430,7 @@ func (rec *PlayerTaskRecord) GetRow(row int) (id string, typ int32, key string, 
 }
 
 //获取一行数据
-func (rec *PlayerTaskRecord) GetRowInterface(row int) (rowvalue interface{}, err error) {
+func (rec *PlayerTaskRecord) FindRowInterface(row int) (rowvalue interface{}, err error) {
 
 	if row < 0 || row >= len(rec.Rows) {
 		err = ErrRowError
@@ -4571,17 +4571,17 @@ func (rec *PlayerTaskCanAccept) Load(eq ExecQueryer, dbId uint64) error {
 	return nil
 }
 
-func (rec *PlayerTaskCanAccept) GetName() string {
+func (rec *PlayerTaskCanAccept) Name() string {
 	return "TaskCanAccept"
 }
 
 //表格的容量
-func (rec *PlayerTaskCanAccept) GetCap() int {
+func (rec *PlayerTaskCanAccept) Caps() int {
 	return rec.MaxRows
 }
 
 //表格当前的行数
-func (rec *PlayerTaskCanAccept) GetRows() int {
+func (rec *PlayerTaskCanAccept) RowCount() int {
 	return len(rec.Rows)
 }
 
@@ -4593,7 +4593,7 @@ func (rec *PlayerTaskCanAccept) ColTypes() ([]int, []string) {
 }
 
 //获取列数
-func (rec *PlayerTaskCanAccept) GetCols() int {
+func (rec *PlayerTaskCanAccept) ColCount() int {
 	return rec.Cols
 }
 
@@ -4917,7 +4917,7 @@ func (rec *PlayerTaskCanAccept) GetRow(row int) (id string, err error) {
 }
 
 //获取一行数据
-func (rec *PlayerTaskCanAccept) GetRowInterface(row int) (rowvalue interface{}, err error) {
+func (rec *PlayerTaskCanAccept) FindRowInterface(row int) (rowvalue interface{}, err error) {
 
 	if row < 0 || row >= len(rec.Rows) {
 		err = ErrRowError
@@ -5053,17 +5053,17 @@ func (rec *PlayerTaskTimeLimit) Load(eq ExecQueryer, dbId uint64) error {
 	return nil
 }
 
-func (rec *PlayerTaskTimeLimit) GetName() string {
+func (rec *PlayerTaskTimeLimit) Name() string {
 	return "TaskTimeLimit"
 }
 
 //表格的容量
-func (rec *PlayerTaskTimeLimit) GetCap() int {
+func (rec *PlayerTaskTimeLimit) Caps() int {
 	return rec.MaxRows
 }
 
 //表格当前的行数
-func (rec *PlayerTaskTimeLimit) GetRows() int {
+func (rec *PlayerTaskTimeLimit) RowCount() int {
 	return len(rec.Rows)
 }
 
@@ -5075,7 +5075,7 @@ func (rec *PlayerTaskTimeLimit) ColTypes() ([]int, []string) {
 }
 
 //获取列数
-func (rec *PlayerTaskTimeLimit) GetCols() int {
+func (rec *PlayerTaskTimeLimit) ColCount() int {
 	return rec.Cols
 }
 
@@ -5559,7 +5559,7 @@ func (rec *PlayerTaskTimeLimit) GetRow(row int) (id string, starttime int64, end
 }
 
 //获取一行数据
-func (rec *PlayerTaskTimeLimit) GetRowInterface(row int) (rowvalue interface{}, err error) {
+func (rec *PlayerTaskTimeLimit) FindRowInterface(row int) (rowvalue interface{}, err error) {
 
 	if row < 0 || row >= len(rec.Rows) {
 		err = ErrRowError
@@ -5697,17 +5697,17 @@ func (rec *PlayerTaskGlobalRecord) Load(eq ExecQueryer, dbId uint64) error {
 	return nil
 }
 
-func (rec *PlayerTaskGlobalRecord) GetName() string {
+func (rec *PlayerTaskGlobalRecord) Name() string {
 	return "TaskGlobalRecord"
 }
 
 //表格的容量
-func (rec *PlayerTaskGlobalRecord) GetCap() int {
+func (rec *PlayerTaskGlobalRecord) Caps() int {
 	return rec.MaxRows
 }
 
 //表格当前的行数
-func (rec *PlayerTaskGlobalRecord) GetRows() int {
+func (rec *PlayerTaskGlobalRecord) RowCount() int {
 	return len(rec.Rows)
 }
 
@@ -5719,7 +5719,7 @@ func (rec *PlayerTaskGlobalRecord) ColTypes() ([]int, []string) {
 }
 
 //获取列数
-func (rec *PlayerTaskGlobalRecord) GetCols() int {
+func (rec *PlayerTaskGlobalRecord) ColCount() int {
 	return rec.Cols
 }
 
@@ -6203,7 +6203,7 @@ func (rec *PlayerTaskGlobalRecord) GetRow(row int) (typ int32, key string, curre
 }
 
 //获取一行数据
-func (rec *PlayerTaskGlobalRecord) GetRowInterface(row int) (rowvalue interface{}, err error) {
+func (rec *PlayerTaskGlobalRecord) FindRowInterface(row int) (rowvalue interface{}, err error) {
 
 	if row < 0 || row >= len(rec.Rows) {
 		err = ErrRowError
@@ -6341,17 +6341,17 @@ func (rec *PlayerTaskPropRecord) Load(eq ExecQueryer, dbId uint64) error {
 	return nil
 }
 
-func (rec *PlayerTaskPropRecord) GetName() string {
+func (rec *PlayerTaskPropRecord) Name() string {
 	return "TaskPropRecord"
 }
 
 //表格的容量
-func (rec *PlayerTaskPropRecord) GetCap() int {
+func (rec *PlayerTaskPropRecord) Caps() int {
 	return rec.MaxRows
 }
 
 //表格当前的行数
-func (rec *PlayerTaskPropRecord) GetRows() int {
+func (rec *PlayerTaskPropRecord) RowCount() int {
 	return len(rec.Rows)
 }
 
@@ -6363,7 +6363,7 @@ func (rec *PlayerTaskPropRecord) ColTypes() ([]int, []string) {
 }
 
 //获取列数
-func (rec *PlayerTaskPropRecord) GetCols() int {
+func (rec *PlayerTaskPropRecord) ColCount() int {
 	return rec.Cols
 }
 
@@ -6847,7 +6847,7 @@ func (rec *PlayerTaskPropRecord) GetRow(row int) (id string, property string, ne
 }
 
 //获取一行数据
-func (rec *PlayerTaskPropRecord) GetRowInterface(row int) (rowvalue interface{}, err error) {
+func (rec *PlayerTaskPropRecord) FindRowInterface(row int) (rowvalue interface{}, err error) {
 
 	if row < 0 || row >= len(rec.Rows) {
 		err = ErrRowError

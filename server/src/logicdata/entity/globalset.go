@@ -841,7 +841,7 @@ func (obj *GlobalSet) setDirty(p string, v interface{}) {
 	obj.SetSaveFlag()
 }
 
-func (obj *GlobalSet) GetDirty() map[string]interface{} {
+func (obj *GlobalSet) Dirtys() map[string]interface{} {
 
 	return obj.Mdirty
 }
@@ -857,7 +857,7 @@ func (obj *GlobalSet) setModify(p string, v interface{}) {
 	obj.Mmodify[p] = v
 }
 
-func (obj *GlobalSet) GetModify() map[string]interface{} {
+func (obj *GlobalSet) Modifys() map[string]interface{} {
 	return obj.Mmodify
 }
 

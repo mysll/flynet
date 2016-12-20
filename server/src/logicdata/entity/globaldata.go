@@ -939,7 +939,7 @@ func (obj *GlobalData) setDirty(p string, v interface{}) {
 	obj.SetSaveFlag()
 }
 
-func (obj *GlobalData) GetDirty() map[string]interface{} {
+func (obj *GlobalData) Dirtys() map[string]interface{} {
 
 	return obj.Mdirty
 }
@@ -955,7 +955,7 @@ func (obj *GlobalData) setModify(p string, v interface{}) {
 	obj.Mmodify[p] = v
 }
 
-func (obj *GlobalData) GetModify() map[string]interface{} {
+func (obj *GlobalData) Modifys() map[string]interface{} {
 	return obj.Mmodify
 }
 
@@ -1108,17 +1108,17 @@ func (rec *GlobalDataTestRec) Load(eq ExecQueryer, dbId uint64) error {
 	return nil
 }
 
-func (rec *GlobalDataTestRec) GetName() string {
+func (rec *GlobalDataTestRec) Name() string {
 	return "TestRec"
 }
 
 //表格的容量
-func (rec *GlobalDataTestRec) GetCap() int {
+func (rec *GlobalDataTestRec) Caps() int {
 	return rec.MaxRows
 }
 
 //表格当前的行数
-func (rec *GlobalDataTestRec) GetRows() int {
+func (rec *GlobalDataTestRec) RowCount() int {
 	return len(rec.Rows)
 }
 
@@ -1130,7 +1130,7 @@ func (rec *GlobalDataTestRec) ColTypes() ([]int, []string) {
 }
 
 //获取列数
-func (rec *GlobalDataTestRec) GetCols() int {
+func (rec *GlobalDataTestRec) ColCount() int {
 	return rec.Cols
 }
 
@@ -1511,7 +1511,7 @@ func (rec *GlobalDataTestRec) GetRow(row int) (id string, flag int8, err error) 
 }
 
 //获取一行数据
-func (rec *GlobalDataTestRec) GetRowInterface(row int) (rowvalue interface{}, err error) {
+func (rec *GlobalDataTestRec) FindRowInterface(row int) (rowvalue interface{}, err error) {
 
 	if row < 0 || row >= len(rec.Rows) {
 		err = ErrRowError

@@ -878,7 +878,7 @@ func (obj *Container) setDirty(p string, v interface{}) {
 	obj.SetSaveFlag()
 }
 
-func (obj *Container) GetDirty() map[string]interface{} {
+func (obj *Container) Dirtys() map[string]interface{} {
 
 	return obj.Mdirty
 }
@@ -894,7 +894,7 @@ func (obj *Container) setModify(p string, v interface{}) {
 	obj.Mmodify[p] = v
 }
 
-func (obj *Container) GetModify() map[string]interface{} {
+func (obj *Container) Modifys() map[string]interface{} {
 	return obj.Mmodify
 }
 

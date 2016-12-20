@@ -560,7 +560,7 @@ func (gd *GlobalDataHelper) RecAppend(self datatype.Entity, rec datatype.Record,
 		}
 
 		rowvalues, _ := rec.SerialRow(row)
-		app.CallBack(nil, "GlobalHelper.GlobalDataRecAppend", gd.OnDataChanged, self.ChildIndex(), v, rec.GetName(), row, rowvalues)
+		app.CallBack(nil, "GlobalHelper.GlobalDataRecAppend", gd.OnDataChanged, self.ChildIndex(), v, rec.Name(), row, rowvalues)
 	}
 }
 
@@ -581,7 +581,7 @@ func (gd *GlobalDataHelper) RecDelete(self datatype.Entity, rec datatype.Record,
 			continue
 		}
 
-		app.CallBack(nil, "GlobalHelper.GlobalDataRecDelete", gd.OnDataChanged, self.ChildIndex(), v, rec.GetName(), row)
+		app.CallBack(nil, "GlobalHelper.GlobalDataRecDelete", gd.OnDataChanged, self.ChildIndex(), v, rec.Name(), row)
 	}
 }
 
@@ -601,7 +601,7 @@ func (gd *GlobalDataHelper) RecClear(self datatype.Entity, rec datatype.Record) 
 			continue
 		}
 
-		app.CallBack(nil, "GlobalHelper.GlobalDataRecClear", gd.OnDataChanged, self.ChildIndex(), v, rec.GetName())
+		app.CallBack(nil, "GlobalHelper.GlobalDataRecClear", gd.OnDataChanged, self.ChildIndex(), v, rec.Name())
 	}
 }
 
@@ -622,7 +622,7 @@ func (gd *GlobalDataHelper) RecModify(self datatype.Entity, rec datatype.Record,
 		}
 
 		val, _ := rec.Get(row, col)
-		app.CallBack(nil, "GlobalHelper.GlobalDataRecModify", gd.OnDataChanged, self.ChildIndex(), v, rec.GetName(), row, col, datatype.NewAny(0, val))
+		app.CallBack(nil, "GlobalHelper.GlobalDataRecModify", gd.OnDataChanged, self.ChildIndex(), v, rec.Name(), row, col, datatype.NewAny(0, val))
 	}
 }
 
@@ -645,7 +645,7 @@ func (gd *GlobalDataHelper) RecSetRow(self datatype.Entity, rec datatype.Record,
 
 		rowvalues, _ := rec.SerialRow(row)
 
-		app.CallBack(nil, "GlobalHelper.GlobalDataRecSetRow", gd.OnDataChanged, self.ChildIndex(), v, rec.GetName(), row, rowvalues)
+		app.CallBack(nil, "GlobalHelper.GlobalDataRecSetRow", gd.OnDataChanged, self.ChildIndex(), v, rec.Name(), row, rowvalues)
 	}
 
 }

@@ -927,7 +927,7 @@ func (obj *{{.Name}}) setDirty(p string, v interface{}) {
 	obj.SetSaveFlag()
 }
 
-func (obj *{{.Name}}) GetDirty() map[string]interface{} {
+func (obj *{{.Name}}) Dirtys() map[string]interface{} {
 
 	return obj.Mdirty
 }
@@ -943,7 +943,7 @@ func (obj *{{.Name}}) setModify(p string, v interface{}) {
 	obj.Mmodify[p] = v
 }
 
-func (obj *{{.Name}}) GetModify() map[string]interface{} {
+func (obj *{{.Name}}) Modifys() map[string]interface{} {
 	return obj.Mmodify
 }
 
@@ -1124,16 +1124,16 @@ func (rec *{{$Obj}}{{.Name}}) Load(eq ExecQueryer, dbId uint64) error {
 	return nil{{end}}
 }
 
-func (rec *{{$Obj}}{{.Name}}) GetName() string {
+func (rec *{{$Obj}}{{.Name}}) Name() string {
 	return "{{.Name}}"
 }
 //表格的容量
-func (rec *{{$Obj}}{{.Name}}) GetCap() int {
+func (rec *{{$Obj}}{{.Name}}) Caps() int {
 	return rec.MaxRows
 }
 
 //表格当前的行数
-func (rec *{{$Obj}}{{.Name}}) GetRows() int {
+func (rec *{{$Obj}}{{.Name}}) RowCount() int {
 	return len(rec.Rows)
 }
 
@@ -1145,7 +1145,7 @@ func (rec *{{$Obj}}{{.Name}}) ColTypes() ([]int, []string) {
 }
 
 //获取列数
-func (rec *{{$Obj}}{{.Name}}) GetCols() int {
+func (rec *{{$Obj}}{{.Name}}) ColCount() int {
 	return rec.Cols
 }
 
@@ -1507,7 +1507,7 @@ func (rec *{{$Obj}}{{.Name}}) GetRow(row int)({{range .Columns}}{{tolower .Name}
 }
 
 //获取一行数据
-func (rec *{{$Obj}}{{.Name}}) GetRowInterface(row int)(rowvalue interface{}, err error) {
+func (rec *{{$Obj}}{{.Name}}) FindRowInterface(row int)(rowvalue interface{}, err error) {
 
 	if row < 0 || row >= len(rec.Rows) {
 		err = ErrRowError

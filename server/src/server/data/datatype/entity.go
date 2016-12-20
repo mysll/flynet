@@ -43,13 +43,13 @@ type DBSaveLoader interface {
 
 type Record interface {
 	//获取表格名
-	GetName() string
+	Name() string
 	//获取表最大行数
-	GetCap() int
+	Caps() int
 	//获取表格列数
-	GetCols() int
+	ColCount() int
 	//获取表格行数
-	GetRows() int
+	RowCount() int
 	//获取列类型
 	ColTypes() ([]int, []string)
 	//脏标志
@@ -71,7 +71,7 @@ type Record interface {
 	//通过行类型进行设置一行的值
 	SetRowInterface(row int, rowvalue interface{}) error
 	//获取一行
-	GetRowInterface(row int) (rowvalue interface{}, err error)
+	FindRowInterface(row int) (rowvalue interface{}, err error)
 
 	//增加一行数据,row插入的位置，-1表示插入在最后
 	Add(row int, args ...interface{}) int
@@ -265,11 +265,11 @@ type Entity interface {
 	//属性是否保存
 	PropertyIsSave(p string) bool
 	//获取所有脏数据(保存用)
-	GetDirty() map[string]interface{}
+	Dirtys() map[string]interface{}
 	//清除脏标志
 	ClearDirty()
 	//获取所有被修改的属性(同步用)
-	GetModify() map[string]interface{}
+	Modifys() map[string]interface{}
 	//清除所有修改标志
 	ClearModify()
 	//通过表格名获取表格
