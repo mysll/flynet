@@ -30,7 +30,7 @@ func (p *PlayerList) SwitchPlayer(player *BasePlayer) error {
 	server.Error(nil, &player.Mailbox, "Login.Error", share.ERROR_ROLE_REPLACE)
 	App.DelayKickUser(oldsession, 5)
 	//同步玩家数据
-	App.AttachPlayer(replace.Entity, replace.Mailbox)
+	App.Kernel().AttachPlayer(replace.Entity, replace.Mailbox)
 
 	player.Account += "*replace*"
 	player.ChooseRole += "*replace*"

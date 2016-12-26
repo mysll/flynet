@@ -30,7 +30,7 @@ func (a *AreaApp) GetCell(id int) *cell {
 	}
 	cell := CreateCell(id, 1000, 1000)
 	a.cells[id] = cell
-	a.AddDispatchNoName(cell, server.DP_BEGINUPDATE|server.DP_UPDATE|server.DP_LASTUPDATE|server.DP_FLUSH)
+	a.Kernel().AddDispatchNoName(cell, server.DP_BEGINUPDATE|server.DP_UPDATE|server.DP_LASTUPDATE|server.DP_FLUSH)
 	return cell
 }
 
@@ -43,7 +43,7 @@ func (a *AreaApp) FindCell(id int) *cell {
 
 func (a *AreaApp) RemoveCell(id int) {
 	if cell, ok := a.cells[id]; ok {
-		a.RemoveDispatch(cell.GetDispatchID())
+		a.Kernel().RemoveDispatch(cell.GetDispatchID())
 		cell.Delete()
 		delete(a.cells, id)
 	}

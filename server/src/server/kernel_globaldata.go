@@ -278,12 +278,12 @@ func (gd *GlobalDataHelper) OnLoadGlobalData(msg *rpc.Message) {
 		return
 	}
 
-	ent, err := core.CreateFromDb(&savedata)
+	ent, err := core.kernel.CreateFromDb(&savedata)
 	if err != nil {
 		log.LogError("create global data set failed, err:", err)
 	}
 	if gd.dataset != nil {
-		core.Destroy(gd.dataset.ObjectId())
+		core.kernel.Destroy(gd.dataset.ObjectId())
 	}
 	gd.dataset = ent
 	gd.ready = true
@@ -352,12 +352,12 @@ func (gd *GlobalDataHelper) OnSaveDataSet(msg *rpc.Message) {
 //创建数据集合
 func (gd *GlobalDataHelper) createDataSet() error {
 	if gd.dataset == nil {
-		ent, err := core.CreateContainer(core.globalset, core.maxglobalentry)
+		ent, err := core.kernel.CreateContainer(core.globalset, core.maxglobalentry)
 		if err != nil {
 			return fmt.Errorf("create global data failed, %s", err.Error())
 		}
 
-		ent.SetDBId(core.GetUid())
+		ent.SetDBId(core.kernel.GetUid())
 		ent.Set("Name", "GlobalData")
 		gd.dataset = ent
 		gd.isnew = true
@@ -398,7 +398,7 @@ func (gd *GlobalDataHelper) addData(name string, datatype string) error {
 		return fmt.Errorf("global data(%s) exist", name)
 	}
 
-	data, err := core.Create(datatype)
+	data, err := core.kernel.Create(datatype)
 	if err != nil {
 		return fmt.Errorf("create global data(%s) failed", datatype)
 	}
@@ -407,7 +407,7 @@ func (gd *GlobalDataHelper) addData(name string, datatype string) error {
 	data.SetInBase(true)
 	data.Set("Name", name)
 
-	index, err := core.AddChild(gd.dataset.ObjectId(), data.ObjectId(), -1)
+	index, err := core.kernel.AddChild(gd.dataset.ObjectId(), data.ObjectId(), -1)
 	if err == nil {
 
 		entityinfo, err := share.GetItemInfo(data, false)
@@ -505,7 +505,7 @@ func (gd *GlobalDataHelper) OnFrame() {
 
 //加载全局数据
 func (gd *GlobalDataHelper) LoadGlobalData() error {
-	core.AddDispatchNoName(gd, DP_FRAME)
+	core.kernel.AddDispatchNoName(gd, DP_FRAME)
 	log.LogMessage("begin load global data")
 	db := GetAppByType("database")
 	if db == nil {

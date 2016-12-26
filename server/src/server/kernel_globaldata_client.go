@@ -25,13 +25,13 @@ func (gd *GlobalDataHelper) CreateGlobalData(sender rpc.Mailbox, msg *rpc.Messag
 		return ERR_GLOBALDATA_DISABLED, reply
 	}
 
-	ent, err := core.CreateFromArchive(datainfo, nil)
+	ent, err := core.kernel.CreateFromArchive(datainfo, nil)
 	if err != nil {
 		return share.ERR_REPLY_FAILED, reply
 	}
 
 	if gd.dataset != nil {
-		core.Destroy(gd.dataset.ObjectId())
+		core.kernel.Destroy(gd.dataset.ObjectId())
 	}
 	gd.dataset = ent
 	log.LogMessage("create global data succeed, version:", gd.dataversion)
@@ -60,7 +60,7 @@ func (gd *GlobalDataHelper) GlobalDataAddData(sender rpc.Mailbox, msg *rpc.Messa
 		return ERR_GLOBALDATA_NOT_FOUND, reply
 	}
 
-	ent, err := core.CreateFromArchive(datainfo, nil)
+	ent, err := core.kernel.CreateFromArchive(datainfo, nil)
 	if err != nil {
 		return share.ERR_FUNC_BEGIN + 4, reply
 	}

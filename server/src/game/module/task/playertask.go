@@ -13,7 +13,7 @@ type PlayerTask struct {
 
 func (pl *PlayerTask) OnReady(self datatype.Entity, first bool) int {
 	if first {
-		Module.GetCore().AddHeartbeat(self, "CheckTask", time.Minute, -1, nil)
+		Module.GetCore().Kernel().AddHeartbeat(self, "CheckTask", time.Minute, -1, nil)
 		Module.TaskSystem.CheckTaskInfo(self.(*entity.Player))
 	}
 

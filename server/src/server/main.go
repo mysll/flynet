@@ -21,10 +21,8 @@ func NewServer(app Apper, id int32) *Server {
 	s.clientList = NewClientList()
 	s.apper = app
 	s.Emitter = event.NewEventList()
-	s.ObjectFactory = NewFactory()
-	s.Kernel = NewKernel(s.ObjectFactory)
+	s.kernel = NewKernel()
 	s.channel = make(map[string]*Channel, 32)
-
 	s.s2chelper = NewS2CHelper()
 	s.c2shelper = &C2SHelper{}
 	s.teleport = &TeleportHelper{}

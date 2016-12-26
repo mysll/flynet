@@ -33,7 +33,7 @@ func (t *TeleportHelper) TeleportPlayerByBase(sender rpc.Mailbox, msg *rpc.Messa
 		return share.ERR_ARGS_ERROR, reply
 	}
 
-	pl, err := core.CreateFromArchive(playerinfo, nil)
+	pl, err := core.kernel.CreateFromArchive(playerinfo, nil)
 	if err != nil {
 		log.LogError(err)
 		return share.ERR_FUNC_BEGIN + 1, reply
@@ -44,7 +44,7 @@ func (t *TeleportHelper) TeleportPlayerByBase(sender rpc.Mailbox, msg *rpc.Messa
 		params = args[1].([]interface{})
 	}
 	if !core.apper.OnTeleportFromBase(params, pl) {
-		core.Destroy(pl.ObjectId())
+		core.kernel.Destroy(pl.ObjectId())
 		return share.ERR_REPLY_FAILED, reply
 	}
 

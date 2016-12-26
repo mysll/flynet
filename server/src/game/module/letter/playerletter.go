@@ -15,7 +15,7 @@ type PlayerLetter struct {
 
 func (pl *PlayerLetter) OnReady(self datatype.Entity, first bool) int {
 	if first {
-		Module.GetCore().AddHeartbeat(self, "CheckLetter", time.Minute, -1, nil)
+		Module.GetCore().Kernel().AddHeartbeat(self, "CheckLetter", time.Minute, -1, nil)
 
 		//清理过期的邮件
 		DeleteExpiredLetter(self.(*entity.Player))

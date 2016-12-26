@@ -64,7 +64,7 @@ func (a *Account) CreatePlayer(mailbox rpc.Mailbox, msg *rpc.Message) (errcode i
 		log.LogWarning("player state not logged")
 		return 0, nil
 	}
-	obj, err := App.CreateRole("Player", args)
+	obj, err := App.Kernel().CreateRole("Player", args)
 	if err != nil {
 		log.LogError(err)
 		return 0, nil
@@ -72,7 +72,7 @@ func (a *Account) CreatePlayer(mailbox rpc.Mailbox, msg *rpc.Message) (errcode i
 
 	save := share.GetSaveData(obj)
 	server.Check(App.DbBridge.createRole(mailbox, obj, player.Account, args.GetName(), int(args.GetIndex()), save))
-	App.Destroy(obj.ObjectId())
+	App.Kernel().Destroy(obj.ObjectId())
 	return 0, nil
 }
 

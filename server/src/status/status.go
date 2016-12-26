@@ -43,28 +43,28 @@ func (status *StatusApp) OnLost(app string) {
 
 func (status *StatusApp) OnGlobalDataLoaded() {
 	log.LogError("create test globaldata")
-	if status.FindGlobalData("Test1") == -1 {
-		if err := status.AddGlobalData("Test1", "GlobalData"); err != nil {
+	if status.Kernel().FindGlobalData("Test1") == -1 {
+		if err := status.Kernel().AddGlobalData("Test1", "GlobalData"); err != nil {
 			log.LogError(err)
 			return
 		}
 
-		index := status.FindGlobalData("Test1")
-		status.GlobalDataSet(index, "Test1", "ddddddddd")
-		status.GlobalDataSet(index, "Test2", "hhhhhhh")
+		index := status.Kernel().FindGlobalData("Test1")
+		status.Kernel().GlobalDataSet(index, "Test1", "ddddddddd")
+		status.Kernel().GlobalDataSet(index, "Test2", "hhhhhhh")
 
-		status.GlobalDataAddRowValues(index, "TestRec", -1, "sll", int8(1))
-		status.GlobalDataAddRowValues(index, "TestRec", -1, "sll2", int8(2))
-		status.GlobalDataSetGrid(index, "TestRec", 0, 0, "test")
-		status.GlobalDataDelRow(index, "TestRec", 1)
-		status.SaveGlobalData(false, false)
+		status.Kernel().GlobalDataAddRowValues(index, "TestRec", -1, "sll", int8(1))
+		status.Kernel().GlobalDataAddRowValues(index, "TestRec", -1, "sll2", int8(2))
+		status.Kernel().GlobalDataSetGrid(index, "TestRec", 0, 0, "test")
+		status.Kernel().GlobalDataDelRow(index, "TestRec", 1)
+		status.Kernel().SaveGlobalData(false, false)
 	}
 
 }
 
 func (status *StatusApp) Exit() {
 	status.shutdown = 2
-	App.AddTimer(time.Second, 1, status.DelayQuit, nil)
+	App.Kernel().AddTimer(time.Second, 1, status.DelayQuit, nil)
 }
 
 func (status *StatusApp) DelayQuit(intervalid server.TimerID, count int32, args interface{}) {

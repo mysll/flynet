@@ -19,7 +19,7 @@ func (s *Scene) OnAfterAdd(self Entity, sender Entity, index int) int {
 func (s *Scene) OnRemove(self Entity, sender Entity, index int) int {
 	log.LogMessage("scene remove obj", sender.ObjectId())
 	//解除所有的心跳
-	App.DeatchBeat(sender)
+	App.Kernel().DeatchBeat(sender)
 	self.FindExtraData("cell").(*cell).RemoveObject(sender)
 
 	return 1

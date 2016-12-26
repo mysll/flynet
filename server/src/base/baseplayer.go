@@ -52,7 +52,7 @@ func (p *BasePlayer) Disconnect() {
 	}
 
 	p.Offline = true
-	App.Disconnect(p.Entity)
+	App.Kernel().Disconnect(p.Entity)
 	p.Leave()
 	log.LogInfo("player disconnect:", p.ChooseRole, " session:", p.Session)
 }
@@ -126,8 +126,8 @@ func (p *BasePlayer) SaveFailed() {
 		f := fmt.Sprintf("dump/%s_%d_%d_%d_%d_%d_%d.log", p.Account, now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
 
 		log.LogError("save player failed, dump info into:", f)
-		go App.DumpInfo(*p, f)
-		App.Timeout(time.Second*5, TimeToDel, p.Mailbox.Uid)
+		go App.Kernel().DumpInfo(*p, f)
+		App.Kernel().Timeout(time.Second*5, TimeToDel, p.Mailbox.Uid)
 	}
 }
 
@@ -136,19 +136,19 @@ func (p *BasePlayer) LoadPlayer(data share.LoadUserBak) error {
 	p.RoleInfo = data.Data.RoleInfo
 	p.LandTimes = data.LandTimes
 	var err error
-	p.Entity, err = App.CreateFromDb(data.Data)
+	p.Entity, err = App.Kernel().CreateFromDb(data.Data)
 	if err != nil {
 		log.LogError(err)
 		return err
 	}
 	p.State = STATE_READY
 	player := p.Entity.(*entity.Player)
-	App.SetRoleInfo(p.Entity, p.RoleInfo)
-	App.SetLandpos(p.Entity, p.trans)
+	App.Kernel().SetRoleInfo(p.Entity, p.RoleInfo)
+	App.Kernel().SetLandpos(p.Entity, p.trans)
 	p.Entity.SetExtraData("account", p.Account)
 	p.Entity.SetUID(p.Mailbox.Uid)
 	log.LogInfo("load player succeed,", player.GetName())
-	p.saveid = App.AddTimer(time.Minute*5, -1, p.TimeToSave, nil)
+	p.saveid = App.Kernel().AddTimer(time.Minute*5, -1, p.TimeToSave, nil)
 
 	if player.GetLastUpdateTime() == 0 {
 		player.SetLastUpdateTime(time.Now().Unix())
@@ -158,25 +158,25 @@ func (p *BasePlayer) LoadPlayer(data share.LoadUserBak) error {
 	}
 
 	//同步玩家
-	App.AttachPlayer(p.Entity, p.Mailbox)
+	App.Kernel().AttachPlayer(p.Entity, p.Mailbox)
 
 	return err
 }
 
 func (p *BasePlayer) DeletePlayer() {
 	if p.Entity != nil {
-		App.DetachPlayer(p.Entity)
+		App.Kernel().DetachPlayer(p.Entity)
 		p.Entity.SetQuiting()
-		App.Destroy(p.Entity.ObjectId())
+		App.Kernel().Destroy(p.Entity.ObjectId())
 		log.LogInfo("player destroy:", p.ChooseRole, " session:", p.Session)
 	}
-	App.CancelTimer(p.saveid)
+	App.Kernel().CancelTimer(p.saveid)
 }
 
 func (p *BasePlayer) PlayerReady() {
 
 	if p.LandTimes == 0 {
-		App.Command(p.Entity.ObjectId(), p.Entity.ObjectId(), share.PLAYER_FIRST_LAND, nil)
+		App.Kernel().Command(p.Entity.ObjectId(), p.Entity.ObjectId(), share.PLAYER_FIRST_LAND, nil)
 	}
 
 	server.MailTo(nil, &p.Mailbox, "Role.Ready", &s2c.Void{})

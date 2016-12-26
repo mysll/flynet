@@ -40,7 +40,7 @@ const (
 )
 
 type Server struct {
-	*Kernel
+	kernel           *Kernel
 	StartArgs        *simplejson.Json
 	Type             string
 	Host             string
@@ -52,7 +52,6 @@ type Server struct {
 	Fronted          bool
 	Debug            bool
 	PProfPort        int
-	ObjectFactory    *Factory
 	MustAppReady     bool
 	MailBox          rpc.Mailbox
 	Emitter          *event.EventList
@@ -91,6 +90,11 @@ type Server struct {
 type StartStoper interface {
 	Start(args *simplejson.Json) bool
 	Stop()
+}
+
+//获取kernel
+func (svr *Server) Kernel() *Kernel {
+	return svr.kernel
 }
 
 //获取程序启动到现在的毫秒数
@@ -307,12 +311,12 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 	}
 
 	serial := (uint64(time.Now().Unix()%0x80000000) << 32) | (uint64(svr.AppId) << 24)
-	svr.setSerial(serial)
+	svr.kernel.setSerial(serial)
 	log.LogMessage("start serial:", fmt.Sprintf("%X", serial))
 	if !svr.apper.OnPrepare() {
 		return false
 	}
-	svr.CurrentInBase(svr.apper.IsBase())
+	svr.kernel.CurrentInBase(svr.apper.IsBase())
 	if svr.AssetPath != "" {
 		helper.LoadAllConfig(svr.AssetPath)
 	}
@@ -365,7 +369,7 @@ func (svr *Server) Wait() {
 	if svr.globaldataserver {
 		//保存global data
 		log.TraceInfo(svr.Name, "save global data")
-		if err := svr.SaveGlobalData(true, true); err != nil {
+		if err := svr.kernel.SaveGlobalData(true, true); err != nil {
 			log.LogError(err)
 		}
 		log.TraceInfo(svr.Name, "save global data, ok")

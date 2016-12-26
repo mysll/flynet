@@ -56,7 +56,7 @@ func (this *cell) enterScene(obj Entity) {
 				if id.Equal(obj.ObjectId()) {
 					continue
 				}
-				if ent := App.GetEntity(id); ent != nil {
+				if ent := App.Kernel().GetEntity(id); ent != nil {
 					watcher.AddObject(id, ent.ObjType())
 					if ent.ObjType() == PLAYER {
 						ch.Add(rpc.NewMailBoxFromUid(ent.UID()))
@@ -95,10 +95,10 @@ func (this *cell) AddObject(obj Entity) error {
 
 	this.Objects[obj.ObjType()][id.Index] = obj
 	if obj.ObjType() == PLAYER {
-		App.EntryScene(obj)
+		App.Kernel().EntryScene(obj)
 		this.enterScene(obj)
 		App.baseProxy.entryScene(this.scene, obj)
-		App.EnterScene(obj)
+		App.Kernel().EnterScene(obj)
 		log.LogMessage("add player:", obj.ObjectId())
 		this.playernum++
 		this.livetime = -1
@@ -163,17 +163,17 @@ func (this *cell) Delete() {
 			}
 		}
 	}
-	App.Destroy(this.scene.ObjectId())
+	App.Kernel().Destroy(this.scene.ObjectId())
 	log.LogMessage("cell deleted,", this.id)
 }
 
 func (this *cell) aoiAdd(id ObjectID, typ int, watchers []ObjectID) {
 	for _, wid := range watchers {
-		if ent := App.GetEntity(wid); ent != nil {
+		if ent := App.Kernel().GetEntity(wid); ent != nil {
 			if watcher, ok := ent.(inter.Watcher); ok {
 				if !ent.ObjectId().Equal(id) {
 					watcher.AddObject(id, typ)
-					if obj := App.GetEntity(id); obj != nil {
+					if obj := App.Kernel().GetEntity(id); obj != nil {
 						if obj.ObjType() == PLAYER {
 							ent.FindExtraData("aoiCh").(*server.Channel).Add(rpc.NewMailBoxFromUid(obj.UID()))
 						}
@@ -186,11 +186,11 @@ func (this *cell) aoiAdd(id ObjectID, typ int, watchers []ObjectID) {
 
 func (this *cell) aoiRemove(id ObjectID, typ int, watchers []ObjectID) {
 	for _, wid := range watchers {
-		if ent := App.GetEntity(wid); ent != nil {
+		if ent := App.Kernel().GetEntity(wid); ent != nil {
 			if watcher, ok := ent.(inter.Watcher); ok {
 				if !ent.ObjectId().Equal(id) {
 					watcher.RemoveObject(id, typ)
-					if obj := App.GetEntity(id); obj != nil {
+					if obj := App.Kernel().GetEntity(id); obj != nil {
 						if obj.ObjType() == PLAYER {
 							ent.FindExtraData("aoiCh").(*server.Channel).Remove(rpc.NewMailBoxFromUid(obj.UID()))
 						}
@@ -203,11 +203,11 @@ func (this *cell) aoiRemove(id ObjectID, typ int, watchers []ObjectID) {
 
 func (this *cell) aoiUpdate(id ObjectID, typ int, oldWatchers []ObjectID, newWatchers []ObjectID) {
 	for _, wid := range oldWatchers {
-		if ent := App.GetEntity(wid); ent != nil {
+		if ent := App.Kernel().GetEntity(wid); ent != nil {
 			if watcher, ok := ent.(inter.Watcher); ok {
 				if !ent.ObjectId().Equal(id) {
 					watcher.RemoveObject(id, typ)
-					if obj := App.GetEntity(id); obj != nil {
+					if obj := App.Kernel().GetEntity(id); obj != nil {
 						if obj.ObjType() == PLAYER {
 							ent.FindExtraData("aoiCh").(*server.Channel).Remove(rpc.NewMailBoxFromUid(obj.UID()))
 						}
@@ -217,11 +217,11 @@ func (this *cell) aoiUpdate(id ObjectID, typ int, oldWatchers []ObjectID, newWat
 		}
 	}
 	for _, wid := range newWatchers {
-		if ent := App.GetEntity(wid); ent != nil {
+		if ent := App.Kernel().GetEntity(wid); ent != nil {
 			if watcher, ok := ent.(inter.Watcher); ok {
 				if !ent.ObjectId().Equal(id) {
 					watcher.AddObject(id, typ)
-					if obj := App.GetEntity(id); obj != nil {
+					if obj := App.Kernel().GetEntity(id); obj != nil {
 						if obj.ObjType() == PLAYER {
 							ent.FindExtraData("aoiCh").(*server.Channel).Add(rpc.NewMailBoxFromUid(obj.UID()))
 						}
@@ -233,12 +233,12 @@ func (this *cell) aoiUpdate(id ObjectID, typ int, oldWatchers []ObjectID, newWat
 }
 
 func (this *cell) aoiUpdateWatcher(id ObjectID, typ int, addobjs []ObjectID, removeobjs []ObjectID) {
-	if ent := App.GetEntity(id); ent != nil {
+	if ent := App.Kernel().GetEntity(id); ent != nil {
 		if watcher, ok := ent.(inter.Watcher); ok {
 			for _, o := range addobjs {
 				if !id.Equal(o) {
 					watcher.AddObject(o, typ)
-					if obj := App.GetEntity(o); obj != nil {
+					if obj := App.Kernel().GetEntity(o); obj != nil {
 						if obj.ObjType() == PLAYER {
 							ent.FindExtraData("aoiChan").(*server.Channel).Add(rpc.NewMailBoxFromUid(obj.UID()))
 						}
@@ -248,7 +248,7 @@ func (this *cell) aoiUpdateWatcher(id ObjectID, typ int, addobjs []ObjectID, rem
 			for _, o := range removeobjs {
 				if !id.Equal(o) {
 					watcher.RemoveObject(o, typ)
-					if obj := App.GetEntity(o); obj != nil {
+					if obj := App.Kernel().GetEntity(o); obj != nil {
 						if obj.ObjType() == PLAYER {
 							ent.FindExtraData("aoiChan").(*server.Channel).Remove(rpc.NewMailBoxFromUid(obj.UID()))
 						}
@@ -295,7 +295,7 @@ func (this *cell) OnFlush() {
 
 func CreateCell(id int, width float32, height float32) *cell {
 	c := &cell{}
-	scene, err := App.Create("BaseScene")
+	scene, err := App.Kernel().Create("BaseScene")
 	if err != nil {
 		return nil
 	}

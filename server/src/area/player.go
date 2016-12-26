@@ -19,7 +19,7 @@ func (p *Player) OnEnterScene(self Entity) int {
 	mb := self.FindExtraData("base").(rpc.Mailbox)
 	pl := App.Players.FindPlayer(mb.Uid)
 	if pl != nil {
-		App.AddHeartbeat(self, "Store", time.Minute*5, -1, mb)
+		App.Kernel().AddHeartbeat(self, "Store", time.Minute*5, -1, mb)
 	}
 	return 1
 }
@@ -77,7 +77,7 @@ func (p *Player) OnTimer(self Entity, beat string, count int32, args interface{}
 		mb := args.(rpc.Mailbox)
 		pl := App.Players.FindPlayer(mb.Uid)
 		if pl != nil {
-			App.Save(pl.GetEntity(), share.SAVETYPE_TIMER)
+			App.Kernel().Save(pl.GetEntity(), share.SAVETYPE_TIMER)
 		}
 	}
 

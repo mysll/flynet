@@ -140,7 +140,7 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) (errc
 		index := -1
 		var res int32
 		for k, appendix := range appendixs {
-			item, err := Module.GetCore().CreateFromConfig(appendix.Configid)
+			item, err := Module.GetCore().Kernel().CreateFromConfig(appendix.Configid)
 			if err != nil { //物品不存在
 				log.LogError("appendix not found ", appendix.Configid)
 				continue
@@ -154,7 +154,7 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) (errc
 			}
 
 			if Module.fc == nil {
-				Module.GetCore().Destroy(item.ObjectId())
+				Module.GetCore().Kernel().Destroy(item.ObjectId())
 				flag = true
 				res = share.ERROR_SYSTEMERROR
 				break
@@ -162,15 +162,15 @@ func (l *LetterSystem) RecvAppendix(mailbox rpc.Mailbox, msg *rpc.Message) (errc
 
 			container := Module.fc(player, item)
 			if container == nil {
-				Module.GetCore().Destroy(item.ObjectId())
+				Module.GetCore().Kernel().Destroy(item.ObjectId())
 				flag = true
 				res = share.ERROR_SYSTEMERROR
 				break
 			}
 
-			_, err = Module.GetCore().AddChild(container.ObjectId(), item.ObjectId(), -1)
+			_, err = Module.GetCore().Kernel().AddChild(container.ObjectId(), item.ObjectId(), -1)
 			if err != nil {
-				Module.GetCore().Destroy(item.ObjectId())
+				Module.GetCore().Kernel().Destroy(item.ObjectId())
 				flag = true
 				res = share.ERROR_CONTAINER_FULL
 				break

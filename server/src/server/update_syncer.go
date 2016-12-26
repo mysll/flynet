@@ -33,9 +33,9 @@ func NewPropSync(mb rpc.Mailbox, objid ObjectID) *PropSync {
 }
 
 func (ps *PropSync) OnUpdate() {
-	player := core.GetEntity(ps.objid)
+	player := core.kernel.GetEntity(ps.objid)
 	if player == nil {
-		core.RemoveScheduler(ps)
+		core.kernel.RemoveScheduler(ps)
 		return
 	}
 	ps.UpdateAll(player)

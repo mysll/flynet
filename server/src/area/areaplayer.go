@@ -29,7 +29,7 @@ func NewAreaPlayer() server.PlayerHandler {
 }
 
 func (a *AreaPlayer) LoadPlayer(mailbox rpc.Mailbox, data *EntityInfo) error {
-	ent, err := App.CreateFromArchive(data,
+	ent, err := App.Kernel().CreateFromArchive(data,
 		map[string]interface{}{
 			"mailbox": mailbox,
 			"base":    rpc.Mailbox{App: mailbox.App},
@@ -42,7 +42,7 @@ func (a *AreaPlayer) LoadPlayer(mailbox rpc.Mailbox, data *EntityInfo) error {
 	nameinter, err := ent.Get("Name")
 	if err != nil {
 		log.LogError(err)
-		App.Destroy(ent.ObjectId())
+		App.Kernel().Destroy(ent.ObjectId())
 		return err
 	}
 	name := nameinter.(string)
@@ -96,7 +96,7 @@ func (a *AreaPlayer) RemovePlayer(mailbox rpc.Mailbox) bool {
 
 func (a *AreaPlayer) DeletePlayer() {
 	if a.Entity != nil {
-		App.Destroy(a.Entity.ObjectId())
+		App.Kernel().Destroy(a.Entity.ObjectId())
 	}
 }
 
@@ -109,7 +109,7 @@ func (a *AreaPlayer) Save(remove bool) {
 		typ = share.SAVETYPE_TIMER
 	}
 
-	App.Save(a.Entity, typ)
+	App.Kernel().Save(a.Entity, typ)
 }
 
 func (a *AreaPlayer) LevelScene() {

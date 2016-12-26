@@ -108,7 +108,7 @@ func (pi *PlayerInfo) OnClear() {
 }
 
 func (pi *PlayerInfo) OnEvent(event string) {
-	core.Kernel.Emit(pi.Entity, event, nil)
+	core.kernel.Emit(pi.Entity, event, nil)
 }
 
 func (pi *PlayerInfo) UpdateHash() {
@@ -158,7 +158,7 @@ func NewPlayerManager(typ int, f InitFunc) *PlayerManager {
 	pm.Players = make(map[uint64]PlayerHandler, 512)
 	pm.UniqueType = typ
 	pm.initfunc = f
-	core.AddDispatchNoName(pm, DP_FRAME)
+	core.kernel.AddDispatchNoName(pm, DP_FRAME)
 	core.Players = pm
 	return pm
 }
@@ -247,7 +247,7 @@ func (pm *PlayerManager) SwitchPlayer(player PlayerHandler) error {
 	Error(nil, &mb, "Login.Error", share.ERROR_ROLE_REPLACE)
 	core.DelayKickUser(oldsession, 5)
 	//同步玩家数据
-	core.AttachPlayer(replace.GetEntity(), replace.GetMailbox())
+	core.kernel.AttachPlayer(replace.GetEntity(), replace.GetMailbox())
 
 	player.SetAccount(player.GetAccount() + "*replace*")
 	player.SetName(player.GetName() + "*replace*")

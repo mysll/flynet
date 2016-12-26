@@ -83,7 +83,7 @@ type Record interface {
 	Del(row int)
 	//清除表格内容
 	Clear()
-	//监视
+	//表格监视
 	SetMonitor(s TableMonitor)
 	Monitor() TableMonitor
 	//序列号表格

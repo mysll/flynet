@@ -44,9 +44,9 @@ var (
 	ErrContainerCantAdd = errors.New("container can't add")
 )
 
-func NewKernel(factory *Factory) *Kernel {
+func NewKernel() *Kernel {
 	k := &Kernel{}
-	k.factory = factory
+	k.factory = NewFactory()
 	k.sceneBeat = NewSceneBeat()
 	k.dispatcherList = map[int]*DispatchSlot{
 		DP_BEAT:        nil,
