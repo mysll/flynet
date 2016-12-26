@@ -1,7 +1,6 @@
 package server
 
 import (
-	"container/list"
 	"fmt"
 	"server/data/datatype"
 	"server/libs/log"
@@ -14,19 +13,20 @@ const (
 
 //对象池
 type Pool struct {
-	pool map[string]*list.List
+	pool map[string]chan datatype.Entity
 }
 
 //创建一个对象，如果池中有空闲的，则激活使用，否则新建一个对象
 func (p *Pool) Create(typ string) datatype.Entity {
-	if l, exist := p.pool[typ]; exist {
-		if e := l.Front(); e != nil {
-			ele := e.Value.(datatype.Entity)
-			l.Remove(e)
-			return ele
+	if ch, exist := p.pool[typ]; exist {
+		select {
+		case ent := <-ch:
+			return ent
+		default:
+			break
 		}
 	} else {
-		p.pool[typ] = list.New()
+		log.LogError("type not register ", typ)
 	}
 
 	if e := datatype.Create(typ); e != nil {
@@ -38,16 +38,15 @@ func (p *Pool) Create(typ string) datatype.Entity {
 
 //释放一个具体对象，如果池中有空间，则回收，如果空闲的超过一定数量，则不回收，直接删除
 func (p *Pool) Free(e datatype.Entity) {
-	if l, exist := p.pool[e.ObjTypeName()]; exist {
-		if l.Len() <= MAX_POOL_FREE {
+	if ch, exist := p.pool[e.ObjTypeName()]; exist {
+		select {
+		case ch <- e:
 			e.Reset()
-			l.PushBack(e)
+		default:
+			return
 		}
 	} else {
-		l := list.New()
-		e.Reset()
-		l.PushBack(e)
-		p.pool[e.ObjTypeName()] = l
+		log.LogError("type not register ", e.ObjTypeName())
 	}
 }
 
@@ -69,7 +68,7 @@ func (p *Pool) DebugInfo(intervalid TimerID, count int32, args interface{}) {
 	info = append(info, "object pool memory status:")
 	info = append(info, "###########################################")
 	for k, v := range p.pool {
-		info = append(info, fmt.Sprintf("pool:%s, cached:%d", k, v.Len()))
+		info = append(info, fmt.Sprintf("pool:%s, cached:%d", k, len(v)))
 	}
 	info = append(info, "###########################################")
 	log.LogMessage(strings.Join(info, "\n"))
@@ -78,6 +77,13 @@ func (p *Pool) DebugInfo(intervalid TimerID, count int32, args interface{}) {
 //新建一个对象池
 func NewEntityPool() *Pool {
 	p := &Pool{}
-	p.pool = make(map[string]*list.List)
+	p.pool = make(map[string]chan datatype.Entity)
+
+	typs := datatype.GetAllTypes()
+
+	for _, v := range typs {
+		log.LogDebug("create pool:", v)
+		p.pool[v] = make(chan datatype.Entity, MAX_POOL_FREE)
+	}
 	return p
 }

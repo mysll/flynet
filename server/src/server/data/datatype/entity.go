@@ -317,3 +317,12 @@ func Create(name string) Entity {
 
 	return nil
 }
+
+func GetAllTypes() []string {
+	typs := make([]string, 0, len(objects))
+	for k, _ := range objects {
+		typs = append(typs, k)
+	}
+
+	return typs
+}

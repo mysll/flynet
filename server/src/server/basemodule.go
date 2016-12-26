@@ -72,7 +72,7 @@ func SendToModule(src string, dest string, args interface{}) error {
 func initAllModules() {
 	for name, module := range modules {
 		module.Init()
-		log.LogMessage(name, " is inited")
+		log.LogMessage(name, " has inited")
 	}
 }
 
@@ -83,13 +83,13 @@ func loadAllModules() {
 			log.LogFatalf("load module failed,", err)
 		}
 
-		log.LogMessage(name, " is loaded")
+		log.LogMessage(name, " has loaded")
 	}
 }
 
 func unloadAllModules() {
 	for name, module := range modules {
 		module.UnLoad()
-		log.LogMessage(name, " is unloaded")
+		log.LogMessage(name, " has unloaded")
 	}
 }
