@@ -6,10 +6,10 @@ import (
 	"server/util"
 )
 
-type master_peer struct {
+type masterPeer struct {
 }
 
-func (mp *master_peer) Handle(id uint16, msgbody []byte) error {
+func (mp *masterPeer) Handle(id uint16, msgbody []byte) error {
 	switch id {
 	case share.M_ADD_SERVER:
 		var as share.AddApp

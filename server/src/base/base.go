@@ -1,8 +1,6 @@
 package base
 
 import (
-	"game/module/letter"
-	"game/module/task"
 	"logicdata/entity"
 	"math/rand"
 	_ "pb"
@@ -120,6 +118,6 @@ func init() {
 	server.RegisterRemote("AreaBridge", App.AreaBridge)
 	server.RegisterRemote("Sync", App.Sync)
 
-	server.RegisterModule("taskmodule", task.Module)
-	server.RegisterModule("lettermodule", letter.Module)
+	//server.RegisterModule("taskmodule", task.Module)
+	//server.RegisterModule("lettermodule", letter.Module)
 }

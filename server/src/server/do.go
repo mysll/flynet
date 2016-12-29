@@ -17,7 +17,7 @@ var (
 )
 
 //进程rpc处理
-func RpcProcess(ch chan *rpc.RpcCall) {
+func doRPCProcess(ch chan *rpc.RpcCall) {
 	var start_time time.Time
 	var delay time.Duration
 	for {
@@ -50,8 +50,8 @@ func RpcProcess(ch chan *rpc.RpcCall) {
 	}
 }
 
-//rpc 回调处理
-func RpcResponseProcess() {
+//RpcResponseProcess rpc回调处理
+func doRPCResponseProcess() {
 	applock.RLock()
 	for _, app := range RemoteApps {
 		if app.RpcClient != nil {
@@ -61,8 +61,8 @@ func RpcResponseProcess() {
 	applock.RUnlock()
 }
 
-//事件执行
-func DoEvent(e *event.Event) {
+//DoEvent 事件执行
+func doEvent(e *event.Event) {
 
 	switch e.Typ {
 	case NEWUSERCONN:
@@ -86,8 +86,8 @@ func DoEvent(e *event.Event) {
 
 }
 
-//事件遍历
-func EventProcess(e *event.EventList) {
+//EventProcess 事件遍历
+func eventProcess(e *event.EventList) {
 	var start_time time.Time
 	var delay time.Duration
 	for {
@@ -96,7 +96,7 @@ func EventProcess(e *event.EventList) {
 			break
 		}
 		start_time = time.Now()
-		DoEvent(evt)
+		doEvent(evt)
 		delay = time.Now().Sub(start_time)
 		if delay > warninglvl {
 			log.LogWarning("DoEvent delay:", delay.Nanoseconds()/1000000, "ms")
@@ -107,11 +107,11 @@ func EventProcess(e *event.EventList) {
 
 }
 
-//主循环，整个服务器的工作循环，每次循环处理顺序：
+//Run 主循环，整个服务器的工作循环，每次循环处理顺序：
 //1、事件处理
 //2、远程调用处理
 //3、固定时间间隔的逻辑处理
-func Run(s *Server) {
+func run(s *Server) {
 	s.apper.OnStart()
 	now := time.Now()
 	s.Time.FrameCount = 0
@@ -129,9 +129,9 @@ func Run(s *Server) {
 		s.Time.FrameCount++
 		busy = false
 
-		EventProcess(s.Emitter)
-		RpcProcess(s.rpcCh)
-		RpcResponseProcess()
+		eventProcess(s.Emitter)
+		doRPCProcess(s.rpcCh)
+		doRPCResponseProcess()
 
 		if now.Sub(s.Time.LastBeatTime) >= BeatTime {
 			//处理心跳
@@ -203,8 +203,6 @@ func Run(s *Server) {
 			}
 		}
 
-		//删除对象
-		s.kernel.factory.ClearDelete()
 		s.apper.OnFrame()
 		ds = s.kernel.dispatcherList[DP_FRAME]
 		if ds != nil {
@@ -213,6 +211,8 @@ func Run(s *Server) {
 			}
 		}
 		s.s2chelper.flush() //发送缓存数据
+		//删除对象
+		s.kernel.factory.ClearDelete()
 		runtime.Gosched()
 		if !busy {
 			time.Sleep(time.Millisecond * 1)

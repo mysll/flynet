@@ -1,9 +1,9 @@
 package area
 
 import (
-	"area/aoi"
-	"area/aoi/toweraoi"
 	"errors"
+	"game/libs/aoi"
+	"game/libs/aoi/toweraoi"
 	"logicdata/inter"
 	"server"
 	. "server/data/datatype"

@@ -1,4 +1,4 @@
-// Server是整个服务器的核心，所以扩展的服务都继承于Server,每个服务是一个独立的进程，这个服务可以是单独运行在一台服务器上，
+//Package server Server是整个服务器的核心，所以扩展的服务都继承于Server,每个服务是一个独立的进程，这个服务可以是单独运行在一台服务器上，
 // 也可以将多个服务启动在同一台电脑上，这主要取决于你的服务器配置。
 // Server提供的基础功能包含：
 //		对外提供连接服务(主要是面向客户端的连接服务)
@@ -223,8 +223,8 @@ func (svr *Server) Start(master string, localip string, outerip string, typ stri
 		log.TraceInfo(svr.Name, "start link complete")
 	}
 
-	master_peer := &master_peer{}
-	peer := &peer{addr: master, h: master_peer}
+	mp := &masterPeer{}
+	peer := &peer{addr: master, h: mp}
 	if err := peer.Connect(); err != nil {
 		panic(err)
 	}
@@ -350,9 +350,9 @@ func (svr *Server) GetChannel(typ string) *Channel {
 	return svr.channel[typ]
 }
 
-//主循环
+//Wait 主循环
 func (svr *Server) Wait() {
-	go Run(svr)
+	go run(svr)
 	log.LogMessage("server debug:", svr.Debug)
 	//启动调试
 	if svr.Debug {
